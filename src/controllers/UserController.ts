@@ -126,6 +126,30 @@ class UserController {
         return response.status(200).json(user);
     }
 
+    async updateSignatureFile(request: Request, response: Response) {
+        const authenticatedUserId = request.headers.authenticatedUserId as string;
+        const signature = typeof request.body?.signature === 'string'
+            ? request.body.signature
+            : undefined;
+
+        const userService = new UserService();
+        const user = await userService.updateSignatureFile(authenticatedUserId, request.file, signature);
+
+        return response.status(200).json(user);
+    }
+
+    async getSignatureFilePreview(request: Request, response: Response) {
+        const authenticatedUserId = request.headers.authenticatedUserId as string;
+
+        const userService = new UserService();
+        const signaturePreview = await userService.getSignatureFilePreview(authenticatedUserId);
+
+        response.setHeader('Content-Type', signaturePreview.contentType);
+        response.setHeader('Content-Disposition', 'inline; filename="assinatura-atual"');
+
+        return response.status(200).send(signaturePreview.content);
+    }
+
     async updateRole(request: Request, response: Response) {
         const authenticatedUserId = request.headers.authenticatedUserId as string;
         const { id } = request.params;

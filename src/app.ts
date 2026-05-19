@@ -25,7 +25,9 @@ app.use((err: Error, request: Request, response: Response, _next: NextFunction) 
 
     if (err instanceof multer.MulterError) {
         const message = err.code === 'LIMIT_FILE_SIZE'
-            ? 'O arquivo excede o limite de 10MB para importacao.'
+            ? (err.field === 'signatureFile'
+                ? 'O arquivo de assinatura excede o limite de 2MB.'
+                : 'O arquivo excede o limite de 10MB para importacao.')
             : err.message;
 
         return response.status(400).json({ message });

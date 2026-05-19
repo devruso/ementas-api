@@ -1,4 +1,4 @@
-import fs from 'fs';
+﻿import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { spawnSync } from 'child_process';
@@ -26,8 +26,8 @@ export class LibreOfficeDocxToPdfConverter implements DocxToPdfConverter {
 
     convert(request: DocxToPdfConversionRequest): Buffer | null {
         const safeBaseName = request.fileBaseName.replace(/[^A-Za-z0-9._-]/g, '_');
-        const tempDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'bdcp-export-'));
-        const userProfileDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'bdcp-lo-profile-'));
+        const tempDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ementas-export-'));
+        const userProfileDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'ementas-lo-profile-'));
         const docxPath = path.join(tempDirectory, `${safeBaseName}.docx`);
         const pdfPath = path.join(tempDirectory, `${safeBaseName}.pdf`);
 
@@ -93,3 +93,5 @@ export class LibreOfficeDocxToPdfConverter implements DocxToPdfConverter {
         return `file://${resolvedPath}`;
     }
 }
+
+

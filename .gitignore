@@ -4,5 +4,6 @@
 /coverage
 /dist
 /tmp/
+/storage/
 
 .env

@@ -33,6 +33,21 @@ class User {
     @Column({ name: 'signature_updated_at', type: 'timestamptz', nullable: true })
         signatureUpdatedAt?: Date;
 
+    @Column({ name: 'signature_file_key', nullable: true })
+        signatureFileKey?: string;
+
+    @Column({ name: 'signature_file_provider', nullable: true })
+        signatureFileProvider?: string;
+
+    @Column({ name: 'signature_file_content_type', nullable: true })
+        signatureFileContentType?: string;
+
+    @Column({ name: 'signature_file_size', type: 'integer', nullable: true })
+        signatureFileSize?: number;
+
+    @Column({ name: 'signature_file_hash', nullable: true })
+        signatureFileHash?: string;
+
     @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
         createdAt: Date;
 

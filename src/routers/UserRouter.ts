@@ -13,6 +13,7 @@ import {
 	ensureAuthenticated,
 	ensureSuperAdminAuthenticated,
 } from '../middlewares/EnsureAuthenticated';
+import { uploadUserSignatureFile } from '../middlewares/Upload';
 import { makeValidateBody } from '../middlewares/Validator';
 
 const userRouter = Router();
@@ -237,6 +238,8 @@ userRouter.put('/update/email', ensureAuthenticated, makeValidateBody(UpdateUser
 userRouter.put('/update/password', ensureAuthenticated, makeValidateBody(UpdateUserRequestDto), userController.updatePassword);
 
 userRouter.put('/update/signature', ensureAuthenticated, makeValidateBody(UpdateUserSignatureRequestDto), userController.updateSignature);
+userRouter.put('/update/signature/file', ensureAuthenticated, uploadUserSignatureFile.single('signatureFile'), userController.updateSignatureFile);
+userRouter.get('/signature/file', ensureAuthenticated, userController.getSignatureFilePreview);
 
 userRouter.put('/:id/role', ensureAuthenticated, ensureSuperAdminAuthenticated, makeValidateBody(UpdateUserRoleRequestDto), userController.updateRole);
 

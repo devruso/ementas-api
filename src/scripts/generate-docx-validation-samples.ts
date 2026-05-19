@@ -1,4 +1,4 @@
-import fs from 'fs';
+﻿import fs from 'fs';
 import path from 'path';
 
 import { ComponentService } from '../services/ComponentService';
@@ -49,7 +49,7 @@ const buildCommon = (): Omit<GenerateHtmlData, 'id' | 'code' | 'name' | 'program
   approval: {
     agreementNumber: 'ATA-2026-001',
     agreementDate: new Date('2026-05-05T12:30:00.000Z'),
-    approvedBy: 'Prof. Validacao BDCP',
+    approvedBy: 'Prof. Validacao EMENTAS',
   },
 });
 
@@ -160,3 +160,5 @@ const main = () => {
 };
 
 main();
+
+

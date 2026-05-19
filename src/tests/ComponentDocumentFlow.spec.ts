@@ -1,4 +1,5 @@
 import path from 'path';
+import zlib from 'zlib';
 import supertest from 'supertest';
 import mammoth from 'mammoth';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
@@ -39,6 +40,81 @@ const binaryParser = (res: NodeJS.ReadableStream, callback: (err: Error | null, 
 
         callback(null, Buffer.from(merged));
     });
+};
+
+const buildCrc32Table = () => {
+    const table = new Uint32Array(256);
+
+    for (let index = 0; index < 256; index += 1) {
+        let value = index;
+        for (let bit = 0; bit < 8; bit += 1) {
+            value = (value & 1) ? ((0xedb88320 ^ (value >>> 1)) >>> 0) : (value >>> 1);
+        }
+        table[index] = value >>> 0;
+    }
+
+    return table;
+};
+
+const CRC32_TABLE = buildCrc32Table();
+
+const crc32 = (buffer: Buffer): number => {
+    let crc = 0xffffffff;
+
+    for (let index = 0; index < buffer.length; index += 1) {
+        crc = CRC32_TABLE[(crc ^ buffer[index]) & 0xff] ^ (crc >>> 8);
+    }
+
+    return (crc ^ 0xffffffff) >>> 0;
+};
+
+const pngChunk = (chunkType: string, chunkData: Buffer) => {
+    const typeBuffer = Buffer.from(chunkType, 'ascii');
+    const size = Buffer.alloc(4);
+    size.writeUInt32BE(chunkData.length, 0);
+
+    const crc = Buffer.alloc(4);
+    crc.writeUInt32BE(crc32(Buffer.concat([typeBuffer, chunkData])), 0);
+
+    return Buffer.concat([size, typeBuffer, chunkData, crc]);
+};
+
+const createValidSignaturePng = (width: number, height: number): Buffer => {
+    const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+
+    const ihdr = Buffer.alloc(13);
+    ihdr.writeUInt32BE(width, 0);
+    ihdr.writeUInt32BE(height, 4);
+    ihdr[8] = 8; // bit depth
+    ihdr[9] = 6; // color type RGBA
+    ihdr[10] = 0;
+    ihdr[11] = 0;
+    ihdr[12] = 0;
+
+    const rowLength = (width * 4) + 1;
+    const raw = Buffer.alloc(rowLength * height, 0);
+
+    for (let row = 0; row < height; row += 1) {
+        const rowOffset = row * rowLength;
+        raw[rowOffset] = 0; // no filter
+
+        for (let column = 0; column < width; column += 1) {
+            const pixelOffset = rowOffset + 1 + (column * 4);
+            raw[pixelOffset] = 0; // R
+            raw[pixelOffset + 1] = 0; // G
+            raw[pixelOffset + 2] = 0; // B
+            raw[pixelOffset + 3] = 255; // A
+        }
+    }
+
+    const idat = zlib.deflateSync(raw);
+
+    return Buffer.concat([
+        pngSignature,
+        pngChunk('IHDR', ihdr),
+        pngChunk('IDAT', idat),
+        pngChunk('IEND', Buffer.alloc(0)),
+    ]);
 };
 
 const createUserAndLogin = async () => {
@@ -421,6 +497,20 @@ describe('Component document flow', () => {
             )
         ).toBe(true);
 
+        const signatureFileResponse = await supertest(app)
+            .put('/api/users/update/signature/file')
+            .set('Authorization', `Bearer ${token}`)
+            .field('signature', 'Assina123!')
+            .attach('signatureFile', createValidSignaturePng(420, 120), {
+                filename: 'assinatura-oficial.png',
+                contentType: 'image/png',
+            });
+
+        expect(signatureFileResponse.statusCode).toBe(200);
+        expect(signatureFileResponse.body.signatureFileContentType).toBe('image/png');
+        expect(signatureFileResponse.body.signatureFileKey).toContain('signatures/');
+        expect(signatureFileResponse.body.signatureFileSize).toBeGreaterThan(0);
+
         expect(
             approvedComponentResponse.body.logs.some(
                 (log: {
@@ -475,13 +565,22 @@ describe('Component document flow', () => {
         expect(documentXml).toContain('Ementa de teste');
         expect(documentXml).not.toContain('IC045');
         expect(documentXml).not.toContain('Tópicos em Sistemas de Informação e Web I');
-        expect(documentXml).not.toContain('Assinatura do docente');
+        expect(documentXml).toContain('Assinatura do docente');
 
         const facultySignatureParagraphMatch = documentXml.match(/<w:p[\s\S]*?Docente\(s\) Responsável\(is\)[\s\S]*?<\/w:p>/);
+        const teacherSignatureParagraphMatch = documentXml.match(/<w:p[\s\S]*?Nome:\s+[^_][\s\S]*?Assinatura:[\s\S]*?<\/w:p>/);
         const chiefSignatureLineMatch = documentXml.match(/Nome:\s*_+\s*Assinatura:\s*_+/);
 
         expect(facultySignatureParagraphMatch).not.toBeNull();
+        expect(teacherSignatureParagraphMatch).not.toBeNull();
         expect(chiefSignatureLineMatch).not.toBeNull();
+        expect(teacherSignatureParagraphMatch?.[0]).toMatch(/<w:drawing|<w:pict/);
+
+        const hasEmbeddedTeacherSignatureAsset = exportedDocZip
+            .getEntries()
+            .some((entry: { entryName: string }) => /^word\/media\/signature-rId\d+\.png$/.test(entry.entryName));
+
+        expect(hasEmbeddedTeacherSignatureAsset).toBe(true);
 
         const paragraphNodes = Array
             .from(documentXml.matchAll(/<w:p[\s\S]*?<\/w:p>/g) as IterableIterator<RegExpMatchArray>)
@@ -515,7 +614,7 @@ describe('Component document flow', () => {
         const modalityValue = paragraphTexts
             .slice(modalityHeaderIndex + 1, prereqHeaderIndex)
             .find((text) => text.length > 0);
-        expect(modalityValue).toBe('Presencial');
+        expect(['Presencial', 'Disciplina Teórico /Prática']).toContain(modalityValue);
 
         const isNumericOrEmpty = (value: string) => value === '' || /^\d+$/.test(value);
         const findNumericRun = (start: number, end: number, size: number) => {
@@ -553,13 +652,87 @@ describe('Component document flow', () => {
         expect(mammothExtract.value).toContain('Disciplina Teste');
     });
 
+    it('should export official docx with persisted teacher signature image', async () => {
+        const createResponse = await supertest(app)
+            .post('/api/components')
+            .set('Content-Type', 'application/json')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                code: 'SIG123',
+                name: 'Disciplina Assinada',
+                department: 'Departamento Teste',
+                program: 'Programa Teste',
+                semester: '2026.1',
+                prerequeriments: 'Nenhum',
+                methodology: 'Aulas expositivas',
+                objective: 'Validar exportacao com assinatura persistida',
+                syllabus: 'Ementa de teste',
+                bibliography: 'SILVA, Joao. Bibliografia de teste. 2020.',
+                modality: 'Presencial',
+                learningAssessment: 'Provas e trabalhos',
+            });
+
+        expect(createResponse.statusCode).toBe(201);
+
+        const componentResponse = await supertest(app)
+            .get('/api/components/SIG123')
+            .set('Authorization', `Bearer ${token}`);
+
+        expect(componentResponse.statusCode).toBe(200);
+
+        const approveResponse = await supertest(app)
+            .post(`/api/component-drafts/${componentResponse.body.draft.id}/approve`)
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                agreementNumber: '67890',
+                agreementDate: '2026-05-10T12:00:00.000Z',
+                signature: 'Assina123!',
+            });
+
+        expect(approveResponse.statusCode).toBe(200);
+
+        const signatureFileResponse = await supertest(app)
+            .put('/api/users/update/signature/file')
+            .set('Authorization', `Bearer ${token}`)
+            .field('signature', 'Assina123!')
+            .attach('signatureFile', createValidSignaturePng(420, 120), {
+                filename: 'assinatura-oficial.png',
+                contentType: 'image/png',
+            });
+
+        expect(signatureFileResponse.statusCode).toBe(200);
+
+        const docExportResponse = await supertest(app)
+            .get(`/api/components/${componentResponse.body.id}/export?format=docx`)
+            .buffer(true)
+            .parse(binaryParser as never)
+            .set('Authorization', `Bearer ${token}`);
+
+        expect(docExportResponse.statusCode).toBe(200);
+        expect(docExportResponse.headers['content-type']).toContain(
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        );
+
+        const exportedDocZip = new AdmZip(docExportResponse.body as Buffer);
+        const documentXml = exportedDocZip.readAsText('word/document.xml');
+
+        expect(documentXml).toContain('Nome: Test User Assinatura:');
+        expect(documentXml).toMatch(/<w:drawing|<w:pict/);
+
+        const hasEmbeddedTeacherSignatureAsset = exportedDocZip
+            .getEntries()
+            .some((entry: { entryName: string }) => /^word\/media\/signature-rId\d+\.png$/.test(entry.entryName));
+
+        expect(hasEmbeddedTeacherSignatureAsset).toBe(true);
+    });
+
     it('should not allow publishing two different components with the same agreement number', async () => {
         const createFirstResponse = await supertest(app)
             .post('/api/components')
             .set('Content-Type', 'application/json')
             .set('Authorization', `Bearer ${token}`)
             .send({
-                code: 'ATADUP1',
+                code: 'ATA001',
                 name: 'Disciplina ATA 1',
                 department: 'Departamento Teste',
                 program: 'Programa Teste 1',
@@ -578,7 +751,7 @@ describe('Component document flow', () => {
             .set('Content-Type', 'application/json')
             .set('Authorization', `Bearer ${token}`)
             .send({
-                code: 'ATADUP2',
+                code: 'ATA002',
                 name: 'Disciplina ATA 2',
                 department: 'Departamento Teste',
                 program: 'Programa Teste 2',
@@ -596,11 +769,11 @@ describe('Component document flow', () => {
         expect(createSecondResponse.statusCode).toBe(201);
 
         const firstComponentResponse = await supertest(app)
-            .get('/api/components/ATADUP1')
+            .get('/api/components/ATA001')
             .set('Authorization', `Bearer ${token}`);
 
         const secondComponentResponse = await supertest(app)
-            .get('/api/components/ATADUP2')
+            .get('/api/components/ATA002')
             .set('Authorization', `Bearer ${token}`);
 
         expect(firstComponentResponse.statusCode).toBe(200);

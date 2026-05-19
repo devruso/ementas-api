@@ -67,7 +67,7 @@ describe('Component public shares endpoints', () => {
     });
 
     it('should list active shares with creator metadata', async () => {
-        const admin = await createUserAndLogin('Admin Share', 'admin.share@test.com', 'Admin123!');
+        const admin = await createUserAndLogin('Admin Share', 'admin.share@ufba.br', 'Admin123!');
         await promoteToAdmin(admin.id);
 
         const createComponentResponse = await supertest(app)
@@ -120,7 +120,7 @@ describe('Component public shares endpoints', () => {
     });
 
     it('should revoke all active shares from a component', async () => {
-        const admin = await createUserAndLogin('Admin Bulk', 'admin.bulk@test.com', 'Admin123!');
+        const admin = await createUserAndLogin('Admin Bulk', 'admin.bulk@ufba.br', 'Admin123!');
         await promoteToAdmin(admin.id);
 
         const createComponentResponse = await supertest(app)
@@ -173,10 +173,10 @@ describe('Component public shares endpoints', () => {
     });
 
     it('should not allow non-admin user to revoke all active shares', async () => {
-        const admin = await createUserAndLogin('Admin Owner', 'admin.owner@test.com', 'Admin123!');
+        const admin = await createUserAndLogin('Admin Owner', 'admin.owner@ufba.br', 'Admin123!');
         await promoteToAdmin(admin.id);
 
-        const teacher = await createUserAndLogin('Teacher User', 'teacher.user@test.com', 'Teacher123!');
+        const teacher = await createUserAndLogin('Teacher User', 'teacher.user@ufba.br', 'Teacher123!');
 
         const createComponentResponse = await supertest(app)
             .post('/api/components')
@@ -218,7 +218,7 @@ describe('Component public shares endpoints', () => {
     });
 
     it('should sort active shares by expiresAt in ASC and DESC order', async () => {
-        const admin = await createUserAndLogin('Admin Sort', 'admin.sort@test.com', 'Admin123!');
+        const admin = await createUserAndLogin('Admin Sort', 'admin.sort@ufba.br', 'Admin123!');
         await promoteToAdmin(admin.id);
 
         const createComponentResponse = await supertest(app)

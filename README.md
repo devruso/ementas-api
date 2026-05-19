@@ -18,6 +18,50 @@ Make sure to create a `.env` in the root level on your local machine beforehand.
 - Mesmo com `MAILER_MOCK=false`, se `MAILER_USER`/`MAILER_PASSWORD` não estiverem definidos, o backend entra em fallback mock automaticamente.
 - Para envio real, defina `MAILER_USER` e `MAILER_PASSWORD` válidos e use `MAILER_MOCK=false`.
 
+### Storage de arquivos (incremental)
+
+- O backend agora possui contrato de provider de storage com seleção por variável de ambiente.
+- Modo padrão: `STORAGE_PROVIDER=local`.
+- O provider local persiste arquivos no caminho definido por `STORAGE_LOCAL_BASE_PATH` (padrão: `storage`).
+- O contrato S3-compatible já está preparado, mas fica desativado por padrão para reduzir risco operacional no TCC.
+
+Variáveis relevantes:
+
+```sh
+STORAGE_PROVIDER=local
+STORAGE_LOCAL_BASE_PATH=storage
+STORAGE_S3_ENABLED=false
+STORAGE_S3_ENDPOINT=
+STORAGE_S3_REGION=
+STORAGE_S3_BUCKET=
+STORAGE_S3_ACCESS_KEY_ID=
+STORAGE_S3_SECRET_ACCESS_KEY=
+STORAGE_S3_FORCE_PATH_STYLE=true
+STORAGE_S3_PUBLIC_BASE_URL=
+```
+
+Observações:
+
+- Não salve arquivos no filesystem efêmero do container sem volume.
+- Em Docker Compose deste projeto, o volume `api_storage` monta `/app/storage` para persistência local.
+- Para migrar para serviço da universidade compatível com S3, mantenha `STORAGE_PROVIDER=s3` apenas quando `STORAGE_S3_ENABLED=true` e as credenciais estiverem configuradas.
+
+### Assinatura do professor (texto + arquivo)
+
+- Endpoint textual existente: `PUT /api/users/update/signature` com payload JSON `{ "signature": "..." }`.
+- Novo endpoint multipart: `PUT /api/users/update/signature/file` com campo `signatureFile` e campo opcional `signature`.
+- O upload persiste metadados no usuário e mantém compatibilidade com validação de assinatura hash para publicação oficial.
+
+Campos persistidos em `users`:
+
+- `signature_hash`
+- `signature_updated_at`
+- `signature_file_key`
+- `signature_file_provider`
+- `signature_file_content_type`
+- `signature_file_size`
+- `signature_file_hash`
+
 ### Convite por e-mail (admin)
 
 - Rota: `POST /api/users/invite-email`
@@ -183,4 +227,5 @@ npm run typecheck
 ```sh
 npm run dev
 ```
+
 

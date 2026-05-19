@@ -26,6 +26,9 @@ import {
 } from '../helpers/referenceSections';
 import type { DocxToPdfConverter } from './export/DocxToPdfConverter';
 import { LibreOfficeDocxToPdfConverter } from './export/LibreOfficeDocxToPdfConverter';
+import { DocxSignatureEmbedder } from './export/DocxSignatureEmbedder';
+import { ProcessedSignatureImage } from './export/SignatureImageProcessor';
+import { UserSignatureAssetService } from './export/UserSignatureAssetService';
 
 export class ComponentService {
     private componentRepository: Repository<Component>;
@@ -33,6 +36,8 @@ export class ComponentService {
     private componentDraftRepository: Repository<ComponentDraft>;
     private workloadService: WorkloadService;
     private readonly pdfConverter: DocxToPdfConverter;
+    private readonly signatureAssetService: UserSignatureAssetService;
+    private readonly docxSignatureEmbedder: DocxSignatureEmbedder;
 
     private readonly mutableComponentFields: Array<keyof UpdateComponentRequestDto> = [
         'code',
@@ -64,6 +69,8 @@ export class ComponentService {
         );
         this.workloadService = new WorkloadService();
         this.pdfConverter = pdfConverter;
+        this.signatureAssetService = new UserSignatureAssetService();
+        this.docxSignatureEmbedder = new DocxSignatureEmbedder();
     }
 
     private normalizeTemplateText(value: string | undefined, emptyText = 'Não se aplica') {
@@ -375,7 +382,7 @@ export class ComponentService {
         return paragraphXml.replace(/<w:p([^>]*)>/, `<w:p$1>${paragraphPropertiesXml}`);
     }
 
-    private fillDocxTemplateFromBase(data: GenerateHtmlData) {
+    private fillDocxTemplateFromBase(data: GenerateHtmlData, signatureAsset?: ProcessedSignatureImage | null) {
         const templatePath = path.resolve(process.cwd(), 'UFBA_TEMPLATE.docx');
 
         if (!fs.existsSync(templatePath)) {
@@ -831,7 +838,17 @@ export class ComponentService {
             (text) => /^Nome:\s*/.test(text) && /Assinatura:/.test(text) && !/Nome:\s*_+/.test(text)
         );
         if (signatureLineIndex >= 0) {
-            replaceIndex(signatureLineIndex, `Nome: ${approvedBy} Assinatura: ____________________________________`);
+            if (signatureAsset) {
+                updatedParagraphs[signatureLineIndex] = this.docxSignatureEmbedder.embedSignature(
+                    zip,
+                    updatedParagraphs[signatureLineIndex],
+                    approvedBy,
+                    signatureAsset
+                );
+                texts[signatureLineIndex] = `Nome: ${approvedBy} Assinatura:`;
+            } else {
+                replaceIndex(signatureLineIndex, `Nome: ${approvedBy} Assinatura: ____________________________________`);
+            }
         }
 
         const chiefSignatureLineIndex = texts.findIndex(
@@ -1261,7 +1278,8 @@ export class ComponentService {
             exportMode: format === 'pdf' ? 'pdf' : 'docx',
         };
 
-        const templateDocx = this.fillDocxTemplateFromBase(data);
+        const signatureAsset = await this.signatureAssetService.loadForDocument(latestApprovalLog?.user);
+        const templateDocx = this.fillDocxTemplateFromBase(data, signatureAsset);
 
         if (format === 'doc' || format === 'docx') {
             return {

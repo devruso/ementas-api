@@ -22,4 +22,26 @@ const uploadDraftImport = multer({
     },
 });
 
-export { uploadDraftImport };
+const supportedSignatureMimeTypes = new Set([
+    'image/png',
+    'image/jpeg',
+    'image/webp',
+]);
+
+const uploadUserSignatureFile = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 2 * 1024 * 1024,
+        files: 1,
+    },
+    fileFilter: (_request, file, callback) => {
+        if (!supportedSignatureMimeTypes.has(file.mimetype)) {
+            callback(new AppError('Formato de assinatura nao suportado. Envie PNG, JPG ou WEBP.', 400));
+            return;
+        }
+
+        callback(null, true);
+    },
+});
+
+export { uploadDraftImport, uploadUserSignatureFile };

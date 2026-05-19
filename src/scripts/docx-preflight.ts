@@ -120,6 +120,24 @@ const checkDocx = async (filePath: string): Promise<PreflightResult> => {
       : (!hasFacultyDrawing ? undefined : 'Paragrafo de assinatura docente possui drawing/pict.'),
   });
 
+  const teacherSignatureParagraph = paragraphs.find((paragraph) => {
+    const text = getParagraphText(paragraph);
+
+    return /^Nome:\s+/i.test(text) && /Assinatura:/i.test(text) && !/^Nome:\s*_+/i.test(text);
+  });
+  const teacherSignatureText = getParagraphText(teacherSignatureParagraph || '');
+  const hasTeacherSignatureDrawing = /<w:drawing|<w:pict/.test(teacherSignatureParagraph || '');
+  checks.push({
+    name: 'teacher-signature-line-rendered',
+    ok: !!teacherSignatureParagraph && (hasTeacherSignatureDrawing || /Assinatura:\s*_+/i.test(teacherSignatureText)),
+    required: true,
+    details: !teacherSignatureParagraph
+      ? 'Linha de assinatura docente nao encontrada.'
+      : (hasTeacherSignatureDrawing || /Assinatura:\s*_+/i.test(teacherSignatureText)
+        ? undefined
+        : 'Linha de assinatura docente sem imagem inline nem placeholder textual.'),
+  });
+
   const hasChiefSignatureLine = paragraphs
     .map((paragraph) => getParagraphText(paragraph))
     .some((text) => /^Nome:\s*_+\s*Assinatura:\s*_+/.test(text));

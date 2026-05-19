@@ -1,9 +1,11 @@
-services:
+﻿services:
     api:
         build: .
         restart: unless-stopped
         ports:
             - 3333:3333
+        volumes:
+            - api_storage:/app/storage
         env_file:
             - ./.env
         environment:
@@ -30,9 +32,12 @@ services:
         environment:
             POSTGRES_PASSWORD: supersecret
             POSTGRES_USER: admin
-            POSTGRES_DB: bdcp
+            POSTGRES_DB: ementas
         volumes:
             - postgres_data:/var/lib/postgresql/data
 
 volumes:
     postgres_data:
+    api_storage:
+
+

@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+﻿import nodemailer from 'nodemailer';
 
 class MailerService{
     private hasMailerCredentials() {
@@ -35,7 +35,7 @@ class MailerService{
             to,
             subject,
             text,
-            from: 'BDCP-IC-UFBA <bdcpicufba@gmail.com>',
+            from: 'EMENTAS-IC-UFBA <ementasicufba@gmail.com>',
         });
 
         console.log('Password Reset was requested. Message ID: ', mailSent.messageId);
@@ -46,3 +46,5 @@ class MailerService{
 }
 
 export default new MailerService();
+
+

@@ -9,6 +9,8 @@ FROM node:20-bookworm-slim
 ENV NODE_ENV production
 ENV LIBREOFFICE_BIN=/usr/bin/libreoffice
 ENV PDF_CONVERSION_TIMEOUT_MS=45000
+ENV STORAGE_PROVIDER=local
+ENV STORAGE_LOCAL_BASE_PATH=/app/storage
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -19,6 +21,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	fonts-liberation \
 	fonts-noto-core \
 	&& rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /app/storage
 
 ADD package.json package-lock.json /app/
 RUN npm ci --omit=dev

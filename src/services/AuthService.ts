@@ -1,4 +1,4 @@
-import * as crypto from 'crypto';
+﻿import * as crypto from 'crypto';
 import { JwtPayload, sign, verify } from 'jsonwebtoken';
 import { Repository, getCustomRepository } from 'typeorm';
 
@@ -147,7 +147,7 @@ class AuthService {
             const generatedPassword = crypto.createHmac('sha256', generatedHash).digest('hex');
 
             await this.userRepository.createQueryBuilder().update(User).set({ password: generatedPassword }).where('email = :email', { email: normalizedEmail }).execute();
-            await Mailer.execute(normalizedEmail, 'Nova Senha - BDCP', `Prezado(a),\nUse "${generatedHash}" como sua nova senha para acessar o BDCP.`);
+            await Mailer.execute(normalizedEmail, 'Nova Senha - EMENTAS', `Prezado(a),\nUse "${generatedHash}" como sua nova senha para acessar o EMENTAS.`);
         }
         catch (err) {
             console.log(err);
@@ -165,3 +165,5 @@ class AuthService {
 }
 
 export { AuthService };
+
+

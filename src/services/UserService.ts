@@ -1,4 +1,4 @@
-import * as crypto from 'crypto';
+﻿import * as crypto from 'crypto';
 import { Brackets, getCustomRepository, Repository } from 'typeorm';
 
 import { User } from '../entities/User';
@@ -8,6 +8,9 @@ import Mailer from '../middlewares/Mailer';
 import { UserRole } from '../interfaces/UserRole';
 import { assertUfbaInstitutionalEmail, normalizeEmail } from '../helpers/institutionalEmail';
 import { UserInviteService } from './UserInviteService';
+import { createStorageProvider } from './storage';
+import { StorageProviderKind } from './storage';
+import { SignatureImageUploadValidator } from './signature/SignatureImageUploadValidator';
 
 class UserService {
 
@@ -177,8 +180,8 @@ class UserService {
             try {
                 const mailDelivery = await Mailer.execute(
                     normalizedEmail,
-                    'Acesso BDCP - Credenciais iniciais',
-                    `Olá ${name.trim()},\n\nSeu acesso ao BDCP foi criado por ${adminUser.name}.\n\nE-mail: ${normalizedEmail}\nSenha provisória: ${temporaryPassword}\n\nAo entrar, altere a senha imediatamente.\n\nAtenciosamente,\nEquipe BDCP`
+                    'Acesso EMENTAS - Credenciais iniciais',
+                    `OlÃ¡ ${name.trim()},\n\nSeu acesso ao EMENTAS foi criado por ${adminUser.name}.\n\nE-mail: ${normalizedEmail}\nSenha provisÃ³ria: ${temporaryPassword}\n\nAo entrar, altere a senha imediatamente.\n\nAtenciosamente,\nEquipe EMENTAS`
                 );
 
                 emailDeliveryStatus = mailDelivery.deliveryMode === 'mock' ? 'mock' : 'sent';
@@ -229,8 +232,8 @@ class UserService {
         const inviteLink = `${normalizedBaseUrl}/cadastrar/${token}`;
         const mailDelivery = await Mailer.execute(
             normalizedEmail,
-            'Convite BDCP - Cadastro',
-            `Olá,\n\nVocê recebeu um convite para cadastro no BDCP.\n\nAcesse o link:\n${inviteLink}\n\nEste convite expira em 24 horas.\n\nAtenciosamente,\nEquipe BDCP`
+            'Convite EMENTAS - Cadastro',
+            `OlÃ¡,\n\nVocÃª recebeu um convite para cadastro no EMENTAS.\n\nAcesse o link:\n${inviteLink}\n\nEste convite expira em 24 horas.\n\nAtenciosamente,\nEquipe EMENTAS`
         );
 
         return {
@@ -258,6 +261,80 @@ class UserService {
             .execute();
 
         return this.userRepository.findOne({ where: { id: userId } });
+    }
+
+    async updateSignatureFile(userId: string, file?: Express.Multer.File, signature?: string) {
+        const user = await this.userRepository.findOne({ where: { id: userId, isDeleted: false } });
+
+        if (!user) {
+            throw new AppError('User not found.', 404);
+        }
+
+        if (!file) {
+            throw new AppError('Nenhum arquivo de assinatura foi enviado.', 400);
+        }
+
+        const normalizedFile = SignatureImageUploadValidator.validateAndNormalize(file);
+
+        const storageProvider = createStorageProvider();
+        const fileName = `${user.id}-${Date.now()}.${normalizedFile.extension}`;
+
+        const savedFile = await storageProvider.save({
+            folder: 'signatures',
+            fileName,
+            content: normalizedFile.buffer,
+            contentType: normalizedFile.contentType,
+        });
+
+        if (user.signatureFileKey && user.signatureFileProvider === storageProvider.kind) {
+            await storageProvider.delete(user.signatureFileKey);
+        }
+
+        const normalizedSignature = signature?.trim();
+        const nextSignatureHash = normalizedSignature
+            ? crypto.createHmac('sha256', normalizedSignature).digest('hex')
+            : user.signatureHash;
+
+        await this.userRepository
+            .createQueryBuilder()
+            .update(User)
+            .set({
+                signatureHash: nextSignatureHash,
+                signatureUpdatedAt: new Date(),
+                signatureFileKey: savedFile.key,
+                signatureFileProvider: savedFile.provider,
+                signatureFileContentType: savedFile.contentType,
+                signatureFileSize: savedFile.size,
+                signatureFileHash: crypto.createHash('sha256').update(normalizedFile.buffer).digest('hex'),
+            })
+            .where('id = :id', { id: userId })
+            .execute();
+
+        return this.userRepository.findOne({ where: { id: userId } });
+    }
+
+    async getSignatureFilePreview(userId: string) {
+        const user = await this.userRepository.findOne({ where: { id: userId, isDeleted: false } });
+
+        if (!user) {
+            throw new AppError('User not found.', 404);
+        }
+
+        if (!user.signatureFileKey || !user.signatureFileProvider || !user.signatureFileContentType) {
+            throw new AppError('Nenhum arquivo de assinatura foi configurado para este usuÃ¡rio.', 404);
+        }
+
+        if (!/^image\//i.test(user.signatureFileContentType)) {
+            throw new AppError('O arquivo de assinatura atual nÃ£o pode ser exibido como imagem.', 400);
+        }
+
+        const storageProvider = createStorageProvider(user.signatureFileProvider as StorageProviderKind);
+        const content = await storageProvider.read(user.signatureFileKey);
+
+        return {
+            content,
+            contentType: user.signatureFileContentType,
+        };
     }
 
     async updateUserRole(
@@ -362,3 +439,5 @@ class UserService {
 }
 
 export { UserService };
+
+

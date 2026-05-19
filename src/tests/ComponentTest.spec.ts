@@ -31,7 +31,7 @@ beforeEach(async() => {
         },
         body:{
             'name': 'Test',
-            'email': 'test@gmail.com',
+            'email': 'test@ufba.br',
             'password':'test123'
         }
     });
@@ -40,7 +40,7 @@ beforeEach(async() => {
     const response = await supertest(app)
         .post('/api/auth/login')
         .send({
-            email: 'test@gmail.com',
+            email: 'test@ufba.br',
             password: 'test123',
         });
     token = response.body.token;

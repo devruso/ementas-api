@@ -8,7 +8,7 @@
     "lint:fix": "eslint . --ext .ts --fix",
     "typecheck": "tsc --noEmit",
     "dev": "ts-node-dev -r dotenv/config --exit-child src/server.ts",
-    "postgres:create": "docker run --name db-postgres -e POSTGRES_PASSWORD=supersecret -e POSTGRES_USER=admin -e POSTGRES_DB=bdcp -d -p 5432:5432 postgres",
+    "postgres:create": "docker run --name db-postgres -e POSTGRES_PASSWORD=supersecret -e POSTGRES_USER=admin -e POSTGRES_DB=ementas -d -p 5432:5432 postgres",
     "migration:create": "typeorm migration:create --dir src/database/migrations --name",
     "migration:generate": "node -r ts-node/register -r dotenv/config ./node_modules/typeorm/cli.js migration:generate --name",
     "migration:revert": "node -r ts-node/register -r dotenv/config ./node_modules/typeorm/cli.js migration:revert",
@@ -39,6 +39,8 @@
   },
   "homepage": "https://github.com/devruso/ementas-api#readme",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1045.0",
+    "@jimp/plugin-print": "^1.6.1",
     "@sinonjs/fake-timers": "^6.0.1",
     "@types/adm-zip": "^0.5.8",
     "@types/sinonjs__fake-timers": "^6.0.4",
@@ -54,6 +56,7 @@
     "gensync": "^1.0.0-beta.2",
     "html-to-docx": "^1.8.0",
     "jest-watcher": "^28.0.0",
+    "jimp": "^1.6.1",
     "js-tokens": "^7.0.0",
     "jsesc": "^3.0.2",
     "jsonwebtoken": "^9.0.3",
@@ -62,7 +65,7 @@
     "multer": "^2.1.1",
     "nodemailer": "^8.0.7",
     "pdf-parse": "^2.4.5",
-    "pg": "^8.7.3",
+    "pg": "8.7.3",
     "pirates": "^4.0.5",
     "puppeteer": "^24.42.0",
     "react": "^18.0.0",
@@ -108,4 +111,3 @@
     "typescript": "^4.9.5"
   }
 }
-

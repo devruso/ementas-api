@@ -621,7 +621,7 @@ export class CrawlerService {
             responseType: 'arraybuffer',
             responseEncoding: 'binary',
         });
-        const formCookie = this.buildCookieHeader(formPageResponse.headers['set-cookie']);
+        const formCookie = this.buildCookieHeader(formPageResponse.headers?.['set-cookie']);
 
         const formHtml = this.decodeHtmlBuffer(formPageResponse.data);
         const $formPage = cheerio.load(formHtml);
@@ -652,7 +652,7 @@ export class CrawlerService {
                 ...(formCookie ? { Cookie: formCookie } : {}),
             },
         });
-        const searchCookie = this.buildCookieHeader(searchResponse.headers['set-cookie']);
+        const searchCookie = this.buildCookieHeader(searchResponse.headers?.['set-cookie']);
         const detailCookie = this.mergeCookieHeaders(formCookie, searchCookie);
 
         const searchHtml = this.decodeHtmlBuffer(searchResponse.data);
@@ -1894,7 +1894,7 @@ export class CrawlerService {
                     responseType: 'arraybuffer',
                     responseEncoding: 'binary',
                 });
-                const sourceCookie = this.buildCookieHeader(response.headers['set-cookie']);
+                const sourceCookie = this.buildCookieHeader(response.headers?.['set-cookie']);
                 data = response.data;
 
                 const html = this.decodeHtmlBuffer(data);
