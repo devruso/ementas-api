@@ -1,8 +1,39 @@
 ﻿import nodemailer from 'nodemailer';
 
 class MailerService{
+    private parseBoolean(value: string | undefined, defaultValue: boolean) {
+        if (value == undefined) {
+            return defaultValue;
+        }
+
+        return String(value).trim().toLowerCase() === 'true';
+    }
+
     private hasMailerCredentials() {
         return Boolean(process.env.MAILER_USER && process.env.MAILER_PASSWORD);
+    }
+
+    private getTransportConfig() {
+        return {
+            host: process.env.MAILER_HOST || 'smtp.gmail.com',
+            port: Number(process.env.MAILER_PORT || 587),
+            secure: this.parseBoolean(process.env.MAILER_SECURE, false),
+            auth: {
+                user: process.env.MAILER_USER,
+                pass: process.env.MAILER_PASSWORD,
+            },
+            tls: {
+                rejectUnauthorized: this.parseBoolean(process.env.MAILER_TLS_REJECT_UNAUTHORIZED, false),
+            },
+        };
+    }
+
+    private getFromAddress() {
+        return process.env.MAILER_FROM_ADDRESS || process.env.MAILER_USER || 'ementas.ic.ufba@gmail.com';
+    }
+
+    private getFromName() {
+        return process.env.MAILER_FROM_NAME || 'EMENTAS IC UFBA';
     }
 
     async execute(to: string, subject: string, text: string){
@@ -18,27 +49,16 @@ class MailerService{
             return { deliveryMode: 'mock' as const, fallbackReason };
         }
 
-        const transporter = nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: 587,
-            secure: false,
-            auth: {
-                user: process.env.MAILER_USER,
-                pass: process.env.MAILER_PASSWORD,
-            },
-            tls: {
-                rejectUnauthorized: false,
-            }
-        });
+        const transporter = nodemailer.createTransport(this.getTransportConfig());
 
         const mailSent = await transporter.sendMail({
             to,
             subject,
             text,
-            from: 'EMENTAS-IC-UFBA <ementasicufba@gmail.com>',
+            from: `${this.getFromName()} <${this.getFromAddress()}>`,
         });
 
-        console.log('Password Reset was requested. Message ID: ', mailSent.messageId);
+        console.log('Email sent successfully. Message ID:', mailSent.messageId);
 
         return { deliveryMode: 'sent' as const };
     }

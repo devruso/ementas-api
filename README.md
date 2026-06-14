@@ -11,12 +11,51 @@ npm install
 ## Enviroments
 Make sure to create a `.env` in the root level on your local machine beforehand. Check the existing variables at `./.env.example`
 
-### Mailer (SMTP opcional em desenvolvimento)
+### Mailer (SMTP com Gmail para producao)
 
 - O sistema funciona sem SMTP real em ambiente de desenvolvimento.
 - Quando `MAILER_MOCK=true`, o envio de e-mail é simulado (logado no backend) e o fluxo de convite/cadastro continua normalmente.
 - Mesmo com `MAILER_MOCK=false`, se `MAILER_USER`/`MAILER_PASSWORD` não estiverem definidos, o backend entra em fallback mock automaticamente.
 - Para envio real, defina `MAILER_USER` e `MAILER_PASSWORD` válidos e use `MAILER_MOCK=false`.
+- Para Gmail, use uma App Password da conta `ementas.ic.ufba@gmail.com`; nao use a senha normal da conta.
+
+Variaveis recomendadas para producao:
+
+```sh
+MAILER_HOST=smtp.gmail.com
+MAILER_PORT=587
+MAILER_SECURE=false
+MAILER_TLS_REJECT_UNAUTHORIZED=false
+MAILER_USER=ementas.ic.ufba@gmail.com
+MAILER_PASSWORD=<gmail-app-password>
+MAILER_FROM_NAME=EMENTAS IC UFBA
+MAILER_FROM_ADDRESS=ementas.ic.ufba@gmail.com
+MAILER_MOCK=false
+```
+
+Observacoes operacionais:
+
+- A conta Gmail do projeto passa a ser o remetente padrao de convites e recuperacao de senha.
+- O throughput diario do Gmail e limitado; para o volume atual de convites do TCC, o limite eh suficiente, mas monitore bloqueios e spam.
+- Se `MAILER_MOCK=true`, o backend nao envia e-mail real mesmo com credenciais preenchidas.
+
+### Variaveis de runtime e operacao
+
+Variaveis adicionais relevantes em producao:
+
+```sh
+SWAGGER_SERVER_URL=https://api.ementas.app.ic.ufba.com.br
+LIBREOFFICE_BIN=/usr/bin/libreoffice
+PDF_CONVERSION_TIMEOUT_MS=45000
+SUPER_ADMIN_EMAIL=<email-institucional-ufba>
+SUPER_ADMIN_NAME=Super Admin
+SUPER_ADMIN_PASSWORD=<senha-forte-inicial>
+```
+
+Observacoes:
+
+- `SWAGGER_SERVER_URL` evita que a documentacao da API publique uma URL incorreta no ambiente produtivo.
+- `SUPER_ADMIN_*` pode ser usado junto com `npm run user:ensure-super-admin` para bootstrap administrativo.
 
 ### Storage de arquivos (incremental)
 

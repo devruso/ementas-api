@@ -6,7 +6,7 @@ import connection from './connection';
 jest.mock('../middlewares/Mailer', () => ({
     __esModule: true,
     default: {
-        execute: jest.fn().mockResolvedValue(undefined),
+        execute: jest.fn().mockResolvedValue({ deliveryMode: 'mock', fallbackReason: 'jest' }),
     },
 }));
 /* eslint-disable */

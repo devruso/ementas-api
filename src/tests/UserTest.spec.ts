@@ -10,7 +10,7 @@ import crypto from 'crypto';
 jest.mock('../middlewares/Mailer', () => ({
     __esModule: true,
     default: {
-        execute: jest.fn().mockResolvedValue(undefined),
+        execute: jest.fn().mockResolvedValue({ deliveryMode: 'mock', fallbackReason: 'jest' }),
     },
 }));
 /* eslint-disable */
@@ -196,6 +196,49 @@ describe('Create teacher by admin', () => {
             name: 'Professor Claudio',
             email: 'claudio@ufba.br',
         });
+        expect(result.emailDeliveryStatus).toBe('disabled');
+    });
+
+    it('should report mocked email delivery when admin requests credential email', async () => {
+        const userService = new UserService();
+        const userRepository = getCustomRepository(UserRepository);
+        const adminUser = await userRepository.save(userRepository.create({
+            name: 'Admin User',
+            email: 'admin@ufba.br',
+            password: crypto.createHmac('sha256', 'Admin123!').digest('hex'),
+            role: UserRole.ADMIN,
+        }));
+
+        const result = await userService.createTeacherByAdmin(
+            adminUser.id,
+            'Professor Marina',
+            'marina@ufba.br',
+            true
+        );
+
+        expect(result.emailDeliveryStatus).toBe('mock');
+        expect(result.temporaryPassword).toBeTruthy();
+    });
+
+    it('should generate invite link and report mocked email delivery', async () => {
+        const userService = new UserService();
+        const userRepository = getCustomRepository(UserRepository);
+        const adminUser = await userRepository.save(userRepository.create({
+            name: 'Admin User',
+            email: 'admin@ufba.br',
+            password: crypto.createHmac('sha256', 'Admin123!').digest('hex'),
+            role: UserRole.ADMIN,
+        }));
+
+        const result = await userService.sendInviteByEmail(
+            adminUser.id,
+            'convite@ufba.br',
+            'https://ementas.app.ic.ufba.com.br'
+        );
+
+        expect(result.email).toBe('convite@ufba.br');
+        expect(result.inviteLink).toContain('/cadastrar/');
+        expect(result.emailDeliveryStatus).toBe('mock');
     });
 
     it('should not be able to create teacher by non-admin', async () => {

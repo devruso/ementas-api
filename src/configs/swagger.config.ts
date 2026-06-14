@@ -1,6 +1,8 @@
-﻿const url = process.env.NODE_ENV === 'production'
-    ? 'https://api-ementas.herokuapp.com/'
-    : `http://localhost:${process.env.PORT}`;
+﻿const url = process.env.SWAGGER_SERVER_URL
+    ? String(process.env.SWAGGER_SERVER_URL).trim().replace(/\/+$/, '')
+    : process.env.NODE_ENV === 'production'
+        ? `http://localhost:${process.env.PORT || 3333}`
+        : `http://localhost:${process.env.PORT || 3333}`;
 
 const SwaggerOptions = {
     definition: {
