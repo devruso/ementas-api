@@ -11,6 +11,7 @@ import { UserInviteService } from './UserInviteService';
 import { createStorageProvider } from './storage';
 import { StorageProviderKind } from './storage';
 import { SignatureImageUploadValidator } from './signature/SignatureImageUploadValidator';
+import { buildInviteEmailTemplate, buildTeacherCredentialsEmailTemplate } from '../helpers/emailTemplates';
 
 class UserService {
 
@@ -178,10 +179,17 @@ class UserService {
 
         if (sendCredentialsByEmail) {
             try {
+                const credentialsEmail = buildTeacherCredentialsEmailTemplate(
+                    name.trim(),
+                    normalizedEmail,
+                    temporaryPassword,
+                    adminUser.name
+                );
+
                 const mailDelivery = await Mailer.execute(
                     normalizedEmail,
                     'Acesso EMENTAS - Credenciais iniciais',
-                    `OlÃ¡ ${name.trim()},\n\nSeu acesso ao EMENTAS foi criado por ${adminUser.name}.\n\nE-mail: ${normalizedEmail}\nSenha provisÃ³ria: ${temporaryPassword}\n\nAo entrar, altere a senha imediatamente.\n\nAtenciosamente,\nEquipe EMENTAS`
+                    credentialsEmail
                 );
 
                 emailDeliveryStatus = mailDelivery.deliveryMode === 'mock' ? 'mock' : 'sent';
@@ -230,17 +238,31 @@ class UserService {
 
         const token = new UserInviteService().generateUserInvite();
         const inviteLink = `${normalizedBaseUrl}/cadastrar/${token}`;
-        const mailDelivery = await Mailer.execute(
-            normalizedEmail,
-            'Convite EMENTAS - Cadastro',
-            `OlÃ¡,\n\nVocÃª recebeu um convite para cadastro no EMENTAS.\n\nAcesse o link:\n${inviteLink}\n\nEste convite expira em 24 horas.\n\nAtenciosamente,\nEquipe EMENTAS`
-        );
+        const inviteEmail = buildInviteEmailTemplate(inviteLink);
+        let mailDeliveryStatus: 'sent' | 'mock' | 'failed' = 'failed';
+        let emailDeliveryError: string | undefined;
+
+        try {
+            const mailDelivery = await Mailer.execute(
+                normalizedEmail,
+                'Convite EMENTAS - Cadastro',
+                inviteEmail
+            );
+
+            mailDeliveryStatus = mailDelivery.deliveryMode;
+        } catch (error) {
+            mailDeliveryStatus = 'failed';
+            emailDeliveryError = error instanceof Error
+                ? error.message
+                : 'Falha inesperada no envio de e-mail de convite.';
+        }
 
         return {
             email: normalizedEmail,
             token,
             inviteLink,
-            emailDeliveryStatus: mailDelivery.deliveryMode,
+            emailDeliveryStatus: mailDeliveryStatus,
+            emailDeliveryError,
         };
     }
 
@@ -419,10 +441,23 @@ class UserService {
         }
     }
 
-    async delete(id: string){
-        const userExists = await this.userRepository.findOne({
-            where: { id }
-        });
+    async delete(authenticatedUserId: string, id: string){
+        const [actor, userExists] = await Promise.all([
+            this.userRepository.findOne({
+                where: { id: authenticatedUserId, isDeleted: false }
+            }),
+            this.userRepository.findOne({
+                where: { id, isDeleted: false }
+            }),
+        ]);
+
+        if (!actor || actor.role !== UserRole.SUPER_ADMIN) {
+            throw new AppError('Only super admin can remove users.', 401);
+        }
+
+        if(actor.id === id){
+            throw new AppError('Super admin cannot remove own account.', 400);
+        }
 
         if(!userExists){
             throw new AppError('User not found.', 404);
@@ -431,7 +466,7 @@ class UserService {
         await this.userRepository
             .createQueryBuilder()
             .update(User)
-            .set({ isDeleted: true })
+            .set({ isDeleted: true, isUserActive: false })
             .where('id = :id', { id })
             .execute();
     }

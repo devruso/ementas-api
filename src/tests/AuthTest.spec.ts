@@ -167,7 +167,7 @@ describe('Reset password user', ()=>{
         expect(res.statusCode).toBe(201);
       
     });
-    it('should not be able to reset password user with incorrect email', async ()=>{
+    it('should return success even when email does not exist', async ()=>{
         const authController = new AuthController();
         const req = new MockExpressRequest({
             method:'POST',
@@ -179,7 +179,8 @@ describe('Reset password user', ()=>{
             }
         });
         const res = new MockExpressResponse();
-        await expect(authController.resetPassword(req, res)).rejects.toHaveProperty('statusCode', 400);
+        await authController.resetPassword(req, res);
+        expect(res.statusCode).toBe(201);
     });
 
     it('should not be able to reset password with non-institutional email domain', async ()=>{

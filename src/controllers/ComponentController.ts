@@ -62,10 +62,31 @@ class ComponentController {
         const authenticatedUserId = request.headers.authenticatedUserId as string;
         const crawlerService = new CrawlerService();
 
-        if (!sourceType || !sourceId || !academicLevel) {
+        if (!sourceType || !academicLevel) {
             return response.status(400).json({
                 message: 'sourceType, sourceId e academicLevel são obrigatórios.',
             });
+        }
+
+        if (academicLevel !== 'all' && !String(sourceId || '').trim()) {
+            return response.status(400).json({
+                message: 'sourceId é obrigatório para importação SIGAA por nível específico.',
+            });
+        }
+
+        if (academicLevel === 'all') {
+            const hasGlobalSourceId = Boolean(String(sourceId || '').trim());
+            const hasAnyScopedSourceId = Boolean(
+                String(sourceIdsByLevel?.graduacao || '').trim()
+                || String(sourceIdsByLevel?.mestrado || '').trim()
+                || String(sourceIdsByLevel?.doutorado || '').trim()
+            );
+
+            if (!hasGlobalSourceId && !hasAnyScopedSourceId) {
+                return response.status(400).json({
+                    message: 'Informe sourceId global ou ao menos um sourceIdsByLevel para academicLevel=all.',
+                });
+            }
         }
 
         if (academicLevel !== 'all' && !Object.values(AcademicLevel).includes(academicLevel as AcademicLevel)) {

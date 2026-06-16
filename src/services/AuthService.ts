@@ -7,6 +7,7 @@ import { UserRepository } from '../repositories/UserRepository';
 import { AppError } from './../errors/AppError';
 import Mailer from '../middlewares/Mailer';
 import { assertUfbaInstitutionalEmail, normalizeEmail } from '../helpers/institutionalEmail';
+import { buildResetPasswordEmailTemplate } from '../helpers/emailTemplates';
 
 class AuthService {
     private userRepository : Repository<User>;
@@ -139,19 +140,20 @@ class AuthService {
         const user = await this.userRepository.findOne({ email: normalizedEmail });
 
         if (!user) {
-            throw new AppError('User does not exists!', 400);
+            return;
         }
 
         try {
             const generatedHash = Math.random().toString(36).substring(2);
             const generatedPassword = crypto.createHmac('sha256', generatedHash).digest('hex');
+            const resetPasswordEmail = buildResetPasswordEmailTemplate(generatedHash);
 
             await this.userRepository.createQueryBuilder().update(User).set({ password: generatedPassword }).where('email = :email', { email: normalizedEmail }).execute();
-            await Mailer.execute(normalizedEmail, 'Nova Senha - EMENTAS', `Prezado(a),\nUse "${generatedHash}" como sua nova senha para acessar o EMENTAS.`);
+            await Mailer.execute(normalizedEmail, 'Nova Senha - EMENTAS', resetPasswordEmail);
         }
         catch (err) {
             console.log(err);
-            throw new AppError('An error has been occurred!', 400);
+            throw new AppError('Nao foi possivel enviar o e-mail de recuperacao de senha.', 400);
         }
     }
 

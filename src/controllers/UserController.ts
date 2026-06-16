@@ -30,7 +30,6 @@ class UserController {
             search,
             sortBy,
             sortOrder,
-            excludeUserId: authenticatedUserId,
         });
 
         return response.status(200).json(paginate(users, { page, limit, search, sortBy, sortOrder }));
@@ -162,10 +161,11 @@ class UserController {
     }
 
     async delete(request: Request, response: Response) {
+        const authenticatedUserId = request.headers.authenticatedUserId as string;
         const { id } = request.params;
 
         const userService = new UserService();
-        await userService.delete(id);
+        await userService.delete(authenticatedUserId, id);
 
         return response.status(200).json({ message: 'User has been deleted!' });
     }

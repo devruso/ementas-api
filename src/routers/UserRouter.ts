@@ -264,6 +264,6 @@ userRouter.put('/:id/role', ensureAuthenticated, ensureSuperAdminAuthenticated, 
 *       500:
 *         description: Internal Server Error
 */
-userRouter.delete('/:id', ensureAuthenticated, ensureAdminAuthenticated, userController.delete);
+userRouter.delete('/:id', ensureAuthenticated, ensureSuperAdminAuthenticated, userController.delete);
 
 export { userRouter };
