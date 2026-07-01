@@ -236,8 +236,11 @@ class UserService {
             throw new AppError('Invalid registration base URL. Use a full URL, e.g. http://localhost:3000.', 400);
         }
 
-        const token = new UserInviteService().generateUserInvite();
-        const inviteLink = `${normalizedBaseUrl}/cadastrar/${token}`;
+        const userInviteService = new UserInviteService();
+        const token = userInviteService.generateUserInvite();
+        const shortLink = await userInviteService.createShortLinkForInvite(token, normalizedEmail);
+        const inviteLink = `${normalizedBaseUrl}/i/${shortLink.shortCode}`;
+        const directInviteLink = `${normalizedBaseUrl}/cadastrar/${token}`;
         const inviteEmail = buildInviteEmailTemplate(inviteLink);
         let mailDeliveryStatus: 'sent' | 'mock' | 'failed' = 'failed';
         let emailDeliveryError: string | undefined;
@@ -261,6 +264,8 @@ class UserService {
             email: normalizedEmail,
             token,
             inviteLink,
+            directInviteLink,
+            inviteShortCode: shortLink.shortCode,
             emailDeliveryStatus: mailDeliveryStatus,
             emailDeliveryError,
         };

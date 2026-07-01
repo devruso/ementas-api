@@ -19,6 +19,7 @@
     "siac:reconcile": "node -r ts-node/register -r dotenv/config src/scripts/reconcile-siac-existing-components.ts",
     "repair:encoding": "node -r ts-node/register -r dotenv/config src/scripts/repair-imported-text-encoding.ts",
     "audit:encoding": "node -r ts-node/register -r dotenv/config src/scripts/audit-imported-text-encoding.ts",
+    "invite:cleanup": "node -r ts-node/register -r dotenv/config src/scripts/cleanup-expired-invite-shortlinks.ts",
     "sigaa:full-catalog": "node -r ts-node/register -r dotenv/config src/scripts/sigaa-full-catalog.ts",
     "benchmark:parser": "node -r ts-node/register -r dotenv/config src/scripts/sigaa-parser-benchmark.ts",
     "user:ensure-super-admin": "node -r ts-node/register -r dotenv/config src/scripts/ensure-super-admin.ts",

@@ -1,6 +1,7 @@
 import { createConnection, getConnectionOptions } from 'typeorm';
 import { app } from './app';
 import { runStartupBootstrapImportIfNeeded } from './services/StartupBootstrapService';
+import { startUserInviteShortLinkCleanupScheduler } from './services/UserInviteShortLinkCleanupScheduler';
 
 const PORT = process.env.PORT || 3333;
 const env = process.env.NODE_ENV || 'local';
@@ -12,6 +13,8 @@ getConnectionOptions()
     })
     .then(connection => {
         console.log(`DB connection is UP? ${connection.isConnected}`);
+
+        startUserInviteShortLinkCleanupScheduler();
 
         runStartupBootstrapImportIfNeeded()
             .catch((error) => {

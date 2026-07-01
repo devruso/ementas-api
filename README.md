@@ -114,7 +114,10 @@ Campos persistidos em `users`:
 }
 ```
 
-- Resultado: gera token de convite, monta o link `/cadastrar/{token}` e envia por e-mail (ou mock/fallback quando SMTP não estiver ativo).
+- Resultado: gera token de convite, cria shortlink `/i/{codigo}` com expiração em 24h e envia por e-mail (ou mock/fallback quando SMTP não estiver ativo).
+- Resolucao do shortlink: `GET /api/invite/resolve/{codigo}` retorna o `inviteToken` original para redirecionar ao cadastro.
+- Limpeza automatica: links expirados sao removidos no startup e periodicamente (padrao: a cada 6 horas). Ajuste com `INVITE_SHORTLINK_CLEANUP_INTERVAL_MS`.
+- Limpeza manual sob demanda: `npm run invite:cleanup`.
 
 ## Postgresql
 Run `npm run postgres:create` to create and run a docker image for a Postgres server.

@@ -18,6 +18,14 @@ class UserInviteController {
         return response.status(200).json({ tokenIsValid: true });
     }
 
+    async resolveUserInviteShortCode(request: Request, response: Response) {
+        const { shortCode } = request.params;
+        const userInviteService = new UserInviteService();
+        const inviteToken = await userInviteService.resolveShortInvite(shortCode);
+
+        return response.status(200).json({ inviteToken });
+    }
+
 }
 
 export { UserInviteController };

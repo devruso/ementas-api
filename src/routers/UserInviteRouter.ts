@@ -51,5 +51,6 @@ userInviteRouter.get('/generate', userInviteController.generateUserInvite);
 *         description: Internal Server Error
 */
 userInviteRouter.get('/validate/:inviteToken', userInviteController.validateUserInvite);
+userInviteRouter.get('/resolve/:shortCode', userInviteController.resolveUserInviteShortCode);
 
 export { userInviteRouter };

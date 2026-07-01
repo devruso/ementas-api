@@ -237,7 +237,9 @@ describe('Create teacher by admin', () => {
         );
 
         expect(result.email).toBe('convite@ufba.br');
-        expect(result.inviteLink).toContain('/cadastrar/');
+        expect(result.inviteLink).toContain('/i/');
+        expect(result.directInviteLink).toContain('/cadastrar/');
+        expect(result.inviteShortCode).toBeTruthy();
         expect(result.emailDeliveryStatus).toBe('mock');
     });
 
