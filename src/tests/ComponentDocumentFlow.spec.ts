@@ -616,6 +616,15 @@ describe('Component document flow', () => {
             .find((text) => text.length > 0);
         expect(['Presencial', 'Disciplina Teórico /Prática']).toContain(modalityValue);
 
+        const modalityArtifacts = paragraphTexts
+            .slice(modalityHeaderIndex + 1, prereqHeaderIndex)
+            .filter((text) => {
+                const normalized = normalize(text);
+                return normalized.includes('DISCIPLINA')
+                    && (normalized.includes('TEORIC') || normalized.includes('PRAT'));
+            });
+        expect(modalityArtifacts).toHaveLength(1);
+
         const isNumericOrEmpty = (value: string) => value === '' || /^\d+$/.test(value);
         const findNumericRun = (start: number, end: number, size: number) => {
             for (let index = start + 1; index <= end - size; index += 1) {

@@ -621,25 +621,71 @@ export class ComponentService {
             const prereqHeaderIndex = indexOfExact('PRÉ-REQUISITO (POR CURSO)');
             const disciplinaIndex = indexOfExact('DISCIPLINA');
 
-            const firstValueBetween = (start: number, end: number) => {
+            const isModalityArtifactText = (normalizedText: string) => (
+                normalizedText.includes('DISCIPLINA')
+                && (normalizedText.includes('TEORIC') || normalizedText.includes('PRAT'))
+            );
+
+            const isBoldParagraph = (paragraphXml: string) => /<w:pPr[\s\S]*?<w:rPr>[\s\S]*?<w:b\/>/.test(paragraphXml);
+
+            const findModalityTarget = (start: number, end: number) => {
                 if (start < 0 || end <= start) {
                     return -1;
                 }
 
+                const modalityArtifactCandidates: number[] = [];
+                const genericValueCandidates: number[] = [];
+
                 for (let index = start + 1; index < end; index += 1) {
                     const normalized = normalizeHeading(texts[index]);
 
-                    if (!sectionHeaders.has(normalized) && normalized.length > 0) {
-                        return index;
+                    if (!normalized || sectionHeaders.has(normalized)) {
+                        continue;
                     }
+
+                    if (isModalityArtifactText(normalized)) {
+                        modalityArtifactCandidates.push(index);
+                        continue;
+                    }
+
+                    genericValueCandidates.push(index);
                 }
 
-                // Fallback: quando a célula no template estiver vazia, usar a primeira posição disponível.
-                if (start + 1 < end) {
-                    return start + 1;
+                if (modalityArtifactCandidates.length > 0) {
+                    const nonBoldCandidate = modalityArtifactCandidates.find(
+                        (index) => !isBoldParagraph(updatedParagraphs[index])
+                    );
+
+                    return nonBoldCandidate ?? modalityArtifactCandidates[0];
+                }
+
+                if (genericValueCandidates.length > 0) {
+                    const nonBoldCandidate = genericValueCandidates.find(
+                        (index) => !isBoldParagraph(updatedParagraphs[index])
+                    );
+
+                    return nonBoldCandidate ?? genericValueCandidates[0];
                 }
 
                 return -1;
+            };
+
+            const clearDuplicateModalityArtifacts = (start: number, end: number, keepIndex: number) => {
+                if (start < 0 || end <= start) {
+                    return;
+                }
+
+                for (let index = start + 1; index < end; index += 1) {
+                    if (index === keepIndex) {
+                        continue;
+                    }
+
+                    const normalized = normalizeHeading(texts[index]);
+
+                    if (isModalityArtifactText(normalized)) {
+                        clearIndex(index);
+                    }
+                }
             };
 
             const findPrereqTarget = (start: number, end: number) => {
@@ -662,7 +708,7 @@ export class ComponentService {
                 return -1;
             };
 
-            const modalityValueIndex = firstValueBetween(
+            const modalityValueIndex = findModalityTarget(
                 modalityHeaderIndex,
                 prereqHeaderIndex > 0 ? prereqHeaderIndex : workloadEnd
             );
@@ -675,6 +721,11 @@ export class ComponentService {
             if (modalityValueIndex >= 0) {
                 replaceIndex(modalityValueIndex, this.normalizeModalityForTemplate(data.modality));
                 updatedParagraphs[modalityValueIndex] = this.applyParagraphAlignment(updatedParagraphs[modalityValueIndex], 'center');
+                clearDuplicateModalityArtifacts(
+                    modalityHeaderIndex,
+                    prereqHeaderIndex > 0 ? prereqHeaderIndex : workloadEnd,
+                    modalityValueIndex
+                );
             }
 
             if (prereqValueIndex >= 0) {
