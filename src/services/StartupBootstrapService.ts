@@ -94,7 +94,10 @@ const ensureBootstrapSuperAdmin = async () => {
 };
 
 export const runStartupBootstrapImportIfNeeded = async () => {
-    if (!parseBoolean(process.env.BOOTSTRAP_IMPORT_ON_EMPTY_DB)) {
+    const isEnabled = parseBoolean(process.env.BOOTSTRAP_IMPORT_ON_EMPTY_DB);
+
+    if (!isEnabled) {
+        console.log('[startup-bootstrap] skipped: BOOTSTRAP_IMPORT_ON_EMPTY_DB is not true.');
         return;
     }
 
