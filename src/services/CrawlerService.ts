@@ -95,6 +95,7 @@ export class CrawlerService {
     private workloadService: WorkloadService;
     private sigaaDetailCache = new Map<string, SigaaComponentDetail | null>();
     private sigaaDetailInFlight = new Map<string, Promise<SigaaComponentDetail | null>>();
+    private requestTimeoutMs: number;
 
     constructor() {
         this.componentRepository = getCustomRepository(ComponentRepository);
@@ -102,6 +103,7 @@ export class CrawlerService {
         this.componentLogRepository = getCustomRepository(ComponentLogRepository);
         this.componentRelationRepository = getCustomRepository(ComponentRelationRepository);
         this.workloadService = new WorkloadService();
+        this.requestTimeoutMs = Number(process.env.CRAWLER_HTTP_TIMEOUT_MS || 45000);
     }
 
     private normalizePrerequeriments(rawValue?: string) {
@@ -624,6 +626,7 @@ export class CrawlerService {
         const formPageResponse = await axios.get<ArrayBuffer>('https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf', {
             responseType: 'arraybuffer',
             responseEncoding: 'binary',
+            timeout: this.requestTimeoutMs,
         });
         const formCookie = this.buildCookieHeader(formPageResponse.headers?.['set-cookie']);
 
@@ -651,6 +654,7 @@ export class CrawlerService {
         const searchResponse = await axios.post<ArrayBuffer>(actionUrl, payload.toString(), {
             responseType: 'arraybuffer',
             responseEncoding: 'binary',
+            timeout: this.requestTimeoutMs,
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
                 ...(formCookie ? { Cookie: formCookie } : {}),
@@ -1394,6 +1398,7 @@ export class CrawlerService {
                     ? await axios.get<ArrayBuffer>(request.url, {
                         responseType: 'arraybuffer',
                         responseEncoding: 'binary',
+                        timeout: this.requestTimeoutMs,
                         headers: {
                             ...(component.detailRequestCookie ? { Cookie: component.detailRequestCookie } : {}),
                         },
@@ -1401,6 +1406,7 @@ export class CrawlerService {
                     : await axios.post<ArrayBuffer>(request.url, request.payload || '', {
                         responseType: 'arraybuffer',
                         responseEncoding: 'binary',
+                        timeout: this.requestTimeoutMs,
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded',
                             ...(component.detailRequestCookie ? { Cookie: component.detailRequestCookie } : {}),
@@ -1688,6 +1694,7 @@ export class CrawlerService {
             url: listUrl,
             responseType: 'arraybuffer',
             responseEncoding: 'binary',
+            timeout: this.requestTimeoutMs,
             headers: {
                 'Content-type': 'application/json'
             },
@@ -1697,6 +1704,7 @@ export class CrawlerService {
             url: '',
             responseType: 'arraybuffer',
             responseEncoding: 'binary',
+            timeout: this.requestTimeoutMs,
             headers: {
                 'Content-type': 'application/json'
             },
@@ -1907,6 +1915,7 @@ export class CrawlerService {
                 const response = await axios.get<ArrayBuffer>(sourceUrl, {
                     responseType: 'arraybuffer',
                     responseEncoding: 'binary',
+                    timeout: this.requestTimeoutMs,
                 });
                 const sourceCookie = this.buildCookieHeader(response.headers?.['set-cookie']);
                 data = response.data;
