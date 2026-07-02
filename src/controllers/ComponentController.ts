@@ -23,28 +23,28 @@ const isUserAuthenticated = (authorization?: string) => {
     }
 };
 
-class ComponentController {
-    private readSigaaSourceIdFromEnv(level?: AcademicLevel) {
-        const globalSourceId = String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID || '').trim();
-        const defaultSourceIds: Record<AcademicLevel, string> = {
-            [AcademicLevel.GRADUATION]: '114',
-            [AcademicLevel.MASTERS]: '1307',
-            [AcademicLevel.DOCTORATE]: '1307',
-        };
+const readSigaaSourceIdFromEnv = (level?: AcademicLevel) => {
+    const globalSourceId = String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID || '').trim();
+    const defaultSourceIds: Record<AcademicLevel, string> = {
+        [AcademicLevel.GRADUATION]: '114',
+        [AcademicLevel.MASTERS]: '1307',
+        [AcademicLevel.DOCTORATE]: '1307',
+    };
 
-        if (!level) {
-            return globalSourceId;
-        }
-
-        const levelMap: Record<AcademicLevel, string> = {
-            [AcademicLevel.GRADUATION]: String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID_GRADUACAO || '').trim(),
-            [AcademicLevel.MASTERS]: String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID_MESTRADO || '').trim(),
-            [AcademicLevel.DOCTORATE]: String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID_DOUTORADO || '').trim(),
-        };
-
-        return levelMap[level] || globalSourceId || defaultSourceIds[level];
+    if (!level) {
+        return globalSourceId;
     }
 
+    const levelMap: Record<AcademicLevel, string> = {
+        [AcademicLevel.GRADUATION]: String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID_GRADUACAO || '').trim(),
+        [AcademicLevel.MASTERS]: String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID_MESTRADO || '').trim(),
+        [AcademicLevel.DOCTORATE]: String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID_DOUTORADO || '').trim(),
+    };
+
+    return levelMap[level] || globalSourceId || defaultSourceIds[level];
+};
+
+class ComponentController {
     async importComponentsFromSiac(request: Request, response: Response) {
         const { cdCurso, nuPerCursoInicial } = request.body;
         const authenticatedUserId = request.headers
@@ -82,11 +82,11 @@ class ComponentController {
         };
         const authenticatedUserId = request.headers.authenticatedUserId as string;
         const crawlerService = new CrawlerService();
-        const globalSourceId = String(sourceId || '').trim() || this.readSigaaSourceIdFromEnv();
+        const globalSourceId = String(sourceId || '').trim() || readSigaaSourceIdFromEnv();
         const scopedSourceIds: Partial<Record<AcademicLevel, string>> = {
-            [AcademicLevel.GRADUATION]: String(sourceIdsByLevel?.graduacao || '').trim() || this.readSigaaSourceIdFromEnv(AcademicLevel.GRADUATION),
-            [AcademicLevel.MASTERS]: String(sourceIdsByLevel?.mestrado || '').trim() || this.readSigaaSourceIdFromEnv(AcademicLevel.MASTERS),
-            [AcademicLevel.DOCTORATE]: String(sourceIdsByLevel?.doutorado || '').trim() || this.readSigaaSourceIdFromEnv(AcademicLevel.DOCTORATE),
+            [AcademicLevel.GRADUATION]: String(sourceIdsByLevel?.graduacao || '').trim() || readSigaaSourceIdFromEnv(AcademicLevel.GRADUATION),
+            [AcademicLevel.MASTERS]: String(sourceIdsByLevel?.mestrado || '').trim() || readSigaaSourceIdFromEnv(AcademicLevel.MASTERS),
+            [AcademicLevel.DOCTORATE]: String(sourceIdsByLevel?.doutorado || '').trim() || readSigaaSourceIdFromEnv(AcademicLevel.DOCTORATE),
         };
 
         if (!sourceType || !academicLevel) {
