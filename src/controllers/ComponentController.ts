@@ -114,13 +114,14 @@ class ComponentController {
     }
 
     async importComponentsFromSigaaPublic(request: Request, response: Response) {
-        const { sourceType, sourceId, academicLevel, sourceIdsByLevel, maxComponents, enrichDetails } = request.body as {
+        const { sourceType, sourceId, academicLevel, sourceIdsByLevel, maxComponents, enrichDetails, requestTimeoutMs } = request.body as {
             sourceType: 'department' | 'program';
             sourceId: string;
             academicLevel: AcademicLevel | 'all';
             sourceIdsByLevel?: Partial<Record<AcademicLevel, string>>;
             maxComponents?: number;
             enrichDetails?: boolean;
+            requestTimeoutMs?: number;
         };
         const authenticatedUserId = request.headers.authenticatedUserId as string;
         const crawlerService = new CrawlerService();
@@ -128,6 +129,7 @@ class ComponentController {
             maxComponents: Number.isFinite(maxComponents) ? Math.max(1, Number(maxComponents)) : undefined,
             enrichDetails: enrichDetails === undefined ? true : Boolean(enrichDetails),
             reconcileExisting: true,
+            requestTimeoutMs: Number.isFinite(requestTimeoutMs) ? Math.max(1000, Number(requestTimeoutMs)) : undefined,
         };
         const { globalSourceId, scopedSourceIds, levelSources } = buildSigaaLevelSources(sourceId, academicLevel, sourceIdsByLevel);
 
@@ -220,18 +222,20 @@ class ComponentController {
                 sourceIdsByLevel: scopedSourceIds,
                 maxComponents: importOptions.maxComponents,
                 enrichDetails: importOptions.enrichDetails,
+                requestTimeoutMs: importOptions.requestTimeoutMs,
             },
         });
     }
 
     async createSigaaPublicImportJob(request: Request, response: Response) {
-        const { sourceType, sourceId, academicLevel, sourceIdsByLevel, batchSize, enrichDetails } = request.body as {
+        const { sourceType, sourceId, academicLevel, sourceIdsByLevel, batchSize, enrichDetails, requestTimeoutMs } = request.body as {
             sourceType: 'department' | 'program';
             sourceId?: string;
             academicLevel: AcademicLevel | 'all';
             sourceIdsByLevel?: Partial<Record<AcademicLevel, string>>;
             batchSize?: number;
             enrichDetails?: boolean;
+            requestTimeoutMs?: number;
         };
         const authenticatedUserId = request.headers.authenticatedUserId as string;
 
@@ -263,6 +267,7 @@ class ComponentController {
             batchSize: Number.isFinite(batchSize) ? Math.max(1, Number(batchSize)) : 50,
             enrichDetails: enrichDetails === undefined ? false : Boolean(enrichDetails),
             reconcileExisting: true,
+            requestTimeoutMs: Number.isFinite(requestTimeoutMs) ? Math.max(1000, Number(requestTimeoutMs)) : undefined,
         });
 
         return response.status(202).json({
@@ -275,6 +280,7 @@ class ComponentController {
                 sourceIdsByLevel: scopedSourceIds,
                 batchSize: Number.isFinite(batchSize) ? Math.max(1, Number(batchSize)) : 50,
                 enrichDetails: enrichDetails === undefined ? false : Boolean(enrichDetails),
+                requestTimeoutMs: Number.isFinite(requestTimeoutMs) ? Math.max(1000, Number(requestTimeoutMs)) : undefined,
             },
         });
     }

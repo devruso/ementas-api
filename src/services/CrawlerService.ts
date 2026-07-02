@@ -1851,6 +1851,7 @@ export class CrawlerService {
             maxComponents?: number;
             enrichDetails?: boolean;
             offset?: number;
+            requestTimeoutMs?: number;
         }
     ): Promise<ImportComponentsSummary> {
         const levels: AcademicLevel[] = academicLevel === 'all'
@@ -1896,7 +1897,11 @@ export class CrawlerService {
         const offset = Number.isFinite(options?.offset)
             ? Math.max(0, Number(options?.offset))
             : 0;
+        const requestTimeoutMs = Number.isFinite(options?.requestTimeoutMs)
+            ? Math.max(1000, Number(options?.requestTimeoutMs))
+            : this.requestTimeoutMs;
         const normalizedSourceId = String(sourceId).trim();
+        this.requestTimeoutMs = requestTimeoutMs;
 
         if (!normalizedSourceId) {
             throw new AppError('Invalid SIGAA source id.', 400);
@@ -1915,7 +1920,7 @@ export class CrawlerService {
                 const response = await axios.get<ArrayBuffer>(sourceUrl, {
                     responseType: 'arraybuffer',
                     responseEncoding: 'binary',
-                    timeout: this.requestTimeoutMs,
+                    timeout: requestTimeoutMs,
                 });
                 const sourceCookie = this.buildCookieHeader(response.headers?.['set-cookie']);
                 data = response.data;

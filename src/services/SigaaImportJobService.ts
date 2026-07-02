@@ -33,6 +33,7 @@ export type SigaaImportJob = {
     batchSize: number;
     enrichDetails: boolean;
     reconcileExisting: boolean;
+    requestTimeoutMs: number;
     createdBy: string;
     createdAt: string;
     startedAt?: string;
@@ -55,6 +56,7 @@ type CreateSigaaImportJobInput = {
     batchSize?: number;
     enrichDetails?: boolean;
     reconcileExisting?: boolean;
+    requestTimeoutMs?: number;
 };
 
 class SigaaImportJobService {
@@ -89,6 +91,7 @@ class SigaaImportJobService {
             batchSize: Math.max(1, Number(input.batchSize || 50)),
             enrichDetails: input.enrichDetails ?? false,
             reconcileExisting: input.reconcileExisting ?? true,
+            requestTimeoutMs: Number.isFinite(input.requestTimeoutMs) ? Math.max(1000, Number(input.requestTimeoutMs)) : 120000,
             createdBy: input.createdBy,
             createdAt: new Date().toISOString(),
             cancelRequested: false,
@@ -109,6 +112,7 @@ class SigaaImportJobService {
         };
 
         this.jobs.set(job.id, job);
+        console.log(`[sigaa-job:${job.id}] started sourceType=${job.sourceType} levels=${job.levels.map((l) => `${l.level}:${l.sourceId}`).join(',')} batchSize=${job.batchSize} timeoutMs=${job.requestTimeoutMs}`);
         this.runJob(job.id).catch((error) => {
             const current = this.jobs.get(job.id);
 
@@ -119,6 +123,7 @@ class SigaaImportJobService {
             current.status = 'failed';
             current.finishedAt = new Date().toISOString();
             current.lastError = error instanceof Error ? error.message : 'Falha desconhecida na execução do job.';
+            console.log(`[sigaa-job:${job.id}] failed ${current.lastError}`);
         });
 
         return this.cloneJob(job);
@@ -215,6 +220,7 @@ class SigaaImportJobService {
                         enrichDetails: job.enrichDetails,
                         maxComponents: job.batchSize,
                         offset: levelConfig.offset,
+                        requestTimeoutMs: job.requestTimeoutMs,
                     }
                 );
 
@@ -225,6 +231,7 @@ class SigaaImportJobService {
                 job.progress.batchesProcessed += 1;
 
                 const processedInBatch = partial.processed ?? partial.requested;
+                console.log(`[sigaa-job:${job.id}] level=${levelConfig.level} batch=${levelConfig.batches} requested=${partial.requested} created=${partial.created} skipped=${partial.skippedExisting} failed=${partial.failed} offset=${levelConfig.offset} nextOffset=${partial.nextOffset ?? 'end'}`);
 
                 if (processedInBatch <= 0) {
                     levelConfig.done = true;
@@ -244,8 +251,10 @@ class SigaaImportJobService {
 
         if (job.cancelRequested) {
             job.status = 'cancelled';
+            console.log(`[sigaa-job:${job.id}] cancelled`);
         } else {
             job.status = 'completed';
+            console.log(`[sigaa-job:${job.id}] completed requested=${job.totals.requested} created=${job.totals.created} skipped=${job.totals.skippedExisting} failed=${job.totals.failed}`);
         }
 
         job.finishedAt = new Date().toISOString();
