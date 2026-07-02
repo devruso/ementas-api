@@ -50,6 +50,20 @@ const getConfiguredSigaaSourceType = (): 'department' | 'program' => {
     return rawType === 'program' ? 'program' : 'department';
 };
 
+const parsePositiveInt = (rawValue?: string) => {
+    const parsed = Number(String(rawValue || '').trim());
+
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+        return undefined;
+    }
+
+    return Math.floor(parsed);
+};
+
+const getConfiguredBootstrapSigaaRequestTimeoutMs = () => parsePositiveInt(
+    process.env.BOOTSTRAP_SIGAA_REQUEST_TIMEOUT_MS
+);
+
 const getConfiguredSigaaSourceIdsByLevel = () => ({
     [AcademicLevel.GRADUATION]: String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID_GRADUACAO || '').trim(),
     [AcademicLevel.MASTERS]: String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID_MESTRADO || '').trim(),
@@ -163,6 +177,7 @@ export const runStartupBootstrapImportIfNeeded = async () => {
     const configuredLevel = getConfiguredAcademicLevel();
     const globalSourceId = String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID || '').trim();
     const sourceIdsByLevel = getConfiguredSigaaSourceIdsByLevel();
+    const bootstrapSigaaRequestTimeoutMs = getConfiguredBootstrapSigaaRequestTimeoutMs();
 
     if (configuredLevel === 'all') {
         const levels: AcademicLevel[] = [AcademicLevel.GRADUATION, AcademicLevel.MASTERS, AcademicLevel.DOCTORATE];
@@ -179,7 +194,13 @@ export const runStartupBootstrapImportIfNeeded = async () => {
 
         for (const level of levels) {
             const resolvedSourceId = resolveSigaaSourceIdForLevel(level, globalSourceId, sourceIdsByLevel);
-            const partial = await crawlerService.importComponentsFromSigaaPublic(userId, sourceType, resolvedSourceId, level);
+            const partial = await crawlerService.importComponentsFromSigaaPublic(
+                userId,
+                sourceType,
+                resolvedSourceId,
+                level,
+                { requestTimeoutMs: bootstrapSigaaRequestTimeoutMs }
+            );
             mergeImportSummaries(combinedSummary, partial);
         }
 
@@ -189,6 +210,12 @@ export const runStartupBootstrapImportIfNeeded = async () => {
     }
 
     const sourceId = resolveSigaaSourceIdForLevel(configuredLevel, globalSourceId, sourceIdsByLevel);
-    const summary = await crawlerService.importComponentsFromSigaaPublic(userId, sourceType, sourceId, configuredLevel);
+    const summary = await crawlerService.importComponentsFromSigaaPublic(
+        userId,
+        sourceType,
+        sourceId,
+        configuredLevel,
+        { requestTimeoutMs: bootstrapSigaaRequestTimeoutMs }
+    );
     console.log('[startup-bootstrap] import summary:', summary);
 };

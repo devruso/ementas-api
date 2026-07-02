@@ -528,6 +528,80 @@ export class CrawlerService {
         categories[category] = (categories[category] || 0) + 1;
     }
 
+    private getSigaaRetryAttempts() {
+        const configured = Number(process.env.CRAWLER_SIGAA_RETRY_ATTEMPTS || 2);
+
+        if (!Number.isFinite(configured)) {
+            return 2;
+        }
+
+        return Math.max(1, Math.floor(configured));
+    }
+
+    private getSigaaRetryBackoffMs() {
+        const configured = Number(process.env.CRAWLER_SIGAA_RETRY_BACKOFF_MS || 1500);
+
+        if (!Number.isFinite(configured)) {
+            return 1500;
+        }
+
+        return Math.max(100, Math.floor(configured));
+    }
+
+    private isRetryableSigaaError(error: unknown) {
+        const genericCode = String((error as { code?: string })?.code || '').toUpperCase();
+        const genericMessage = String((error as { message?: string })?.message || '');
+
+        if (
+            genericCode === 'ECONNABORTED'
+            || genericCode === 'ETIMEDOUT'
+            || genericCode === 'ECONNRESET'
+            || genericCode === 'EHOSTUNREACH'
+            || genericCode === 'ENETUNREACH'
+            || /timeout/i.test(genericMessage)
+        ) {
+            return true;
+        }
+
+        if (axios.isAxiosError(error)) {
+            const statusCode = Number(error.response?.status || 0);
+
+            if (error.code === 'ECONNABORTED' || /timeout/i.test(error.message || '')) {
+                return true;
+            }
+
+            if (statusCode === 408 || statusCode === 429 || statusCode >= 500) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private async executeSigaaRequestWithRetry<T>(
+        operationLabel: string,
+        requestFactory: () => Promise<T>
+    ): Promise<T> {
+        const maxAttempts = this.getSigaaRetryAttempts();
+        const backoffMs = this.getSigaaRetryBackoffMs();
+
+        for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+            try {
+                return await requestFactory();
+            } catch (error) {
+                if (!this.isRetryableSigaaError(error) || attempt >= maxAttempts) {
+                    throw error;
+                }
+
+                const delayMs = backoffMs * attempt;
+                console.log(`[sigaa-retry] ${operationLabel} attempt=${attempt + 1}/${maxAttempts} after ${delayMs}ms`);
+                await new Promise((resolve) => setTimeout(resolve, delayMs));
+            }
+        }
+
+        throw new Error('Falha inesperada em retry de requisição SIGAA.');
+    }
+
     private extractPrerequerimentsFromLesson($lesson: cheerio.Cheerio<any>) {
         const text = $lesson.text().replace(/\s+/g, ' ').trim();
         const directMatch = text.match(/pré-?requisitos?\s*:?\s*([^|;]+)/i);
@@ -623,11 +697,14 @@ export class CrawlerService {
         academicLevel: AcademicLevel
     ): Promise<Array<IComponentInfoCrawler>> {
         const nivel = this.getSigaaSearchLevel(academicLevel);
-        const formPageResponse = await axios.get<ArrayBuffer>('https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf', {
-            responseType: 'arraybuffer',
-            responseEncoding: 'binary',
-            timeout: this.requestTimeoutMs,
-        });
+        const formPageResponse = await this.executeSigaaRequestWithRetry(
+            'sigaa-search-form',
+            () => axios.get<ArrayBuffer>('https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf', {
+                responseType: 'arraybuffer',
+                responseEncoding: 'binary',
+                timeout: this.requestTimeoutMs,
+            })
+        );
         const formCookie = this.buildCookieHeader(formPageResponse.headers?.['set-cookie']);
 
         const formHtml = this.decodeHtmlBuffer(formPageResponse.data);
@@ -651,15 +728,18 @@ export class CrawlerService {
             payload.set('javax.faces.ViewState', viewState);
         }
 
-        const searchResponse = await axios.post<ArrayBuffer>(actionUrl, payload.toString(), {
-            responseType: 'arraybuffer',
-            responseEncoding: 'binary',
-            timeout: this.requestTimeoutMs,
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                ...(formCookie ? { Cookie: formCookie } : {}),
-            },
-        });
+        const searchResponse = await this.executeSigaaRequestWithRetry(
+            `sigaa-search-submit:${sourceType}:${sourceId}:${academicLevel}`,
+            () => axios.post<ArrayBuffer>(actionUrl, payload.toString(), {
+                responseType: 'arraybuffer',
+                responseEncoding: 'binary',
+                timeout: this.requestTimeoutMs,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    ...(formCookie ? { Cookie: formCookie } : {}),
+                },
+            })
+        );
         const searchCookie = this.buildCookieHeader(searchResponse.headers?.['set-cookie']);
         const detailCookie = this.mergeCookieHeaders(formCookie, searchCookie);
 
@@ -1917,11 +1997,14 @@ export class CrawlerService {
             let data: ArrayBuffer;
 
             try {
-                const response = await axios.get<ArrayBuffer>(sourceUrl, {
-                    responseType: 'arraybuffer',
-                    responseEncoding: 'binary',
-                    timeout: requestTimeoutMs,
-                });
+                const response = await this.executeSigaaRequestWithRetry(
+                    `sigaa-source:${sourceType}:${normalizedSourceId}:${level}`,
+                    () => axios.get<ArrayBuffer>(sourceUrl, {
+                        responseType: 'arraybuffer',
+                        responseEncoding: 'binary',
+                        timeout: requestTimeoutMs,
+                    })
+                );
                 const sourceCookie = this.buildCookieHeader(response.headers?.['set-cookie']);
                 data = response.data;
 
