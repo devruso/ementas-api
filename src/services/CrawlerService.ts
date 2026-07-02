@@ -32,6 +32,10 @@ export interface ImportComponentsSummary {
     failed: number;
     failures: string[];
     failureCategories: Record<string, number>;
+    totalAvailable?: number;
+    processed?: number;
+    hasMore?: boolean;
+    nextOffset?: number;
 }
 
 type SigaaComponentDetail = {
@@ -1836,6 +1840,9 @@ export class CrawlerService {
         academicLevel: AcademicLevel | 'all',
         options?: {
             reconcileExisting?: boolean;
+            maxComponents?: number;
+            enrichDetails?: boolean;
+            offset?: number;
         }
     ): Promise<ImportComponentsSummary> {
         const levels: AcademicLevel[] = academicLevel === 'all'
@@ -1874,6 +1881,13 @@ export class CrawlerService {
 
         const level = levels[0];
         const shouldReconcileExisting = options?.reconcileExisting ?? true;
+        const shouldEnrichDetails = options?.enrichDetails ?? true;
+        const maxComponents = Number.isFinite(options?.maxComponents)
+            ? Math.max(1, Number(options?.maxComponents))
+            : undefined;
+        const offset = Number.isFinite(options?.offset)
+            ? Math.max(0, Number(options?.offset))
+            : 0;
         const normalizedSourceId = String(sourceId).trim();
 
         if (!normalizedSourceId) {
@@ -1934,8 +1948,16 @@ export class CrawlerService {
             throw new AppError('No components found in SIGAA public source.', 404);
         }
 
-        componentsInfo = await this.enrichSigaaComponentsFromPublicDetails(componentsInfo, 4);
-        const canonicalComponents = this.selectCanonicalComponentsByCode(componentsInfo);
+        if (shouldEnrichDetails) {
+            componentsInfo = await this.enrichSigaaComponentsFromPublicDetails(componentsInfo, 4);
+        }
+
+        const canonicalComponentsRaw = this
+            .selectCanonicalComponentsByCode(componentsInfo)
+            .sort((a, b) => String(a.code || '').localeCompare(String(b.code || ''), 'pt-BR'));
+        const canonicalComponents = maxComponents
+            ? canonicalComponentsRaw.slice(offset, offset + maxComponents)
+            : canonicalComponentsRaw.slice(offset);
 
         let created = 0;
         let skippedExisting = 0;
@@ -1976,6 +1998,12 @@ export class CrawlerService {
             failed,
             failures,
             failureCategories,
+            totalAvailable: canonicalComponentsRaw.length,
+            processed: canonicalComponents.length,
+            hasMore: offset + canonicalComponents.length < canonicalComponentsRaw.length,
+            nextOffset: offset + canonicalComponents.length < canonicalComponentsRaw.length
+                ? offset + canonicalComponents.length
+                : undefined,
         } as ImportComponentsSummary;
     }
 

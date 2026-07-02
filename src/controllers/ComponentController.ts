@@ -8,6 +8,7 @@ import { ComponentPublicShareService } from '../services/ComponentPublicShareSer
 import { ComponentService } from '../services/ComponentService';
 import { CrawlerService } from '../services/CrawlerService';
 import { AcademicLevel } from '../interfaces/AcademicLevel';
+import { SigaaImportJobService } from '../services/SigaaImportJobService';
 
 const isUserAuthenticated = (authorization?: string) => {
     try {
@@ -44,6 +45,45 @@ const readSigaaSourceIdFromEnv = (level?: AcademicLevel) => {
     return levelMap[level] || globalSourceId || defaultSourceIds[level];
 };
 
+const buildSigaaLevelSources = (
+    sourceId: string | undefined,
+    academicLevel: AcademicLevel | 'all',
+    sourceIdsByLevel?: Partial<Record<AcademicLevel, string>>
+) => {
+    const globalSourceId = String(sourceId || '').trim() || readSigaaSourceIdFromEnv();
+    const scopedSourceIds: Partial<Record<AcademicLevel, string>> = {
+        [AcademicLevel.GRADUATION]: String(sourceIdsByLevel?.graduacao || '').trim() || readSigaaSourceIdFromEnv(AcademicLevel.GRADUATION),
+        [AcademicLevel.MASTERS]: String(sourceIdsByLevel?.mestrado || '').trim() || readSigaaSourceIdFromEnv(AcademicLevel.MASTERS),
+        [AcademicLevel.DOCTORATE]: String(sourceIdsByLevel?.doutorado || '').trim() || readSigaaSourceIdFromEnv(AcademicLevel.DOCTORATE),
+    };
+
+    if (academicLevel !== 'all') {
+        const levelSourceId = globalSourceId || scopedSourceIds[academicLevel] || '';
+
+        return {
+            globalSourceId,
+            scopedSourceIds,
+            levelSources: levelSourceId
+                ? [{ level: academicLevel, sourceId: levelSourceId }]
+                : [],
+        };
+    }
+
+    const levels: AcademicLevel[] = [AcademicLevel.GRADUATION, AcademicLevel.MASTERS, AcademicLevel.DOCTORATE];
+    const levelSources = levels
+        .map((level) => ({
+            level,
+            sourceId: String(scopedSourceIds[level] || globalSourceId || '').trim(),
+        }))
+        .filter((entry) => !!entry.sourceId);
+
+    return {
+        globalSourceId,
+        scopedSourceIds,
+        levelSources,
+    };
+};
+
 class ComponentController {
     async importComponentsFromSiac(request: Request, response: Response) {
         const { cdCurso, nuPerCursoInicial } = request.body;
@@ -74,20 +114,22 @@ class ComponentController {
     }
 
     async importComponentsFromSigaaPublic(request: Request, response: Response) {
-        const { sourceType, sourceId, academicLevel, sourceIdsByLevel } = request.body as {
+        const { sourceType, sourceId, academicLevel, sourceIdsByLevel, maxComponents, enrichDetails } = request.body as {
             sourceType: 'department' | 'program';
             sourceId: string;
             academicLevel: AcademicLevel | 'all';
             sourceIdsByLevel?: Partial<Record<AcademicLevel, string>>;
+            maxComponents?: number;
+            enrichDetails?: boolean;
         };
         const authenticatedUserId = request.headers.authenticatedUserId as string;
         const crawlerService = new CrawlerService();
-        const globalSourceId = String(sourceId || '').trim() || readSigaaSourceIdFromEnv();
-        const scopedSourceIds: Partial<Record<AcademicLevel, string>> = {
-            [AcademicLevel.GRADUATION]: String(sourceIdsByLevel?.graduacao || '').trim() || readSigaaSourceIdFromEnv(AcademicLevel.GRADUATION),
-            [AcademicLevel.MASTERS]: String(sourceIdsByLevel?.mestrado || '').trim() || readSigaaSourceIdFromEnv(AcademicLevel.MASTERS),
-            [AcademicLevel.DOCTORATE]: String(sourceIdsByLevel?.doutorado || '').trim() || readSigaaSourceIdFromEnv(AcademicLevel.DOCTORATE),
+        const importOptions = {
+            maxComponents: Number.isFinite(maxComponents) ? Math.max(1, Number(maxComponents)) : undefined,
+            enrichDetails: enrichDetails === undefined ? true : Boolean(enrichDetails),
+            reconcileExisting: true,
         };
+        const { globalSourceId, scopedSourceIds, levelSources } = buildSigaaLevelSources(sourceId, academicLevel, sourceIdsByLevel);
 
         if (!sourceType || !academicLevel) {
             return response.status(400).json({
@@ -95,21 +137,14 @@ class ComponentController {
             });
         }
 
-        if (academicLevel !== 'all' && !globalSourceId) {
+        if (academicLevel !== 'all' && levelSources.length === 0) {
             return response.status(400).json({
                 message: 'sourceId ausente. Informe no payload ou configure BOOTSTRAP_SIGAA_SOURCE_ID(_POR_NIVEL) no ambiente de produção.',
             });
         }
 
         if (academicLevel === 'all') {
-            const hasGlobalSourceId = Boolean(globalSourceId);
-            const hasAnyScopedSourceId = Boolean(
-                scopedSourceIds.graduacao
-                || scopedSourceIds.mestrado
-                || scopedSourceIds.doutorado
-            );
-
-            if (!hasGlobalSourceId && !hasAnyScopedSourceId) {
+            if (levelSources.length === 0) {
                 return response.status(400).json({
                     message: 'Sem IDs SIGAA válidos. Informe sourceId/sourceIdsByLevel ou configure BOOTSTRAP_SIGAA_SOURCE_ID(_POR_NIVEL) em produção.',
                 });
@@ -138,7 +173,7 @@ class ComponentController {
             };
 
             for (const level of levels) {
-                const scopedSourceId = String(scopedSourceIds[level] || globalSourceId || '').trim();
+                const scopedSourceId = levelSources.find((entry) => entry.level === level)?.sourceId || '';
 
                 if (!scopedSourceId) {
                     continue;
@@ -148,7 +183,8 @@ class ComponentController {
                     authenticatedUserId,
                     sourceType,
                     scopedSourceId,
-                    level
+                    level,
+                    importOptions
                 );
 
                 combined.requested += partial.requested;
@@ -169,8 +205,9 @@ class ComponentController {
             importSummary = await crawlerService.importComponentsFromSigaaPublic(
                 authenticatedUserId,
                 sourceType,
-                globalSourceId,
-                academicLevel
+                levelSources[0].sourceId,
+                academicLevel,
+                importOptions
             );
         }
 
@@ -181,7 +218,99 @@ class ComponentController {
                 sourceId: globalSourceId,
                 academicLevel,
                 sourceIdsByLevel: scopedSourceIds,
+                maxComponents: importOptions.maxComponents,
+                enrichDetails: importOptions.enrichDetails,
             },
+        });
+    }
+
+    async createSigaaPublicImportJob(request: Request, response: Response) {
+        const { sourceType, sourceId, academicLevel, sourceIdsByLevel, batchSize, enrichDetails } = request.body as {
+            sourceType: 'department' | 'program';
+            sourceId?: string;
+            academicLevel: AcademicLevel | 'all';
+            sourceIdsByLevel?: Partial<Record<AcademicLevel, string>>;
+            batchSize?: number;
+            enrichDetails?: boolean;
+        };
+        const authenticatedUserId = request.headers.authenticatedUserId as string;
+
+        if (!sourceType || !academicLevel) {
+            return response.status(400).json({
+                message: 'sourceType e academicLevel são obrigatórios.',
+            });
+        }
+
+        if (academicLevel !== 'all' && !Object.values(AcademicLevel).includes(academicLevel as AcademicLevel)) {
+            return response.status(400).json({
+                message: 'academicLevel deve ser graduacao, mestrado, doutorado ou all.',
+            });
+        }
+
+        const { levelSources, scopedSourceIds, globalSourceId } = buildSigaaLevelSources(sourceId, academicLevel, sourceIdsByLevel);
+
+        if (!levelSources.length) {
+            return response.status(400).json({
+                message: 'Sem IDs SIGAA válidos para criar o job. Informe sourceId/sourceIdsByLevel ou configure BOOTSTRAP_SIGAA_SOURCE_ID(_POR_NIVEL).',
+            });
+        }
+
+        const jobService = SigaaImportJobService.getInstance();
+        const job = jobService.createJob({
+            createdBy: authenticatedUserId,
+            sourceType,
+            levels: levelSources,
+            batchSize: Number.isFinite(batchSize) ? Math.max(1, Number(batchSize)) : 50,
+            enrichDetails: enrichDetails === undefined ? false : Boolean(enrichDetails),
+            reconcileExisting: true,
+        });
+
+        return response.status(202).json({
+            message: 'Job de importação SIGAA iniciado.',
+            job,
+            parameters: {
+                sourceType,
+                academicLevel,
+                sourceId: globalSourceId,
+                sourceIdsByLevel: scopedSourceIds,
+                batchSize: Number.isFinite(batchSize) ? Math.max(1, Number(batchSize)) : 50,
+                enrichDetails: enrichDetails === undefined ? false : Boolean(enrichDetails),
+            },
+        });
+    }
+
+    async listSigaaPublicImportJobs(_request: Request, response: Response) {
+        const jobService = SigaaImportJobService.getInstance();
+        const jobs = jobService.listJobs();
+
+        return response.status(200).json({
+            results: jobs,
+            total: jobs.length,
+        });
+    }
+
+    async getSigaaPublicImportJob(request: Request, response: Response) {
+        const { jobId } = request.params;
+        const jobService = SigaaImportJobService.getInstance();
+        const job = jobService.getJob(jobId);
+
+        if (!job) {
+            return response.status(404).json({
+                message: 'Job de importação não encontrado.',
+            });
+        }
+
+        return response.status(200).json(job);
+    }
+
+    async cancelSigaaPublicImportJob(request: Request, response: Response) {
+        const { jobId } = request.params;
+        const jobService = SigaaImportJobService.getInstance();
+        const job = jobService.cancelJob(jobId);
+
+        return response.status(200).json({
+            message: 'Cancelamento solicitado para o job.',
+            job,
         });
     }
 

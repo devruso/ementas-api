@@ -856,6 +856,14 @@ componentRouter.post('/import', ensureAuthenticated, ensureAdminAuthenticated, c
 */
 componentRouter.post('/import/sigaa-public', ensureAuthenticated, ensureAdminAuthenticated, componentController.importComponentsFromSigaaPublic);
 
+componentRouter.post('/import/sigaa-public/jobs', ensureAuthenticated, ensureAdminAuthenticated, componentController.createSigaaPublicImportJob);
+
+componentRouter.get('/import/sigaa-public/jobs', ensureAuthenticated, ensureAdminAuthenticated, componentController.listSigaaPublicImportJobs);
+
+componentRouter.get('/import/sigaa-public/jobs/:jobId', ensureAuthenticated, ensureAdminAuthenticated, componentController.getSigaaPublicImportJob);
+
+componentRouter.post('/import/sigaa-public/jobs/:jobId/cancel', ensureAuthenticated, ensureAdminAuthenticated, componentController.cancelSigaaPublicImportJob);
+
 componentRouter.post('/:id/public-shares', ensureAuthenticated, componentController.createPublicShare);
 
 componentRouter.get('/:id/public-shares', ensureAuthenticated, componentController.getActivePublicShares);
