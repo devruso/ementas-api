@@ -8,10 +8,10 @@ class Department {
     @PrimaryGeneratedColumn('uuid')
         readonly id: string;
 
-    @Column()
+    @Column({ type: 'varchar' })
         name: string;
 
-    @Column({ nullable: true })
+    @Column({ type: 'varchar', nullable: true })
         code?: string | null;
 
     @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
