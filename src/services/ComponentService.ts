@@ -1244,16 +1244,22 @@ export class ComponentService {
             draftId: null,
         });
 
-        await Promise.all([
-            this.componentLogRepository.delete({
-                componentId: id,
-            }),
-            !draft
-                ? null
-                : this.componentDraftRepository.delete({
-                    id: draft.id,
-                }),
-        ]);
+        // Remove any log rows linked to the published component and/or its draft
+        // before deleting the draft row to satisfy FK constraints.
+        await this.componentLogRepository.delete({
+            componentId: id,
+        });
+
+        if (draft?.id) {
+            await this.componentLogRepository.delete({
+                draftId: draft.id,
+            });
+
+            await this.componentDraftRepository.delete({
+                id: draft.id,
+            });
+        }
+
         await this.componentRepository
             .createQueryBuilder()
             .delete()
