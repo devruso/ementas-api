@@ -162,6 +162,61 @@ class SigaaImportJobService {
         return this.cloneJob(job);
     }
 
+    private isRetryableNetworkError(error: unknown) {
+        const message = error instanceof Error ? error.message : String(error || '');
+        return /ETIMEDOUT|ECONNRESET|ECONNABORTED|ENETUNREACH|EHOSTUNREACH|timeout/i.test(message);
+    }
+
+    private classifyJobError(error: unknown) {
+        const message = error instanceof Error ? error.message : String(error || '');
+
+        if (/ETIMEDOUT|ECONNABORTED|timeout/i.test(message)) {
+            return 'source_timeout';
+        }
+
+        if (/ECONNRESET|EHOSTUNREACH|ENETUNREACH/i.test(message)) {
+            return 'source_connection_error';
+        }
+
+        return 'unexpected_error';
+    }
+
+    private async runImportBatchWithRetry(
+        crawlerService: CrawlerService,
+        job: SigaaImportJob,
+        levelConfig: JobLevel
+    ) {
+        const maxAttempts = 3;
+
+        for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+            try {
+                return await crawlerService.importComponentsFromSigaaPublic(
+                    job.createdBy,
+                    job.sourceType,
+                    levelConfig.sourceId,
+                    levelConfig.level,
+                    {
+                        reconcileExisting: job.reconcileExisting,
+                        enrichDetails: job.enrichDetails,
+                        maxComponents: job.batchSize,
+                        offset: levelConfig.offset,
+                        requestTimeoutMs: job.requestTimeoutMs,
+                    }
+                );
+            } catch (error) {
+                if (!this.isRetryableNetworkError(error) || attempt >= maxAttempts) {
+                    throw error;
+                }
+
+                const retryDelayMs = attempt * 2000;
+                console.log(`[sigaa-job:${job.id}] retry level=${levelConfig.level} attempt=${attempt + 1}/${maxAttempts} after ${retryDelayMs}ms`);
+                await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
+            }
+        }
+
+        throw new Error('Falha inesperada ao executar lote do job SIGAA.');
+    }
+
     private mergeSummary(job: SigaaImportJob, partial: ImportComponentsSummary) {
         job.totals.requested += partial.requested;
         job.totals.created += partial.created;
@@ -210,19 +265,23 @@ class SigaaImportJobService {
                     return;
                 }
 
-                const partial = await crawlerService.importComponentsFromSigaaPublic(
-                    job.createdBy,
-                    job.sourceType,
-                    levelConfig.sourceId,
-                    levelConfig.level,
-                    {
-                        reconcileExisting: job.reconcileExisting,
-                        enrichDetails: job.enrichDetails,
-                        maxComponents: job.batchSize,
-                        offset: levelConfig.offset,
-                        requestTimeoutMs: job.requestTimeoutMs,
-                    }
-                );
+                let partial: ImportComponentsSummary;
+
+                try {
+                    partial = await this.runImportBatchWithRetry(crawlerService, job, levelConfig);
+                } catch (error) {
+                    const category = this.classifyJobError(error);
+                    const message = error instanceof Error ? error.message : 'Falha desconhecida no lote SIGAA.';
+
+                    job.totals.failed += 1;
+                    job.totals.failureCategories[category] = (job.totals.failureCategories[category] || 0) + 1;
+                    job.totals.failures.push(`SIGAA_JOB_LEVEL:${levelConfig.level}:${levelConfig.sourceId} (${category})`);
+                    job.totals.failures = Array.from(new Set(job.totals.failures));
+
+                    console.log(`[sigaa-job:${job.id}] level=${levelConfig.level} failed ${message}`);
+                    levelConfig.done = true;
+                    break;
+                }
 
                 this.mergeSummary(job, partial);
 
@@ -252,6 +311,10 @@ class SigaaImportJobService {
         if (job.cancelRequested) {
             job.status = 'cancelled';
             console.log(`[sigaa-job:${job.id}] cancelled`);
+        } else if (job.totals.failed > 0 && job.totals.created === 0 && job.totals.skippedExisting === 0) {
+            job.status = 'failed';
+            job.lastError = 'Falha de conectividade com SIGAA em todos os níveis processados.';
+            console.log(`[sigaa-job:${job.id}] failed no successful batches`);
         } else {
             job.status = 'completed';
             console.log(`[sigaa-job:${job.id}] completed requested=${job.totals.requested} created=${job.totals.created} skipped=${job.totals.skippedExisting} failed=${job.totals.failed}`);

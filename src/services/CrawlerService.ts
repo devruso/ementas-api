@@ -1943,7 +1943,14 @@ export class CrawlerService {
         }
 
         if (componentsInfo.length === 0) {
-            componentsInfo = await this.searchSigaaComponentsByUnit(sourceType, normalizedSourceId, level);
+            try {
+                componentsInfo = await this.searchSigaaComponentsByUnit(sourceType, normalizedSourceId, level);
+            } catch (error) {
+                failed += 1;
+                const category = this.classifyImportFailure(error);
+                this.incrementFailureCategory(failureCategories, category);
+                failures.push(`SIGAA_SEARCH: ${sourceType}:${normalizedSourceId}:${level} (${category}).`);
+            }
         }
 
         if (componentsInfo.length === 0) {
