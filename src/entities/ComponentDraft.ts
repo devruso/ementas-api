@@ -15,6 +15,7 @@ import { ComponentLog } from './ComponentLog';
 import { ComponentLogType } from '../interfaces/ComponentLogType';
 import { Component } from './Component';
 import { AcademicLevel } from '../interfaces/AcademicLevel';
+import { Department } from './Department';
 
 @Entity('component_drafts')
 class ComponentDraft {
@@ -39,6 +40,9 @@ class ComponentDraft {
 
     @Column({ default: '' })
         department?: string;
+
+    @Column({ name: 'department_id', nullable: true })
+        departmentId?: string | null;
 
     @Column({ default: '' })
         modality: string;
@@ -85,6 +89,10 @@ class ComponentDraft {
     @ManyToOne(() => User, (user) => user.componentDrafts)
     @JoinColumn({ name: 'created_by' })
         user: User;
+
+    @ManyToOne(() => Department, (department) => department.componentDrafts, { nullable: true, onDelete: 'SET NULL' })
+    @JoinColumn({ name: 'department_id' })
+        departmentRef?: Department;
     
     @OneToOne(() => ComponentWorkload, (componentWorkload) => componentWorkload.componentDraft)
     @JoinColumn({ name: 'workload_id' })

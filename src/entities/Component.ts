@@ -17,6 +17,7 @@ import { ComponentStatus } from '../interfaces/ComponentStatus';
 import { ComponentDraft } from './ComponentDraft';
 import { AcademicLevel } from '../interfaces/AcademicLevel';
 import { ComponentRelation } from './ComponentRelation';
+import { Department } from './Department';
 
 @Entity('components')
 class Component {
@@ -44,6 +45,9 @@ class Component {
 
     @Column({ default: '' })
         department: string;
+
+    @Column({ name: 'department_id', nullable: true })
+        departmentId?: string | null;
 
     @Column({ default: '' })
         modality: string;
@@ -90,6 +94,10 @@ class Component {
     @ManyToOne(() => User, (user) => user.components)
     @JoinColumn({ name: 'created_by' })
         user: User;
+
+    @ManyToOne(() => Department, (department) => department.components, { nullable: true, onDelete: 'SET NULL' })
+    @JoinColumn({ name: 'department_id' })
+        departmentRef?: Department;
 
     @OneToOne(() => ComponentWorkload, (componentWorkload) => componentWorkload.component)
     @JoinColumn({ name: 'workload_id' })

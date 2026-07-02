@@ -24,6 +24,27 @@ const isUserAuthenticated = (authorization?: string) => {
 };
 
 class ComponentController {
+    private readSigaaSourceIdFromEnv(level?: AcademicLevel) {
+        const globalSourceId = String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID || '').trim();
+        const defaultSourceIds: Record<AcademicLevel, string> = {
+            [AcademicLevel.GRADUATION]: '114',
+            [AcademicLevel.MASTERS]: '1307',
+            [AcademicLevel.DOCTORATE]: '1307',
+        };
+
+        if (!level) {
+            return globalSourceId;
+        }
+
+        const levelMap: Record<AcademicLevel, string> = {
+            [AcademicLevel.GRADUATION]: String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID_GRADUACAO || '').trim(),
+            [AcademicLevel.MASTERS]: String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID_MESTRADO || '').trim(),
+            [AcademicLevel.DOCTORATE]: String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID_DOUTORADO || '').trim(),
+        };
+
+        return levelMap[level] || globalSourceId || defaultSourceIds[level];
+    }
+
     async importComponentsFromSiac(request: Request, response: Response) {
         const { cdCurso, nuPerCursoInicial } = request.body;
         const authenticatedUserId = request.headers
@@ -61,30 +82,36 @@ class ComponentController {
         };
         const authenticatedUserId = request.headers.authenticatedUserId as string;
         const crawlerService = new CrawlerService();
+        const globalSourceId = String(sourceId || '').trim() || this.readSigaaSourceIdFromEnv();
+        const scopedSourceIds: Partial<Record<AcademicLevel, string>> = {
+            [AcademicLevel.GRADUATION]: String(sourceIdsByLevel?.graduacao || '').trim() || this.readSigaaSourceIdFromEnv(AcademicLevel.GRADUATION),
+            [AcademicLevel.MASTERS]: String(sourceIdsByLevel?.mestrado || '').trim() || this.readSigaaSourceIdFromEnv(AcademicLevel.MASTERS),
+            [AcademicLevel.DOCTORATE]: String(sourceIdsByLevel?.doutorado || '').trim() || this.readSigaaSourceIdFromEnv(AcademicLevel.DOCTORATE),
+        };
 
         if (!sourceType || !academicLevel) {
             return response.status(400).json({
-                message: 'sourceType, sourceId e academicLevel são obrigatórios.',
+                message: 'sourceType e academicLevel são obrigatórios.',
             });
         }
 
-        if (academicLevel !== 'all' && !String(sourceId || '').trim()) {
+        if (academicLevel !== 'all' && !globalSourceId) {
             return response.status(400).json({
-                message: 'sourceId é obrigatório para importação SIGAA por nível específico.',
+                message: 'sourceId ausente. Informe no payload ou configure BOOTSTRAP_SIGAA_SOURCE_ID(_POR_NIVEL) no ambiente de produção.',
             });
         }
 
         if (academicLevel === 'all') {
-            const hasGlobalSourceId = Boolean(String(sourceId || '').trim());
+            const hasGlobalSourceId = Boolean(globalSourceId);
             const hasAnyScopedSourceId = Boolean(
-                String(sourceIdsByLevel?.graduacao || '').trim()
-                || String(sourceIdsByLevel?.mestrado || '').trim()
-                || String(sourceIdsByLevel?.doutorado || '').trim()
+                scopedSourceIds.graduacao
+                || scopedSourceIds.mestrado
+                || scopedSourceIds.doutorado
             );
 
             if (!hasGlobalSourceId && !hasAnyScopedSourceId) {
                 return response.status(400).json({
-                    message: 'Informe sourceId global ou ao menos um sourceIdsByLevel para academicLevel=all.',
+                    message: 'Sem IDs SIGAA válidos. Informe sourceId/sourceIdsByLevel ou configure BOOTSTRAP_SIGAA_SOURCE_ID(_POR_NIVEL) em produção.',
                 });
             }
         }
@@ -111,7 +138,7 @@ class ComponentController {
             };
 
             for (const level of levels) {
-                const scopedSourceId = String(sourceIdsByLevel?.[level] || sourceId || '').trim();
+                const scopedSourceId = String(scopedSourceIds[level] || globalSourceId || '').trim();
 
                 if (!scopedSourceId) {
                     continue;
@@ -142,7 +169,7 @@ class ComponentController {
             importSummary = await crawlerService.importComponentsFromSigaaPublic(
                 authenticatedUserId,
                 sourceType,
-                sourceId,
+                globalSourceId,
                 academicLevel
             );
         }
@@ -151,9 +178,9 @@ class ComponentController {
             ...importSummary,
             parameters: {
                 sourceType,
-                sourceId,
+                sourceId: globalSourceId,
                 academicLevel,
-                sourceIdsByLevel,
+                sourceIdsByLevel: scopedSourceIds,
             },
         });
     }
