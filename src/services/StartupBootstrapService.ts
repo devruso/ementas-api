@@ -6,11 +6,17 @@ import { UserRole } from '../interfaces/UserRole';
 import { User } from '../entities/User';
 import { ComponentRepository } from '../repositories/ComponentRepository';
 import { UserRepository } from '../repositories/UserRepository';
-import { CrawlerService } from './CrawlerService';
+import { CrawlerService, ImportComponentsSummary } from './CrawlerService';
 
 const AUTO_IMPORT_FLAG = 'true';
 
 type BootstrapSource = 'sigaa-public' | 'siac';
+
+const DEFAULT_SIGAA_SOURCE_IDS: Record<AcademicLevel, string> = {
+    [AcademicLevel.GRADUATION]: '114',
+    [AcademicLevel.MASTERS]: '1307',
+    [AcademicLevel.DOCTORATE]: '1307',
+};
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
@@ -42,6 +48,31 @@ const getConfiguredAcademicLevel = (): AcademicLevel | 'all' => {
 const getConfiguredSigaaSourceType = (): 'department' | 'program' => {
     const rawType = String(process.env.BOOTSTRAP_SIGAA_SOURCE_TYPE || 'department').trim().toLowerCase();
     return rawType === 'program' ? 'program' : 'department';
+};
+
+const getConfiguredSigaaSourceIdsByLevel = () => ({
+    [AcademicLevel.GRADUATION]: String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID_GRADUACAO || '').trim(),
+    [AcademicLevel.MASTERS]: String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID_MESTRADO || '').trim(),
+    [AcademicLevel.DOCTORATE]: String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID_DOUTORADO || '').trim(),
+});
+
+const resolveSigaaSourceIdForLevel = (
+    level: AcademicLevel,
+    globalSourceId: string,
+    sourceIdsByLevel: Record<AcademicLevel, string>
+) => sourceIdsByLevel[level] || globalSourceId || DEFAULT_SIGAA_SOURCE_IDS[level];
+
+const mergeImportSummaries = (target: ImportComponentsSummary, partial: ImportComponentsSummary) => {
+    target.requested += partial.requested;
+    target.created += partial.created;
+    target.skippedExisting += partial.skippedExisting;
+    target.reconciled = (target.reconciled || 0) + (partial.reconciled || 0);
+    target.failed += partial.failed;
+    target.failures.push(...(partial.failures || []));
+
+    Object.entries(partial.failureCategories || {}).forEach(([key, value]) => {
+        target.failureCategories[key] = (target.failureCategories[key] || 0) + Number(value || 0);
+    });
 };
 
 const getPasswordHash = (password: string) => crypto.createHmac('sha256', password).digest('hex');
@@ -129,18 +160,35 @@ export const runStartupBootstrapImportIfNeeded = async () => {
     }
 
     const sourceType = getConfiguredSigaaSourceType();
-    const sourceId = String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID || '').trim();
+    const configuredLevel = getConfiguredAcademicLevel();
+    const globalSourceId = String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID || '').trim();
+    const sourceIdsByLevel = getConfiguredSigaaSourceIdsByLevel();
 
-    if (!sourceId) {
-        throw new Error('BOOTSTRAP_SIGAA_SOURCE_ID is required for source=sigaa-public.');
+    if (configuredLevel === 'all') {
+        const levels: AcademicLevel[] = [AcademicLevel.GRADUATION, AcademicLevel.MASTERS, AcademicLevel.DOCTORATE];
+        const combinedSummary: ImportComponentsSummary = {
+            source: 'sigaa-public',
+            requested: 0,
+            created: 0,
+            skippedExisting: 0,
+            reconciled: 0,
+            failed: 0,
+            failures: [] as string[],
+            failureCategories: {} as Record<string, number>,
+        };
+
+        for (const level of levels) {
+            const resolvedSourceId = resolveSigaaSourceIdForLevel(level, globalSourceId, sourceIdsByLevel);
+            const partial = await crawlerService.importComponentsFromSigaaPublic(userId, sourceType, resolvedSourceId, level);
+            mergeImportSummaries(combinedSummary, partial);
+        }
+
+        combinedSummary.failures = Array.from(new Set(combinedSummary.failures));
+        console.log('[startup-bootstrap] import summary:', combinedSummary);
+        return;
     }
 
-    const summary = await crawlerService.importComponentsFromSigaaPublic(
-        userId,
-        sourceType,
-        sourceId,
-        getConfiguredAcademicLevel()
-    );
-
+    const sourceId = resolveSigaaSourceIdForLevel(configuredLevel, globalSourceId, sourceIdsByLevel);
+    const summary = await crawlerService.importComponentsFromSigaaPublic(userId, sourceType, sourceId, configuredLevel);
     console.log('[startup-bootstrap] import summary:', summary);
 };
