@@ -96,6 +96,7 @@ export class CrawlerService {
     private sigaaDetailCache = new Map<string, SigaaComponentDetail | null>();
     private sigaaDetailInFlight = new Map<string, Promise<SigaaComponentDetail | null>>();
     private requestTimeoutMs: number;
+    private sigaaHttpFamily?: 4 | 6;
 
     constructor() {
         this.componentRepository = getCustomRepository(ComponentRepository);
@@ -104,6 +105,10 @@ export class CrawlerService {
         this.componentRelationRepository = getCustomRepository(ComponentRelationRepository);
         this.workloadService = new WorkloadService();
         this.requestTimeoutMs = Number(process.env.CRAWLER_HTTP_TIMEOUT_MS || 45000);
+        const configuredFamily = Number(process.env.CRAWLER_HTTP_FAMILY || 0);
+        this.sigaaHttpFamily = configuredFamily === 4 || configuredFamily === 6
+            ? configuredFamily
+            : undefined;
     }
 
     private normalizePrerequeriments(rawValue?: string) {
@@ -578,6 +583,41 @@ export class CrawlerService {
         return false;
     }
 
+    private buildSigaaRequestConfig(config: AxiosRequestConfig = {}): AxiosRequestConfig {
+        if (!this.sigaaHttpFamily) {
+            return config;
+        }
+
+        return {
+            ...config,
+            family: this.sigaaHttpFamily,
+        };
+    }
+
+    private logSigaaRequestFailure(
+        operationLabel: string,
+        attempt: number,
+        maxAttempts: number,
+        error: unknown
+    ) {
+        const axiosError = axios.isAxiosError(error) ? error : undefined;
+        const cause = error as { cause?: { code?: string; message?: string } };
+        const payload = {
+            operationLabel,
+            attempt,
+            maxAttempts,
+            category: this.classifyImportFailure(error),
+            code: String((error as { code?: string })?.code || axiosError?.code || ''),
+            status: axiosError?.response?.status,
+            family: this.sigaaHttpFamily,
+            message: error instanceof Error ? error.message : String(error || ''),
+            causeCode: String(cause?.cause?.code || ''),
+            causeMessage: String(cause?.cause?.message || ''),
+        };
+
+        console.log('[sigaa-request-failed]', payload);
+    }
+
     private async executeSigaaRequestWithRetry<T>(
         operationLabel: string,
         requestFactory: () => Promise<T>
@@ -589,6 +629,8 @@ export class CrawlerService {
             try {
                 return await requestFactory();
             } catch (error) {
+                this.logSigaaRequestFailure(operationLabel, attempt, maxAttempts, error);
+
                 if (!this.isRetryableSigaaError(error) || attempt >= maxAttempts) {
                     throw error;
                 }
@@ -699,11 +741,14 @@ export class CrawlerService {
         const nivel = this.getSigaaSearchLevel(academicLevel);
         const formPageResponse = await this.executeSigaaRequestWithRetry(
             'sigaa-search-form',
-            () => axios.get<ArrayBuffer>('https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf', {
-                responseType: 'arraybuffer',
-                responseEncoding: 'binary',
-                timeout: this.requestTimeoutMs,
-            })
+            () => axios.get<ArrayBuffer>(
+                'https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf',
+                this.buildSigaaRequestConfig({
+                    responseType: 'arraybuffer',
+                    responseEncoding: 'binary',
+                    timeout: this.requestTimeoutMs,
+                })
+            )
         );
         const formCookie = this.buildCookieHeader(formPageResponse.headers?.['set-cookie']);
 
@@ -730,15 +775,19 @@ export class CrawlerService {
 
         const searchResponse = await this.executeSigaaRequestWithRetry(
             `sigaa-search-submit:${sourceType}:${sourceId}:${academicLevel}`,
-            () => axios.post<ArrayBuffer>(actionUrl, payload.toString(), {
-                responseType: 'arraybuffer',
-                responseEncoding: 'binary',
-                timeout: this.requestTimeoutMs,
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    ...(formCookie ? { Cookie: formCookie } : {}),
-                },
-            })
+            () => axios.post<ArrayBuffer>(
+                actionUrl,
+                payload.toString(),
+                this.buildSigaaRequestConfig({
+                    responseType: 'arraybuffer',
+                    responseEncoding: 'binary',
+                    timeout: this.requestTimeoutMs,
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        ...(formCookie ? { Cookie: formCookie } : {}),
+                    },
+                })
+            )
         );
         const searchCookie = this.buildCookieHeader(searchResponse.headers?.['set-cookie']);
         const detailCookie = this.mergeCookieHeaders(formCookie, searchCookie);
@@ -1475,23 +1524,30 @@ export class CrawlerService {
         for (const request of requestSequence) {
             try {
                 const response = request.method === 'GET'
-                    ? await axios.get<ArrayBuffer>(request.url, {
-                        responseType: 'arraybuffer',
-                        responseEncoding: 'binary',
-                        timeout: this.requestTimeoutMs,
-                        headers: {
-                            ...(component.detailRequestCookie ? { Cookie: component.detailRequestCookie } : {}),
-                        },
-                    })
-                    : await axios.post<ArrayBuffer>(request.url, request.payload || '', {
-                        responseType: 'arraybuffer',
-                        responseEncoding: 'binary',
-                        timeout: this.requestTimeoutMs,
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                            ...(component.detailRequestCookie ? { Cookie: component.detailRequestCookie } : {}),
-                        },
-                    });
+                    ? await axios.get<ArrayBuffer>(
+                        request.url,
+                        this.buildSigaaRequestConfig({
+                            responseType: 'arraybuffer',
+                            responseEncoding: 'binary',
+                            timeout: this.requestTimeoutMs,
+                            headers: {
+                                ...(component.detailRequestCookie ? { Cookie: component.detailRequestCookie } : {}),
+                            },
+                        })
+                    )
+                    : await axios.post<ArrayBuffer>(
+                        request.url,
+                        request.payload || '',
+                        this.buildSigaaRequestConfig({
+                            responseType: 'arraybuffer',
+                            responseEncoding: 'binary',
+                            timeout: this.requestTimeoutMs,
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                ...(component.detailRequestCookie ? { Cookie: component.detailRequestCookie } : {}),
+                            },
+                        })
+                    );
 
                 const html = this.decodeHtmlBuffer(response.data);
                 const $ = cheerio.load(html);
@@ -1999,11 +2055,14 @@ export class CrawlerService {
             try {
                 const response = await this.executeSigaaRequestWithRetry(
                     `sigaa-source:${sourceType}:${normalizedSourceId}:${level}`,
-                    () => axios.get<ArrayBuffer>(sourceUrl, {
-                        responseType: 'arraybuffer',
-                        responseEncoding: 'binary',
-                        timeout: requestTimeoutMs,
-                    })
+                    () => axios.get<ArrayBuffer>(
+                        sourceUrl,
+                        this.buildSigaaRequestConfig({
+                            responseType: 'arraybuffer',
+                            responseEncoding: 'binary',
+                            timeout: requestTimeoutMs,
+                        })
+                    )
                 );
                 const sourceCookie = this.buildCookieHeader(response.headers?.['set-cookie']);
                 data = response.data;

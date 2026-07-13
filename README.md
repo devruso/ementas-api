@@ -50,12 +50,14 @@ PDF_CONVERSION_TIMEOUT_MS=45000
 SUPER_ADMIN_EMAIL=<email-institucional-ufba>
 SUPER_ADMIN_NAME=Super Admin
 SUPER_ADMIN_PASSWORD=<senha-forte-inicial>
+CRAWLER_HTTP_TIMEOUT_MS=45000
 ```
 
 Observacoes:
 
 - `SWAGGER_SERVER_URL` evita que a documentacao da API publique uma URL incorreta no ambiente produtivo.
 - `SUPER_ADMIN_*` pode ser usado junto com `npm run user:ensure-super-admin` para bootstrap administrativo.
+- Se o crawler SIGAA funcionar localmente, mas expirar no servidor, teste `CRAWLER_HTTP_FAMILY=4` para forcar IPv4 e compare os logs `[sigaa-request-failed]` em producao.
 
 ### Storage de arquivos (incremental)
 
@@ -164,6 +166,7 @@ BOOTSTRAP_ADMIN_PASSWORD=Ementas@2026
 BOOTSTRAP_SIGAA_SOURCE_TYPE=department
 BOOTSTRAP_SIGAA_SOURCE_ID=1114
 BOOTSTRAP_SIGAA_ACADEMIC_LEVEL=graduacao
+CRAWLER_HTTP_FAMILY=4
 ```
 
 Notes:
@@ -171,6 +174,7 @@ Notes:
 - Import runs only when `components` is empty.
 - The bootstrap user is created/promoted as `super_admin` automatically for the operation.
 - For SIAC source, set `BOOTSTRAP_IMPORT_SOURCE=siac` and provide `BOOTSTRAP_SIAC_CD_CURSO` plus `BOOTSTRAP_SIAC_NU_PER_CURSO_INICIAL`.
+- `CRAWLER_HTTP_FAMILY=4` is optional and helps when production networking reaches SIGAA over IPv4 but times out over IPv6.
 
 ## SIGAA reconciliation for existing components
 
