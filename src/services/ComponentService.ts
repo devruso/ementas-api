@@ -1037,10 +1037,34 @@ export class ComponentService {
         }
 
         if (normalizedDepartment) {
-            query.andWhere(
-                `${this.accentInsensitiveSql('components.department')} = :department`,
-                { department: normalizedDepartment }
-            );
+            const normalizedDepartmentColumn = this.accentInsensitiveSql('components.department');
+
+            if (normalizedDepartment === '__dcc__') {
+                query.andWhere(new Brackets((subQuery) => {
+                    subQuery
+                        .where(`${normalizedDepartmentColumn} LIKE :dccByName`, {
+                            dccByName: '%ciencia da computacao%',
+                        })
+                        .orWhere(`${normalizedDepartmentColumn} LIKE :dccByAcronym`, {
+                            dccByAcronym: '%dcc%',
+                        });
+                }));
+            } else if (normalizedDepartment === '__dci__') {
+                query.andWhere(new Brackets((subQuery) => {
+                    subQuery
+                        .where(`${normalizedDepartmentColumn} LIKE :dciByName`, {
+                            dciByName: '%computacao interdisciplinar%',
+                        })
+                        .orWhere(`${normalizedDepartmentColumn} LIKE :dciByAcronym`, {
+                            dciByAcronym: '%dci%',
+                        });
+                }));
+            } else {
+                query.andWhere(
+                    `${normalizedDepartmentColumn} = :department`,
+                    { department: normalizedDepartment }
+                );
+            }
         }
 
         const components = await query

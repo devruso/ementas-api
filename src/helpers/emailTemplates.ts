@@ -6,6 +6,22 @@ const escapeHtml = (value: string) =>
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
 
+const resolveSystemBaseUrl = () => {
+    return String(
+        process.env.APP_PUBLIC_URL
+        || process.env.FRONTEND_BASE_URL
+        || process.env.FRONTEND_URL
+        || 'https://ementas.app.ic.ufba.br'
+    ).trim().replace(/\/+$/, '');
+};
+
+const resolveEmailLogoUrl = () => {
+    return String(
+        process.env.EMAIL_LOGO_URL
+        || 'https://sipac.ufba.br/shared/img/instituicao/brasao_ufba48x75.jpg'
+    ).trim();
+};
+
 const renderBaseTemplate = (title: string, headline: string, intro: string, contentHtml: string, footerNote?: string) => {
     const safeTitle = escapeHtml(title);
     const safeHeadline = escapeHtml(headline);
@@ -28,7 +44,7 @@ const renderBaseTemplate = (title: string, headline: string, intro: string, cont
               <table role="presentation" cellspacing="0" cellpadding="0">
                 <tr>
                   <td style="vertical-align:middle;padding-right:12px;">
-                    <img src="https://computacao.ufba.br/imagem" alt="Instituto de Computação UFBA" width="44" height="44" style="display:block;border-radius:50%;background:#fff;" />
+                    <img src="${escapeHtml(resolveEmailLogoUrl())}" alt="Instituto de Computação UFBA" width="44" height="44" style="display:block;border-radius:50%;background:#fff;" />
                   </td>
                   <td style="vertical-align:middle;">
                     <div style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;color:#1d4b9c;">Instituto de Computação</div>
@@ -109,15 +125,22 @@ export const buildTeacherCredentialsEmailTemplate = (teacherName: string, email:
 
 export const buildResetPasswordEmailTemplate = (temporaryPassword: string) => {
     const safePassword = escapeHtml(temporaryPassword);
+  const systemUrl = resolveSystemBaseUrl();
+  const safeSystemUrl = escapeHtml(systemUrl);
 
     return {
-        text: `Olá,\n\nSua senha do Ementas foi redefinida.\n\nNova senha provisória: ${temporaryPassword}\n\nRecomendamos alterar a senha após o login.\n\nEquipe Ementas`,
+    text: `Olá,\n\nSua senha do Ementas foi redefinida.\n\nNova senha provisória: ${temporaryPassword}\n\nAcesse o sistema: ${systemUrl}\n\nRecomendamos alterar a senha após o login.\n\nEquipe Ementas`,
         html: renderBaseTemplate(
             'Recuperação de senha - Ementas',
             'Senha redefinida',
             'Recebemos sua solicitação de recuperação de senha.',
             `<p style="margin:0 0 12px;font-size:15px;line-height:1.7;color:#374151;">Sua nova senha provisória é:</p>
              <p style="margin:0 0 18px;padding:12px 14px;border-radius:12px;background:#f3f4f6;color:#111827;font-size:16px;font-weight:700;letter-spacing:0.02em;">${safePassword}</p>
+       <p style="margin:0 0 16px;">
+         <a href="${safeSystemUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 20px;background:#2f67c8;color:#ffffff;text-decoration:none;font-weight:700;border-radius:12px;">Acessar sistema</a>
+       </p>
+       <p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:#6b7280;">Se o botão não abrir, use este link:</p>
+       <p style="margin:0 0 18px;font-size:13px;line-height:1.6;"><a href="${safeSystemUrl}" target="_blank" rel="noopener noreferrer" style="color:#1d4b9c;word-break:break-all;">${safeSystemUrl}</a></p>
              <p style="margin:0;font-size:14px;line-height:1.6;color:#4b5563;">Depois de entrar no sistema, altere sua senha por segurança.</p>`,
             undefined
         ),
