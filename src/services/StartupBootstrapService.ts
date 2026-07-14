@@ -12,10 +12,10 @@ const AUTO_IMPORT_FLAG = 'true';
 
 type BootstrapSource = 'sigaa-public' | 'siac';
 
-const DEFAULT_SIGAA_SOURCE_IDS: Record<AcademicLevel, string> = {
-    [AcademicLevel.GRADUATION]: '1114',
-    [AcademicLevel.MASTERS]: '1820',
-    [AcademicLevel.DOCTORATE]: '43753',
+const DEFAULT_SIGAA_SOURCE_IDS: Record<AcademicLevel, string[]> = {
+    [AcademicLevel.GRADUATION]: ['1114'],
+    [AcademicLevel.MASTERS]: ['1820'],
+    [AcademicLevel.DOCTORATE]: [],
 };
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
@@ -60,21 +60,49 @@ const parsePositiveInt = (rawValue?: string) => {
     return Math.floor(parsed);
 };
 
+const parseSourceIdList = (...rawValues: Array<string | undefined>) => {
+    const tokens = rawValues
+        .flatMap((rawValue) => String(rawValue || '')
+            .split(/[,\n;\r]+/)
+            .map((entry) => entry.trim()))
+        .filter(Boolean);
+
+    return Array.from(new Set(tokens));
+};
+
 const getConfiguredBootstrapSigaaRequestTimeoutMs = () => parsePositiveInt(
     process.env.BOOTSTRAP_SIGAA_REQUEST_TIMEOUT_MS
 );
 
+const getConfiguredGlobalSigaaSourceIds = () => parseSourceIdList(
+    process.env.BOOTSTRAP_SIGAA_SOURCE_IDS,
+    process.env.BOOTSTRAP_SIGAA_SOURCE_ID
+);
+
 const getConfiguredSigaaSourceIdsByLevel = () => ({
-    [AcademicLevel.GRADUATION]: String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID_GRADUACAO || '').trim(),
-    [AcademicLevel.MASTERS]: String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID_MESTRADO || '').trim(),
-    [AcademicLevel.DOCTORATE]: String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID_DOUTORADO || '').trim(),
+    [AcademicLevel.GRADUATION]: parseSourceIdList(
+        process.env.BOOTSTRAP_SIGAA_SOURCE_IDS_GRADUACAO,
+        process.env.BOOTSTRAP_SIGAA_SOURCE_ID_GRADUACAO
+    ),
+    [AcademicLevel.MASTERS]: parseSourceIdList(
+        process.env.BOOTSTRAP_SIGAA_SOURCE_IDS_MESTRADO,
+        process.env.BOOTSTRAP_SIGAA_SOURCE_ID_MESTRADO
+    ),
+    [AcademicLevel.DOCTORATE]: parseSourceIdList(
+        process.env.BOOTSTRAP_SIGAA_SOURCE_IDS_DOUTORADO,
+        process.env.BOOTSTRAP_SIGAA_SOURCE_ID_DOUTORADO
+    ),
 });
 
-const resolveSigaaSourceIdForLevel = (
+const resolveSigaaSourceIdsForLevel = (
     level: AcademicLevel,
-    globalSourceId: string,
-    sourceIdsByLevel: Record<AcademicLevel, string>
-) => sourceIdsByLevel[level] || globalSourceId || DEFAULT_SIGAA_SOURCE_IDS[level];
+    globalSourceIds: string[],
+    sourceIdsByLevel: Record<AcademicLevel, string[]>
+) => sourceIdsByLevel[level].length > 0
+    ? sourceIdsByLevel[level]
+    : globalSourceIds.length > 0
+        ? globalSourceIds
+        : DEFAULT_SIGAA_SOURCE_IDS[level];
 
 const mergeImportSummaries = (target: ImportComponentsSummary, partial: ImportComponentsSummary) => {
     target.requested += partial.requested;
@@ -175,7 +203,7 @@ export const runStartupBootstrapImportIfNeeded = async () => {
 
     const sourceType = getConfiguredSigaaSourceType();
     const configuredLevel = getConfiguredAcademicLevel();
-    const globalSourceId = String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID || '').trim();
+    const globalSourceIds = getConfiguredGlobalSigaaSourceIds();
     const sourceIdsByLevel = getConfiguredSigaaSourceIdsByLevel();
     const bootstrapSigaaRequestTimeoutMs = getConfiguredBootstrapSigaaRequestTimeoutMs();
 
@@ -193,15 +221,18 @@ export const runStartupBootstrapImportIfNeeded = async () => {
         };
 
         for (const level of levels) {
-            const resolvedSourceId = resolveSigaaSourceIdForLevel(level, globalSourceId, sourceIdsByLevel);
-            const partial = await crawlerService.importComponentsFromSigaaPublic(
-                userId,
-                sourceType,
-                resolvedSourceId,
-                level,
-                { requestTimeoutMs: bootstrapSigaaRequestTimeoutMs }
-            );
-            mergeImportSummaries(combinedSummary, partial);
+            const resolvedSourceIds = resolveSigaaSourceIdsForLevel(level, globalSourceIds, sourceIdsByLevel);
+
+            for (const resolvedSourceId of resolvedSourceIds) {
+                const partial = await crawlerService.importComponentsFromSigaaPublic(
+                    userId,
+                    sourceType,
+                    resolvedSourceId,
+                    level,
+                    { requestTimeoutMs: bootstrapSigaaRequestTimeoutMs }
+                );
+                mergeImportSummaries(combinedSummary, partial);
+            }
         }
 
         combinedSummary.failures = Array.from(new Set(combinedSummary.failures));
@@ -209,13 +240,34 @@ export const runStartupBootstrapImportIfNeeded = async () => {
         return;
     }
 
-    const sourceId = resolveSigaaSourceIdForLevel(configuredLevel, globalSourceId, sourceIdsByLevel);
-    const summary = await crawlerService.importComponentsFromSigaaPublic(
-        userId,
-        sourceType,
-        sourceId,
-        configuredLevel,
-        { requestTimeoutMs: bootstrapSigaaRequestTimeoutMs }
-    );
-    console.log('[startup-bootstrap] import summary:', summary);
+    const sourceIds = resolveSigaaSourceIdsForLevel(configuredLevel, globalSourceIds, sourceIdsByLevel);
+
+    if (sourceIds.length === 0) {
+        throw new Error(`Nenhum sourceId SIGAA configurado para o nivel ${configuredLevel}.`);
+    }
+
+    const combinedSummary: ImportComponentsSummary = {
+        source: 'sigaa-public',
+        requested: 0,
+        created: 0,
+        skippedExisting: 0,
+        reconciled: 0,
+        failed: 0,
+        failures: [],
+        failureCategories: {},
+    };
+
+    for (const sourceId of sourceIds) {
+        const partial = await crawlerService.importComponentsFromSigaaPublic(
+            userId,
+            sourceType,
+            sourceId,
+            configuredLevel,
+            { requestTimeoutMs: bootstrapSigaaRequestTimeoutMs }
+        );
+        mergeImportSummaries(combinedSummary, partial);
+    }
+
+    combinedSummary.failures = Array.from(new Set(combinedSummary.failures));
+    console.log('[startup-bootstrap] import summary:', combinedSummary);
 };

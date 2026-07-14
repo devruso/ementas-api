@@ -164,7 +164,6 @@ BOOTSTRAP_ADMIN_EMAIL=jamilsonj@ufba.br
 BOOTSTRAP_ADMIN_NAME=Jamilson
 BOOTSTRAP_ADMIN_PASSWORD=Ementas@2026
 BOOTSTRAP_SIGAA_SOURCE_TYPE=department
-BOOTSTRAP_SIGAA_SOURCE_ID=1114
 BOOTSTRAP_SIGAA_ACADEMIC_LEVEL=graduacao
 CRAWLER_HTTP_FAMILY=4
 ```
@@ -175,6 +174,30 @@ Notes:
 - The bootstrap user is created/promoted as `super_admin` automatically for the operation.
 - For SIAC source, set `BOOTSTRAP_IMPORT_SOURCE=siac` and provide `BOOTSTRAP_SIAC_CD_CURSO` plus `BOOTSTRAP_SIAC_NU_PER_CURSO_INICIAL`.
 - `CRAWLER_HTTP_FAMILY=4` is optional and helps when production networking reaches SIGAA over IPv4 but times out over IPv6.
+- For SIGAA public source, the bootstrap now accepts both single-value vars such as `BOOTSTRAP_SIGAA_SOURCE_ID_GRADUACAO` and multi-value vars such as `BOOTSTRAP_SIGAA_SOURCE_IDS_GRADUACAO`, comma-separated.
+- Validated IC/UFBA public units found in the fixtures:
+  - `1118`: colegiado de Ciencia da Computacao
+  - `1935`: colegiado de Sistemas de Informacao
+  - `1934`: colegiado de Licenciatura em Computacao
+  - `1114`: Departamento de Ciencia da Computacao
+  - `2440`: Departamento de Computacao Interdisciplinar
+  - `1820`: PGCOMP (mestrado/stricto)
+- Doutorado SIGAA publico still depends on a source with public offer actually available. If you do not have a validated doctoral source id, omit `BOOTSTRAP_SIGAA_SOURCE_IDS_DOUTORADO` and the bootstrap skips that level by default.
+
+Example for IC graduation colegiados plus PGCOMP:
+
+```sh
+BOOTSTRAP_IMPORT_ON_EMPTY_DB=true
+BOOTSTRAP_IMPORT_SOURCE=sigaa-public
+BOOTSTRAP_ADMIN_EMAIL=seu-email@ufba.br
+BOOTSTRAP_ADMIN_NAME=Seu Nome
+BOOTSTRAP_ADMIN_PASSWORD=sua-senha-forte
+BOOTSTRAP_SIGAA_SOURCE_TYPE=department
+BOOTSTRAP_SIGAA_ACADEMIC_LEVEL=all
+BOOTSTRAP_SIGAA_SOURCE_IDS_GRADUACAO=1118,1935,1934
+BOOTSTRAP_SIGAA_SOURCE_IDS_MESTRADO=1820
+CRAWLER_HTTP_FAMILY=4
+```
 
 ## SIGAA reconciliation for existing components
 
