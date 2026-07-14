@@ -1,6 +1,13 @@
 import path from 'path';
 import { Readable } from 'stream';
-import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+    CreateBucketCommand,
+    DeleteObjectCommand,
+    GetObjectCommand,
+    HeadBucketCommand,
+    PutObjectCommand,
+    S3Client,
+} from '@aws-sdk/client-s3';
 
 import { AppError } from '../../errors/AppError';
 import { FileStorageProvider } from './FileStorageProvider';
@@ -16,7 +23,9 @@ export class S3CompatibleFileStorageProvider implements FileStorageProvider {
     private readonly secretAccessKey: string;
     private readonly forcePathStyle: boolean;
     private readonly publicBaseUrl: string;
+    private readonly autoCreateBucket: boolean;
     private readonly s3Client: S3Client;
+    private bucketReadyPromise?: Promise<void>;
 
     private sanitizeSegment(value: string, fieldName: string): string {
         const trimmed = value.trim();
@@ -40,6 +49,7 @@ export class S3CompatibleFileStorageProvider implements FileStorageProvider {
         this.secretAccessKey = String(process.env.STORAGE_S3_SECRET_ACCESS_KEY || '').trim();
         this.forcePathStyle = String(process.env.STORAGE_S3_FORCE_PATH_STYLE || 'true').trim().toLowerCase() === 'true';
         this.publicBaseUrl = String(process.env.STORAGE_S3_PUBLIC_BASE_URL || '').trim().replace(/\/+$/, '');
+        this.autoCreateBucket = String(process.env.STORAGE_S3_AUTO_CREATE_BUCKET || 'false').trim().toLowerCase() === 'true';
 
         if (!this.bucketName || !this.endpoint || !this.accessKeyId || !this.secretAccessKey) {
             throw new AppError(
@@ -57,6 +67,80 @@ export class S3CompatibleFileStorageProvider implements FileStorageProvider {
             },
             forcePathStyle: this.forcePathStyle,
         });
+    }
+
+    private isMissingBucketError(error: unknown) {
+        const details = error as {
+            name?: string;
+            Code?: string;
+            code?: string;
+            message?: string;
+            $metadata?: { httpStatusCode?: number };
+        };
+
+        const rawCode = String(details?.Code || details?.code || details?.name || '').trim();
+        const message = String(details?.message || '').trim();
+        const status = details?.$metadata?.httpStatusCode;
+
+        return rawCode === 'NoSuchBucket'
+            || rawCode === 'NotFound'
+            || status === 404
+            || /bucket does not exist/i.test(message);
+    }
+
+    private isBucketAlreadyOwnedError(error: unknown) {
+        const details = error as {
+            name?: string;
+            Code?: string;
+            code?: string;
+            message?: string;
+            $metadata?: { httpStatusCode?: number };
+        };
+
+        const rawCode = String(details?.Code || details?.code || details?.name || '').trim();
+        const message = String(details?.message || '').trim();
+        const status = details?.$metadata?.httpStatusCode;
+
+        return rawCode === 'BucketAlreadyOwnedByYou'
+            || rawCode === 'BucketAlreadyExists'
+            || status === 409
+            || /bucket.*already/i.test(message);
+    }
+
+    private async ensureBucketExists() {
+        if (!this.bucketReadyPromise) {
+            this.bucketReadyPromise = (async () => {
+                try {
+                    await this.s3Client.send(new HeadBucketCommand({
+                        Bucket: this.bucketName,
+                    }));
+                    return;
+                } catch (error) {
+                    if (!this.isMissingBucketError(error)) {
+                        throw error;
+                    }
+                }
+
+                try {
+                    await this.s3Client.send(new CreateBucketCommand({
+                        Bucket: this.bucketName,
+                    }));
+                } catch (error) {
+                    if (!this.isBucketAlreadyOwnedError(error)) {
+                        throw error;
+                    }
+                }
+
+                await this.s3Client.send(new HeadBucketCommand({
+                    Bucket: this.bucketName,
+                }));
+            })().catch((error) => {
+                this.bucketReadyPromise = undefined;
+                throw error;
+            });
+        }
+
+        await this.bucketReadyPromise;
     }
 
     private async streamToBuffer(body: unknown): Promise<Buffer> {
@@ -85,6 +169,10 @@ export class S3CompatibleFileStorageProvider implements FileStorageProvider {
         const folder = this.sanitizeSegment(request.folder, 'folder');
         const fileName = this.sanitizeSegment(request.fileName, 'fileName');
         const key = path.posix.join(folder, fileName);
+
+        if (this.autoCreateBucket) {
+            await this.ensureBucketExists();
+        }
 
         await this.s3Client.send(new PutObjectCommand({
             Bucket: this.bucketName,

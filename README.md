@@ -78,6 +78,7 @@ STORAGE_S3_BUCKET=
 STORAGE_S3_ACCESS_KEY_ID=
 STORAGE_S3_SECRET_ACCESS_KEY=
 STORAGE_S3_FORCE_PATH_STYLE=true
+STORAGE_S3_AUTO_CREATE_BUCKET=false
 STORAGE_S3_PUBLIC_BASE_URL=
 ```
 
@@ -87,6 +88,7 @@ Observações:
 - Em Docker Compose deste projeto, o volume `api_storage` monta `/app/storage` para persistência local.
 - Para migrar para serviço da universidade compatível com S3, mantenha `STORAGE_PROVIDER=s3` apenas quando `STORAGE_S3_ENABLED=true` e as credenciais estiverem configuradas.
 - Se `STORAGE_S3_REGION` não for informado, o backend faz fallback para `us-east-1`, que costuma ser o valor esperado em MinIO.
+- Se o bucket ainda não existir no MinIO, rode `npm run storage:ensure-bucket` ou ative `STORAGE_S3_AUTO_CREATE_BUCKET=true` para deixar a primeira gravação criar o bucket automaticamente.
 - Para validar a configuração dentro do container antes de testar a UI, rode `npm run storage:smoke-test`.
 - Para validar o fluxo completo de assinatura via API, rode `npm run signature:smoke-test -- --baseUrl=http://127.0.0.1:3333 --email=SEU_EMAIL --password=SUA_SENHA`.
 

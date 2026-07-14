@@ -19,6 +19,7 @@
     "siac:reconcile": "node -r ts-node/register -r dotenv/config src/scripts/reconcile-siac-existing-components.ts",
     "repair:encoding": "node -r ts-node/register -r dotenv/config src/scripts/repair-imported-text-encoding.ts",
     "audit:encoding": "node -r ts-node/register -r dotenv/config src/scripts/audit-imported-text-encoding.ts",
+    "storage:ensure-bucket": "node -r ts-node/register -r dotenv/config src/scripts/storage-ensure-bucket.ts",
     "storage:smoke-test": "node -r ts-node/register -r dotenv/config src/scripts/storage-smoke-test.ts",
     "signature:smoke-test": "node -r ts-node/register -r dotenv/config src/scripts/validate-signature-upload-flow.ts",
     "invite:cleanup": "node -r ts-node/register -r dotenv/config src/scripts/cleanup-expired-invite-shortlinks.ts",

@@ -67,6 +67,10 @@ async function main() {
 }
 
 main().catch((error) => {
+    const message = error instanceof Error ? error.message : String(error);
+    const hint = /NoSuchBucket|bucket does not exist/i.test(message)
+        ? 'Bucket ausente. Rode storage-ensure-bucket ou ative STORAGE_S3_AUTO_CREATE_BUCKET=true.'
+        : undefined;
     const details = error instanceof Error
         ? { message: error.message, stack: error.stack }
         : { message: String(error) };
@@ -77,6 +81,7 @@ main().catch((error) => {
         endpoint: String(process.env.STORAGE_S3_ENDPOINT || '').trim(),
         bucket: String(process.env.STORAGE_S3_BUCKET || '').trim(),
         region: String(process.env.STORAGE_S3_REGION || process.env.AWS_REGION || 'us-east-1').trim() || 'us-east-1',
+        hint,
         ...details,
     });
 
