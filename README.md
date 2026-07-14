@@ -89,8 +89,10 @@ Observações:
 - Para migrar para serviço da universidade compatível com S3, mantenha `STORAGE_PROVIDER=s3` apenas quando `STORAGE_S3_ENABLED=true` e as credenciais estiverem configuradas.
 - Se `STORAGE_S3_REGION` não for informado, o backend faz fallback para `us-east-1`, que costuma ser o valor esperado em MinIO.
 - Se o bucket ainda não existir no MinIO, rode `npm run storage:ensure-bucket` ou ative `STORAGE_S3_AUTO_CREATE_BUCKET=true` para deixar a primeira gravação criar o bucket automaticamente.
-- Para validar a configuração dentro do container antes de testar a UI, rode `npm run storage:smoke-test`.
-- Para validar o fluxo completo de assinatura via API, rode `npm run signature:smoke-test -- --baseUrl=http://127.0.0.1:3333 --email=SEU_EMAIL --password=SUA_SENHA`.
+- Para validar a configuração dentro do container antes de testar a UI, rode `npm run storage:smoke-test`. O probe agora usa uma imagem PNG valida, mais proxima do caso real de assinatura.
+- Para validar o fluxo completo de assinatura via API, prefira definir `SIGNATURE_TEST_EMAIL` e `SIGNATURE_TEST_PASSWORD` no ambiente e depois rodar `npm run signature:smoke-test -- --baseUrl=http://127.0.0.1:3333`.
+- O `signature:smoke-test` usa o login da propria aplicacao porque a assinatura precisa ser vinculada a um usuario autenticado. Se voce ja tiver um JWT valido, pode usar `SIGNATURE_TEST_TOKEN` ou `--token=SEU_TOKEN` no lugar de email/senha.
+- Para validar se a assinatura foi realmente embutida no DOCX oficial exportado, rode `npm run signature:docx-smoke-test -- --baseUrl=http://127.0.0.1:3333 --componentId=UUID_DO_COMPONENTE`.
 
 ### Assinatura do professor (texto + arquivo)
 
@@ -165,9 +167,9 @@ If you want the API to automatically import components when starting with an emp
 ```sh
 BOOTSTRAP_IMPORT_ON_EMPTY_DB=true
 BOOTSTRAP_IMPORT_SOURCE=sigaa-public
-BOOTSTRAP_ADMIN_EMAIL=jamilsonj@ufba.br
-BOOTSTRAP_ADMIN_NAME=Jamilson
-BOOTSTRAP_ADMIN_PASSWORD=Ementas@2026
+BOOTSTRAP_ADMIN_EMAIL=seu-email@ufba.br
+BOOTSTRAP_ADMIN_NAME=Seu Nome
+BOOTSTRAP_ADMIN_PASSWORD=sua-senha-forte
 BOOTSTRAP_SIGAA_SOURCE_TYPE=department
 BOOTSTRAP_SIGAA_ACADEMIC_LEVEL=graduacao
 CRAWLER_HTTP_FAMILY=4

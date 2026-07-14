@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 
 import { createStorageProvider } from '../services/storage';
+import { createValidSignaturePng } from './helpers/createValidSignaturePng';
 
 const readFlag = (flagName: string) => {
     const prefix = `--${flagName}=`;
@@ -18,17 +19,19 @@ const buildProbeFileName = () => {
         ? crypto.randomUUID()
         : crypto.randomBytes(12).toString('hex');
 
-    return `probe-${Date.now()}-${randomSegment}.txt`;
+    return `probe-${Date.now()}-${randomSegment}.png`;
 };
 
 async function main() {
     const folder = readFlag('folder') || 'signatures-probe';
     const fileName = readFlag('fileName') || buildProbeFileName();
+    const width = Number(readFlag('width') || 420);
+    const height = Number(readFlag('height') || 120);
     const provider = createStorageProvider();
     const endpoint = String(process.env.STORAGE_S3_ENDPOINT || '').trim() || undefined;
     const bucket = String(process.env.STORAGE_S3_BUCKET || '').trim() || undefined;
     const region = String(process.env.STORAGE_S3_REGION || process.env.AWS_REGION || 'us-east-1').trim() || 'us-east-1';
-    const content = Buffer.from(`ementas-storage-smoke-test ${new Date().toISOString()}`, 'utf-8');
+    const content = createValidSignaturePng(width, height);
 
     console.log('[storage-smoke-test] starting', {
         provider: provider.kind,
@@ -36,13 +39,15 @@ async function main() {
         endpoint,
         bucket,
         region,
+        width,
+        height,
     });
 
     const saved = await provider.save({
         folder,
         fileName,
         content,
-        contentType: 'text/plain; charset=utf-8',
+        contentType: 'image/png',
     });
 
     console.log('[storage-smoke-test] saved', {

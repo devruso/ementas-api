@@ -1,17 +1,8 @@
-import { createValidSignaturePng } from './helpers/createValidSignaturePng';
+import AdmZip from 'adm-zip';
 
 type SessionResponse = {
     token?: string;
     accessToken?: string;
-};
-
-type UploadResponse = {
-    signatureFileKey?: string;
-    signatureFileProvider?: string;
-    signatureFileContentType?: string;
-    signatureFileSize?: number;
-    signatureFileHash?: string;
-    signatureUpdatedAt?: string;
 };
 
 const getArgValue = (flagName: string) => {
@@ -72,25 +63,28 @@ const requestBinary = async (url: string, init?: RequestInit) => {
 
 async function main() {
     const baseUrl = (getArgValue('--baseUrl') || process.env.API_BASE_URL || 'http://127.0.0.1:3333').replace(/\/+$/, '');
+    const componentId = getArgValue('--componentId') || process.env.SIGNATURE_TEST_COMPONENT_ID;
+    const expectedApproverName = getArgValue('--expectedApproverName') || process.env.SIGNATURE_TEST_APPROVER_NAME;
     const providedToken = getArgValue('--token') || process.env.SIGNATURE_TEST_TOKEN;
     const email = getArgValue('--email') || process.env.SIGNATURE_TEST_EMAIL;
     const password = getArgValue('--password') || process.env.SIGNATURE_TEST_PASSWORD;
-    const signature = getArgValue('--signature') || 'Assina123!';
-    const width = Number(getArgValue('--width') || 420);
-    const height = Number(getArgValue('--height') || 120);
 
     if (hasFlag('--skipTlsValidation')) {
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+    }
+
+    if (!componentId) {
+        throw new Error('Informe --componentId para validar o DOCX exportado.');
     }
 
     let token = String(providedToken || '').trim();
 
     if (!token) {
         if (!email || !password) {
-            throw new Error('Informe --token ou use o login da aplicacao com --email e --password para vincular a assinatura ao usuario correto.');
+            throw new Error('Informe --token ou use --email e --password para validar a exportacao DOCX.');
         }
 
-        console.log('[signature-upload-flow] logging in', {
+        console.log('[signature-docx-flow] logging in', {
             baseUrl,
             email,
         });
@@ -109,53 +103,49 @@ async function main() {
             throw new Error('Resposta de login nao retornou token/accessToken.');
         }
     } else {
-        console.log('[signature-upload-flow] using provided token', {
+        console.log('[signature-docx-flow] using provided token', {
             baseUrl,
         });
     }
 
-    const png = createValidSignaturePng(width, height);
-    const formData = new FormData();
-    formData.append('signature', signature);
-    formData.append(
-        'signatureFile',
-        new Blob([png], { type: 'image/png' }),
-        'assinatura-validacao.png'
-    );
-
-    console.log('[signature-upload-flow] uploading signature file', {
-        width,
-        height,
-        bytes: png.length,
+    console.log('[signature-docx-flow] downloading docx export', {
+        componentId,
     });
 
-    const uploadResult = await requestJson<UploadResponse>(`${baseUrl}/api/users/update/signature/file`, {
-        method: 'PUT',
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-    });
-
-    console.log('[signature-upload-flow] upload success', {
-        signatureFileKey: uploadResult.signatureFileKey,
-        signatureFileProvider: uploadResult.signatureFileProvider,
-        signatureFileContentType: uploadResult.signatureFileContentType,
-        signatureFileSize: uploadResult.signatureFileSize,
-        signatureFileHash: uploadResult.signatureFileHash,
-        signatureUpdatedAt: uploadResult.signatureUpdatedAt,
-    });
-
-    const preview = await requestBinary(`${baseUrl}/api/users/signature/file`, {
+    const exportedDocx = await requestBinary(`${baseUrl}/api/components/${componentId}/export?format=docx`, {
         method: 'GET',
         headers: {
             Authorization: `Bearer ${token}`,
         },
     });
 
-    console.log('[signature-upload-flow] preview success', {
-        contentType: preview.contentType,
-        bytes: preview.content.length,
+    if (!/application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document/i.test(exportedDocx.contentType)) {
+        throw new Error(`Export retornou content-type inesperado: ${exportedDocx.contentType}`);
+    }
+
+    const zip = new AdmZip(exportedDocx.content);
+    const documentXml = zip.readAsText('word/document.xml');
+    const hasEmbeddedTeacherSignatureAsset = zip
+        .getEntries()
+        .some((entry: { entryName: string }) => /^word\/media\/signature-rId\d+\.png$/.test(entry.entryName));
+
+    if (!hasEmbeddedTeacherSignatureAsset) {
+        throw new Error('DOCX exportado nao contem asset de assinatura embutido em word/media/signature-rId*.png.');
+    }
+
+    if (!/<w:drawing|<w:pict/.test(documentXml)) {
+        throw new Error('DOCX exportado nao contem drawing/pict para a assinatura do professor.');
+    }
+
+    if (expectedApproverName && !documentXml.includes(`Nome: ${expectedApproverName} Assinatura:`)) {
+        throw new Error(`DOCX exportado nao contem a linha esperada para o aprovador "${expectedApproverName}".`);
+    }
+
+    console.log('[signature-docx-flow] success', {
+        componentId,
+        contentType: exportedDocx.contentType,
+        hasEmbeddedTeacherSignatureAsset,
+        expectedApproverName: expectedApproverName || undefined,
     });
 }
 
@@ -164,6 +154,6 @@ main().catch((error) => {
         ? { message: error.message, stack: error.stack }
         : { message: String(error) };
 
-    console.error('[signature-upload-flow] failed', details);
+    console.error('[signature-docx-flow] failed', details);
     process.exit(1);
 });

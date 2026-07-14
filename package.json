@@ -22,6 +22,7 @@
     "storage:ensure-bucket": "node -r ts-node/register -r dotenv/config src/scripts/storage-ensure-bucket.ts",
     "storage:smoke-test": "node -r ts-node/register -r dotenv/config src/scripts/storage-smoke-test.ts",
     "signature:smoke-test": "node -r ts-node/register -r dotenv/config src/scripts/validate-signature-upload-flow.ts",
+    "signature:docx-smoke-test": "node -r ts-node/register -r dotenv/config src/scripts/validate-signature-docx-export-flow.ts",
     "invite:cleanup": "node -r ts-node/register -r dotenv/config src/scripts/cleanup-expired-invite-shortlinks.ts",
     "sigaa:full-catalog": "node -r ts-node/register -r dotenv/config src/scripts/sigaa-full-catalog.ts",
     "sigaa:bootstrap-snapshot": "node -r ts-node/register -r dotenv/config src/scripts/generate-sigaa-bootstrap-snapshot.ts",

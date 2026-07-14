@@ -9,6 +9,25 @@ import Mailer from '../middlewares/Mailer';
 import { assertUfbaInstitutionalEmail, normalizeEmail } from '../helpers/institutionalEmail';
 import { buildResetPasswordEmailTemplate } from '../helpers/emailTemplates';
 
+type CurrentUserResponse = Pick<
+    User,
+    | 'id'
+    | 'name'
+    | 'email'
+    | 'role'
+    | 'signatureUpdatedAt'
+    | 'signatureFileKey'
+    | 'signatureFileProvider'
+    | 'signatureFileContentType'
+    | 'signatureFileSize'
+    | 'signatureFileHash'
+    | 'createdAt'
+    | 'updatedAt'
+> & {
+    hasSignatureConfigured: boolean;
+    hasSignatureFileConfigured: boolean;
+};
+
 class AuthService {
     private userRepository : Repository<User>;
 
@@ -119,14 +138,33 @@ class AuthService {
         return this.buildAuthResponse({ id: user.id, name: user.name, email: user.email });
     }
 
-    async getCurrentUser(userId: string) {
+    async getCurrentUser(userId: string): Promise<CurrentUserResponse> {
         const user = await this.userRepository.findOne({ id: userId });
 
         if (!user) {
             throw new AppError('User does not exists!', 400);
         }
 
-        return user;
+        return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            signatureUpdatedAt: user.signatureUpdatedAt,
+            signatureFileKey: user.signatureFileKey,
+            signatureFileProvider: user.signatureFileProvider,
+            signatureFileContentType: user.signatureFileContentType,
+            signatureFileSize: user.signatureFileSize,
+            signatureFileHash: user.signatureFileHash,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+            hasSignatureConfigured: Boolean(user.signatureHash),
+            hasSignatureFileConfigured: Boolean(
+                user.signatureFileKey &&
+                user.signatureFileContentType &&
+                /^image\//i.test(user.signatureFileContentType)
+            ),
+        };
     }
 
 
