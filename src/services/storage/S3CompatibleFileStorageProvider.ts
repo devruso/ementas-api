@@ -35,13 +35,13 @@ export class S3CompatibleFileStorageProvider implements FileStorageProvider {
     constructor() {
         this.bucketName = String(process.env.STORAGE_S3_BUCKET || '').trim();
         this.endpoint = String(process.env.STORAGE_S3_ENDPOINT || '').trim();
-        this.region = String(process.env.STORAGE_S3_REGION || '').trim();
+        this.region = String(process.env.STORAGE_S3_REGION || process.env.AWS_REGION || 'us-east-1').trim() || 'us-east-1';
         this.accessKeyId = String(process.env.STORAGE_S3_ACCESS_KEY_ID || '').trim();
         this.secretAccessKey = String(process.env.STORAGE_S3_SECRET_ACCESS_KEY || '').trim();
         this.forcePathStyle = String(process.env.STORAGE_S3_FORCE_PATH_STYLE || 'true').trim().toLowerCase() === 'true';
         this.publicBaseUrl = String(process.env.STORAGE_S3_PUBLIC_BASE_URL || '').trim().replace(/\/+$/, '');
 
-        if (!this.bucketName || !this.endpoint || !this.region || !this.accessKeyId || !this.secretAccessKey) {
+        if (!this.bucketName || !this.endpoint || !this.accessKeyId || !this.secretAccessKey) {
             throw new AppError(
                 'S3-compatible provider requires STORAGE_S3_BUCKET, STORAGE_S3_ENDPOINT, STORAGE_S3_REGION, STORAGE_S3_ACCESS_KEY_ID and STORAGE_S3_SECRET_ACCESS_KEY.',
                 500

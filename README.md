@@ -73,7 +73,7 @@ STORAGE_PROVIDER=local
 STORAGE_LOCAL_BASE_PATH=storage
 STORAGE_S3_ENABLED=false
 STORAGE_S3_ENDPOINT=
-STORAGE_S3_REGION=
+STORAGE_S3_REGION=us-east-1
 STORAGE_S3_BUCKET=
 STORAGE_S3_ACCESS_KEY_ID=
 STORAGE_S3_SECRET_ACCESS_KEY=
@@ -86,6 +86,8 @@ Observações:
 - Não salve arquivos no filesystem efêmero do container sem volume.
 - Em Docker Compose deste projeto, o volume `api_storage` monta `/app/storage` para persistência local.
 - Para migrar para serviço da universidade compatível com S3, mantenha `STORAGE_PROVIDER=s3` apenas quando `STORAGE_S3_ENABLED=true` e as credenciais estiverem configuradas.
+- Se `STORAGE_S3_REGION` não for informado, o backend faz fallback para `us-east-1`, que costuma ser o valor esperado em MinIO.
+- Para validar a configuração dentro do container antes de testar a UI, rode `npm run storage:smoke-test`.
 
 ### Assinatura do professor (texto + arquivo)
 

@@ -48,6 +48,21 @@ describe('Storage provider factory', () => {
         expect(() => createStorageProvider()).toThrow(/STORAGE_S3_ENABLED/i);
     });
 
+    it('should default s3 region to us-east-1 when omitted', () => {
+        process.env.STORAGE_PROVIDER = 's3';
+        process.env.STORAGE_S3_ENABLED = 'true';
+        process.env.STORAGE_S3_ENDPOINT = 'http://127.0.0.1:9000';
+        process.env.STORAGE_S3_BUCKET = 'ementas-signatures-test';
+        process.env.STORAGE_S3_ACCESS_KEY_ID = 'test-access-key';
+        process.env.STORAGE_S3_SECRET_ACCESS_KEY = 'test-secret-key';
+        process.env.STORAGE_S3_REGION = '';
+
+        const provider = createStorageProvider() as unknown as { kind: string; region: string };
+
+        expect(provider.kind).toBe('s3');
+        expect(provider.region).toBe('us-east-1');
+    });
+
     it('should throw for unsupported provider', () => {
         process.env.STORAGE_PROVIDER = 'ftp';
 
