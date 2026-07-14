@@ -13,9 +13,9 @@ const AUTO_IMPORT_FLAG = 'true';
 type BootstrapSource = 'sigaa-public' | 'siac';
 
 const DEFAULT_SIGAA_SOURCE_IDS: Record<AcademicLevel, string> = {
-    [AcademicLevel.GRADUATION]: '114',
-    [AcademicLevel.MASTERS]: '1307',
-    [AcademicLevel.DOCTORATE]: '1307',
+    [AcademicLevel.GRADUATION]: '1114',
+    [AcademicLevel.MASTERS]: '1820',
+    [AcademicLevel.DOCTORATE]: '43753',
 };
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();

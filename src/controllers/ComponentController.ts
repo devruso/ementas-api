@@ -27,9 +27,9 @@ const isUserAuthenticated = (authorization?: string) => {
 const readSigaaSourceIdFromEnv = (level?: AcademicLevel) => {
     const globalSourceId = String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID || '').trim();
     const defaultSourceIds: Record<AcademicLevel, string> = {
-        [AcademicLevel.GRADUATION]: '114',
-        [AcademicLevel.MASTERS]: '1307',
-        [AcademicLevel.DOCTORATE]: '1307',
+        [AcademicLevel.GRADUATION]: '1114',
+        [AcademicLevel.MASTERS]: '1820',
+        [AcademicLevel.DOCTORATE]: '43753',
     };
 
     if (!level) {
