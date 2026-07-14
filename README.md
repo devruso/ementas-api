@@ -173,6 +173,7 @@ Notes:
 - Import runs only when `components` is empty.
 - The bootstrap user is created/promoted as `super_admin` automatically for the operation.
 - For SIAC source, set `BOOTSTRAP_IMPORT_SOURCE=siac` and provide `BOOTSTRAP_SIAC_CD_CURSO` plus `BOOTSTRAP_SIAC_NU_PER_CURSO_INICIAL`.
+- For an offline production bootstrap generated locally, set `BOOTSTRAP_IMPORT_SOURCE=sigaa-snapshot` and provide `BOOTSTRAP_SIGAA_SNAPSHOT_PATH`.
 - `CRAWLER_HTTP_FAMILY=4` is optional and helps when production networking reaches SIGAA over IPv4 but times out over IPv6.
 - For SIGAA public source, the bootstrap now accepts both single-value vars such as `BOOTSTRAP_SIGAA_SOURCE_ID_GRADUACAO` and multi-value vars such as `BOOTSTRAP_SIGAA_SOURCE_IDS_GRADUACAO`, comma-separated.
 - Validated IC/UFBA public units found in the fixtures:
@@ -197,6 +198,29 @@ BOOTSTRAP_SIGAA_ACADEMIC_LEVEL=all
 BOOTSTRAP_SIGAA_SOURCE_IDS_GRADUACAO=1118,1935,1934
 BOOTSTRAP_SIGAA_SOURCE_IDS_MESTRADO=1820
 CRAWLER_HTTP_FAMILY=4
+```
+
+Offline snapshot flow when Dokku cannot reach SIGAA:
+
+```sh
+npm run sigaa:bootstrap-snapshot -- \
+  --graduacaoSourceIds=1118,1935,1934 \
+  --mestradoSourceIds=1820 \
+  --output=bootstrap-data/sigaa-bootstrap.snapshot.json
+```
+
+Then deploy with:
+
+```sh
+BOOTSTRAP_IMPORT_ON_EMPTY_DB=true
+BOOTSTRAP_IMPORT_SOURCE=sigaa-snapshot
+BOOTSTRAP_ADMIN_EMAIL=seu-email@ufba.br
+BOOTSTRAP_ADMIN_NAME=Seu Nome
+BOOTSTRAP_ADMIN_PASSWORD=sua-senha-forte
+BOOTSTRAP_SIGAA_SNAPSHOT_PATH=/app/bootstrap-data/sigaa-bootstrap.snapshot.json
+BOOTSTRAP_SIGAA_ACADEMIC_LEVEL=all
+BOOTSTRAP_SIGAA_SOURCE_IDS_GRADUACAO=1118,1935,1934
+BOOTSTRAP_SIGAA_SOURCE_IDS_MESTRADO=1820
 ```
 
 ## SIGAA reconciliation for existing components

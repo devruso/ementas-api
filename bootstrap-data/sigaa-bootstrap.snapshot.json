@@ -1,0 +1,2411 @@
+{
+  "generatedAt": "2026-07-14T16:08:47.746Z",
+  "requestTimeoutMs": 120000,
+  "enrichDetails": true,
+  "detailsConcurrency": 4,
+  "units": [
+    {
+      "sourceType": "department",
+      "sourceId": "1118",
+      "academicLevel": "graduacao",
+      "label": "COLEGIADO DO CURSO DE GRADUAÇÃO EM CIÊNCIA DA COMPUTAÇÃO/IC",
+      "componentCount": 3,
+      "components": [
+        {
+          "code": "GICC0006",
+          "name": "COMPONENTE DE HOMOLOGAÇÃO DE EXTENSÃO CURRICULAR",
+          "department": "COLEGIADO DO CURSO DE GRADUAÇÃO EM CIÊNCIA DA COMPUTAÇÃO/IC",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: PROJETO FINAL DE CURSO I Cargas Horárias Discente Orientada",
+          "bibliography": "",
+          "prerequeriments": "FCHC45",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Aceita Criar Turma: Não Matriculável On-Line: Não Horário Flexível da Turma: Não Horário Flexível do Docente: Não Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Sim Exige Horário: Não Permite Múltiplas Aprovações: Não",
+          "academicLevel": "graduacao",
+          "workload": {
+            "theoretical": 1,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/departamento/componentes.jsf;jsessionid=2797ED7ED4FB35F24D0275630F23F2F6.sigaapl09",
+          "detailActionPayload": "formComponenteDepartamento=formComponenteDepartamento&formComponenteDepartamento_SUBMIT=1&formComponenteDepartamento%3AformIdioma=formComponenteDepartamento%3AformIdioma&javax.faces.ViewState=j_id1&formComponenteDepartamento%3Aj_id_jsp_1418940761_13=formComponenteDepartamento%3Aj_id_jsp_1418940761_13&id=54479&publico=public",
+          "detailActionPayloadCandidates": [
+            "formComponenteDepartamento=formComponenteDepartamento&formComponenteDepartamento_SUBMIT=1&formComponenteDepartamento%3AformIdioma=formComponenteDepartamento%3AformIdioma&javax.faces.ViewState=j_id1&formComponenteDepartamento%3Aj_id_jsp_1418940761_13=formComponenteDepartamento%3Aj_id_jsp_1418940761_13&id=54479&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=2797ED7ED4FB35F24D0275630F23F2F6.sigaapl09",
+          "workloadExtension": 0,
+          "equivalences": [
+            "MATA66"
+          ]
+        },
+        {
+          "code": "GICC0001",
+          "name": "PROJETO FINAL DE CURSO I",
+          "department": "COLEGIADO DO CURSO DE GRADUAÇÃO EM CIÊNCIA DA COMPUTAÇÃO/IC",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: PROJETO FINAL DE CURSO I Cargas Horárias Discente Orientada",
+          "bibliography": "",
+          "prerequeriments": "FCHC45",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Aceita Criar Turma: Não Matriculável On-Line: Não Horário Flexível da Turma: Não Horário Flexível do Docente: Não Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Sim Exige Horário: Não Permite Múltiplas Aprovações: Não",
+          "academicLevel": "graduacao",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/departamento/componentes.jsf;jsessionid=2797ED7ED4FB35F24D0275630F23F2F6.sigaapl09",
+          "detailActionPayload": "formComponenteDepartamento=formComponenteDepartamento&formComponenteDepartamento_SUBMIT=1&formComponenteDepartamento%3AformIdioma=formComponenteDepartamento%3AformIdioma&javax.faces.ViewState=j_id1&formComponenteDepartamento%3Aj_id_jsp_1418940761_13j_id_1=formComponenteDepartamento%3Aj_id_jsp_1418940761_13j_id_1&id=52372&publico=public",
+          "detailActionPayloadCandidates": [
+            "formComponenteDepartamento=formComponenteDepartamento&formComponenteDepartamento_SUBMIT=1&formComponenteDepartamento%3AformIdioma=formComponenteDepartamento%3AformIdioma&javax.faces.ViewState=j_id1&formComponenteDepartamento%3Aj_id_jsp_1418940761_13j_id_1=formComponenteDepartamento%3Aj_id_jsp_1418940761_13j_id_1&id=52372&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=2797ED7ED4FB35F24D0275630F23F2F6.sigaapl09",
+          "workloadExtension": 0,
+          "equivalences": [
+            "MATA66"
+          ]
+        },
+        {
+          "code": "GICC0002",
+          "name": "PROJETO FINAL DE CURSO II",
+          "department": "COLEGIADO DO CURSO DE GRADUAÇÃO EM CIÊNCIA DA COMPUTAÇÃO/IC",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: PROJETO FINAL DE CURSO I Cargas Horárias Discente Orientada",
+          "bibliography": "",
+          "prerequeriments": "FCHC45",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Aceita Criar Turma: Não Matriculável On-Line: Não Horário Flexível da Turma: Não Horário Flexível do Docente: Não Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Sim Exige Horário: Não Permite Múltiplas Aprovações: Não",
+          "academicLevel": "graduacao",
+          "workload": {
+            "theoretical": 120,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/departamento/componentes.jsf;jsessionid=2797ED7ED4FB35F24D0275630F23F2F6.sigaapl09",
+          "detailActionPayload": "formComponenteDepartamento=formComponenteDepartamento&formComponenteDepartamento_SUBMIT=1&formComponenteDepartamento%3AformIdioma=formComponenteDepartamento%3AformIdioma&javax.faces.ViewState=j_id1&formComponenteDepartamento%3Aj_id_jsp_1418940761_13j_id_2=formComponenteDepartamento%3Aj_id_jsp_1418940761_13j_id_2&id=52373&publico=public",
+          "detailActionPayloadCandidates": [
+            "formComponenteDepartamento=formComponenteDepartamento&formComponenteDepartamento_SUBMIT=1&formComponenteDepartamento%3AformIdioma=formComponenteDepartamento%3AformIdioma&javax.faces.ViewState=j_id1&formComponenteDepartamento%3Aj_id_jsp_1418940761_13j_id_2=formComponenteDepartamento%3Aj_id_jsp_1418940761_13j_id_2&id=52373&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=2797ED7ED4FB35F24D0275630F23F2F6.sigaapl09",
+          "workloadExtension": 0,
+          "equivalences": [
+            "MATA66"
+          ]
+        }
+      ]
+    },
+    {
+      "sourceType": "department",
+      "sourceId": "1935",
+      "academicLevel": "graduacao",
+      "label": "COLEGIADO DO CURSO DE GRADUAÇÃO EM SISTEMAS DE INFORMAÇÃO/IC",
+      "componentCount": 3,
+      "components": [
+        {
+          "code": "GICC0007",
+          "name": "COMPONENTE DE HOMOLOGAÇÃO DE EXTENSÃO CURRICULAR",
+          "department": "COLEGIADO DO CURSO DE GRADUAÇÃO EM SISTEMAS DE INFORMAÇÃO/IC",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Não definido. Cargas Horárias Discente Orientada",
+          "bibliography": "",
+          "prerequeriments": "GICC0003",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Aceita Criar Turma: Não Matriculável On-Line: Não Horário Flexível da Turma: Não Horário Flexível do Docente: Não Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Sim Exige Horário: Não Permite Múltiplas Aprovações: Não",
+          "academicLevel": "graduacao",
+          "workload": {
+            "theoretical": 1,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/departamento/componentes.jsf;jsessionid=995BA277A2D9094321FCD28C5DEEB17D.sigaapl09",
+          "detailActionPayload": "formComponenteDepartamento=formComponenteDepartamento&formComponenteDepartamento_SUBMIT=1&formComponenteDepartamento%3AformIdioma=formComponenteDepartamento%3AformIdioma&javax.faces.ViewState=j_id1&formComponenteDepartamento%3Aj_id_jsp_1418940761_13=formComponenteDepartamento%3Aj_id_jsp_1418940761_13&id=54480&publico=public",
+          "detailActionPayloadCandidates": [
+            "formComponenteDepartamento=formComponenteDepartamento&formComponenteDepartamento_SUBMIT=1&formComponenteDepartamento%3AformIdioma=formComponenteDepartamento%3AformIdioma&javax.faces.ViewState=j_id1&formComponenteDepartamento%3Aj_id_jsp_1418940761_13=formComponenteDepartamento%3Aj_id_jsp_1418940761_13&id=54480&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=995BA277A2D9094321FCD28C5DEEB17D.sigaapl09",
+          "workloadExtension": 0,
+          "equivalences": [
+            "MATC98"
+          ]
+        },
+        {
+          "code": "GICC0003",
+          "name": "TCC BACHARELADO SISTEMAS DE INFORMAÇÃO I",
+          "department": "COLEGIADO DO CURSO DE GRADUAÇÃO EM SISTEMAS DE INFORMAÇÃO/IC",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Não definido. Cargas Horárias Discente Orientada",
+          "bibliography": "",
+          "prerequeriments": "GICC0003",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Aceita Criar Turma: Não Matriculável On-Line: Não Horário Flexível da Turma: Não Horário Flexível do Docente: Não Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Sim Exige Horário: Não Permite Múltiplas Aprovações: Não",
+          "academicLevel": "graduacao",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/departamento/componentes.jsf;jsessionid=995BA277A2D9094321FCD28C5DEEB17D.sigaapl09",
+          "detailActionPayload": "formComponenteDepartamento=formComponenteDepartamento&formComponenteDepartamento_SUBMIT=1&formComponenteDepartamento%3AformIdioma=formComponenteDepartamento%3AformIdioma&javax.faces.ViewState=j_id1&formComponenteDepartamento%3Aj_id_jsp_1418940761_13j_id_1=formComponenteDepartamento%3Aj_id_jsp_1418940761_13j_id_1&id=52392&publico=public",
+          "detailActionPayloadCandidates": [
+            "formComponenteDepartamento=formComponenteDepartamento&formComponenteDepartamento_SUBMIT=1&formComponenteDepartamento%3AformIdioma=formComponenteDepartamento%3AformIdioma&javax.faces.ViewState=j_id1&formComponenteDepartamento%3Aj_id_jsp_1418940761_13j_id_1=formComponenteDepartamento%3Aj_id_jsp_1418940761_13j_id_1&id=52392&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=995BA277A2D9094321FCD28C5DEEB17D.sigaapl09",
+          "workloadExtension": 0,
+          "equivalences": [
+            "MATC98"
+          ]
+        },
+        {
+          "code": "GICC0004",
+          "name": "TCC BACHARELADO SISTEMAS DE INFORMAÇÃO II",
+          "department": "COLEGIADO DO CURSO DE GRADUAÇÃO EM SISTEMAS DE INFORMAÇÃO/IC",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Não definido. Cargas Horárias Discente Orientada",
+          "bibliography": "",
+          "prerequeriments": "GICC0003",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Aceita Criar Turma: Não Matriculável On-Line: Não Horário Flexível da Turma: Não Horário Flexível do Docente: Não Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Sim Exige Horário: Não Permite Múltiplas Aprovações: Não",
+          "academicLevel": "graduacao",
+          "workload": {
+            "theoretical": 120,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/departamento/componentes.jsf;jsessionid=995BA277A2D9094321FCD28C5DEEB17D.sigaapl09",
+          "detailActionPayload": "formComponenteDepartamento=formComponenteDepartamento&formComponenteDepartamento_SUBMIT=1&formComponenteDepartamento%3AformIdioma=formComponenteDepartamento%3AformIdioma&javax.faces.ViewState=j_id1&formComponenteDepartamento%3Aj_id_jsp_1418940761_13j_id_2=formComponenteDepartamento%3Aj_id_jsp_1418940761_13j_id_2&id=52393&publico=public",
+          "detailActionPayloadCandidates": [
+            "formComponenteDepartamento=formComponenteDepartamento&formComponenteDepartamento_SUBMIT=1&formComponenteDepartamento%3AformIdioma=formComponenteDepartamento%3AformIdioma&javax.faces.ViewState=j_id1&formComponenteDepartamento%3Aj_id_jsp_1418940761_13j_id_2=formComponenteDepartamento%3Aj_id_jsp_1418940761_13j_id_2&id=52393&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=995BA277A2D9094321FCD28C5DEEB17D.sigaapl09",
+          "workloadExtension": 0,
+          "equivalences": [
+            "MATC98"
+          ]
+        }
+      ]
+    },
+    {
+      "sourceType": "department",
+      "sourceId": "1934",
+      "academicLevel": "graduacao",
+      "label": "COLEGIADO DO CURSO DE LICENCIATURA EM COMPUTAÇÃO/IC",
+      "componentCount": 1,
+      "components": [
+        {
+          "code": "GICC0008",
+          "name": "COMPONENTE DE HOMOLOGAÇÃO DE EXTENSÃO CURRICULAR",
+          "department": "COLEGIADO DO CURSO DE LICENCIATURA EM COMPUTAÇÃO/IC",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: COMPONENTE DE HOMOLOGAÇÃO DE",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Aceita Criar Turma: Não Matriculável On-Line: Não Horário Flexível da Turma: Não Horário Flexível do Docente: Não Obrigatoriedade de Nota Final: Não Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Sim Exige Horário: Não Permite Múltiplas Aprovações: Não",
+          "academicLevel": "graduacao",
+          "workload": {
+            "theoretical": 1,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/departamento/componentes.jsf;jsessionid=E2B32B3FA318807E868D37800F79F8FB.saomiguel",
+          "detailActionPayload": "formComponenteDepartamento=formComponenteDepartamento&formComponenteDepartamento_SUBMIT=1&formComponenteDepartamento%3AformIdioma=formComponenteDepartamento%3AformIdioma&javax.faces.ViewState=j_id1&formComponenteDepartamento%3Aj_id_jsp_1418940761_13=formComponenteDepartamento%3Aj_id_jsp_1418940761_13&id=54481&publico=public",
+          "detailActionPayloadCandidates": [
+            "formComponenteDepartamento=formComponenteDepartamento&formComponenteDepartamento_SUBMIT=1&formComponenteDepartamento%3AformIdioma=formComponenteDepartamento%3AformIdioma&javax.faces.ViewState=j_id1&formComponenteDepartamento%3Aj_id_jsp_1418940761_13=formComponenteDepartamento%3Aj_id_jsp_1418940761_13&id=54481&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=E2B32B3FA318807E868D37800F79F8FB.saomiguel",
+          "workloadExtension": 0
+        }
+      ]
+    },
+    {
+      "sourceType": "program",
+      "sourceId": "1820",
+      "academicLevel": "mestrado",
+      "label": "Programa SIGAA",
+      "componentCount": 69,
+      "components": [
+        {
+          "code": "IC0062",
+          "name": "ALGORITMOS DISTRIBUÍDOS I",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Esta disciplina abordará temas de pesquisa atuais relacionados à Estatística. Trata-se de disciplina de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Não Horário Flexível do Docente: Não Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Não Necessita de Orientador: Não Exige Horário: Não",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 30,
+            "practice": 30,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23=formListagemComponentes%3Aj_id_jsp_1092268766_23&id=16604&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23=formListagemComponentes%3Aj_id_jsp_1092268766_23&id=16604&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE62"
+          ],
+          "equivalences": [
+            "MATE62"
+          ]
+        },
+        {
+          "code": "IC0004",
+          "name": "ALGORITMOS E GRAFOS",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Esta disciplina abordará temas de pesquisa atuais relacionados à Estatística. Trata-se de disciplina de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Não Horário Flexível do Docente: Não Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Não Necessita de Orientador: Não Exige Horário: Não",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 30,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_1=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_1&id=16546&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_1=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_1&id=16546&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0
+        },
+        {
+          "code": "IC0031",
+          "name": "ARQUITETURA DE SOFTWARE",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Histórico de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Não Horário Flexível do Docente: Não Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Não Necessita de Orientador: Não Exige Horário: Não",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_2=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_2&id=16573&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_2=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_2&id=16573&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE62"
+          ],
+          "equivalences": [
+            "MATE62"
+          ]
+        },
+        {
+          "code": "IC0051",
+          "name": "ASPECTOS RECENTES EM ESTATÍSTICA",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Computação móvel X Computação Ubíqua. Plataformas computacionais e aspectos de comunicação para sistemas ubíquos. Engenharia de Software para sistemas ubíquos. Conceitos de contexto e sistemas sensíveis ao contexto. Mecanismos de aquisição e inferência de contexto. Representação e modelos de contexto. Aspectos da interação humano-computador. Serviços e aplicações da Computação Ubíqua em diferentes domínios. Desafios e direções de pesquisa. Referências: Histórico de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Não Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_3=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_3&id=16593&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_3=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_3&id=16593&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE70"
+          ],
+          "equivalences": [
+            "MATE70"
+          ]
+        },
+        {
+          "code": "IC0032",
+          "name": "BANCO DE DADOS",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Computação móvel X Computação Ubíqua. Plataformas computacionais e aspectos de comunicação para sistemas ubíquos. Engenharia de Software para sistemas ubíquos. Conceitos de contexto e sistemas sensíveis ao contexto. Mecanismos de aquisição e inferência de contexto. Representação e modelos de contexto. Aspectos da interação humano-computador. Serviços e aplicações da Computação Ubíqua em diferentes domínios. Desafios e direções de pesquisa. Referências: Histórico de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Não Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_4=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_4&id=16574&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_4=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_4&id=16574&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE70"
+          ],
+          "equivalences": [
+            "MATE70"
+          ]
+        },
+        {
+          "code": "IC0033",
+          "name": "COMPUTAÇÃO DISTRIBUÍDA",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Computação móvel X Computação Ubíqua. Plataformas computacionais e aspectos de comunicação para sistemas ubíquos. Engenharia de Software para sistemas ubíquos. Conceitos de contexto e sistemas sensíveis ao contexto. Mecanismos de aquisição e inferência de contexto. Representação e modelos de contexto. Aspectos da interação humano-computador. Serviços e aplicações da Computação Ubíqua em diferentes domínios. Desafios e direções de pesquisa. Referências: Histórico de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Não Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_5=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_5&id=16575&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_5=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_5&id=16575&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE70"
+          ],
+          "equivalences": [
+            "MATE70"
+          ]
+        },
+        {
+          "code": "IC0034",
+          "name": "COMPUTAÇÃO UBÍQUA E SENSÍVEL AO CONTEXTO",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Computação móvel X Computação Ubíqua. Plataformas computacionais e aspectos de comunicação para sistemas ubíquos. Engenharia de Software para sistemas ubíquos. Conceitos de contexto e sistemas sensíveis ao contexto. Mecanismos de aquisição e inferência de contexto. Representação e modelos de contexto. Aspectos da interação humano-computador. Serviços e aplicações da Computação Ubíqua em diferentes domínios. Desafios e direções de pesquisa. Referências: Histórico de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Não Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_6=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_6&id=16576&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_6=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_6&id=16576&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE70"
+          ],
+          "equivalences": [
+            "MATE70"
+          ]
+        },
+        {
+          "code": "IC0035",
+          "name": "COMPUTAÇÃO VISUAL",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: A ciência e o método científico. A ciência e a ciência da computação. Leitura de artigos científicos. Técnicas de análise de dados empíricos. Técnicas de apresentação gráfica de dados empíricos. Como realizar uma pesquisa empírica. Medição. Planejamento de surveys e questionários. Escrita e apresentação de um artigo científico. Referências: Histórico de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Não Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_7=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_7&id=16577&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_7=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_7&id=16577&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE65"
+          ],
+          "equivalences": [
+            "MATE65"
+          ]
+        },
+        {
+          "code": "IC0050",
+          "name": "ENGENHARIA DE SOFTWARE EXPERIMENTAL",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: A ciência e o método científico. A ciência e a ciência da computação. Leitura de artigos científicos. Técnicas de análise de dados empíricos. Técnicas de apresentação gráfica de dados empíricos. Como realizar uma pesquisa empírica. Medição. Planejamento de surveys e questionários. Escrita e apresentação de um artigo científico. Referências: Histórico de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Não Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_8=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_8&id=16592&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_8=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_8&id=16592&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE65"
+          ],
+          "equivalences": [
+            "MATE65"
+          ]
+        },
+        {
+          "code": "IC0063",
+          "name": "ENGENHARIA DE SOFTWARE EXPERIMENTAL",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: A ciência e o método científico. A ciência e a ciência da computação. Leitura de artigos científicos. Técnicas de análise de dados empíricos. Técnicas de apresentação gráfica de dados empíricos. Como realizar uma pesquisa empírica. Medição. Planejamento de surveys e questionários. Escrita e apresentação de um artigo científico. Referências: Histórico de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Não Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_9=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_9&id=16605&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_9=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_9&id=16605&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE65"
+          ],
+          "equivalences": [
+            "MATE65"
+          ]
+        },
+        {
+          "code": "IC0029",
+          "name": "FUNDAMENTOS DE PESQUISA EM CIÊNCIA DA COMPUTAÇÃO I",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: A ciência e o método científico. A ciência e a ciência da computação. Leitura de artigos científicos. Técnicas de análise de dados empíricos. Técnicas de apresentação gráfica de dados empíricos. Como realizar uma pesquisa empírica. Medição. Planejamento de surveys e questionários. Escrita e apresentação de um artigo científico. Referências: Histórico de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Não Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_10=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_10&id=16571&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_10=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_10&id=16571&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE65"
+          ],
+          "equivalences": [
+            "MATE65"
+          ]
+        },
+        {
+          "code": "IC0030",
+          "name": "FUNDAMENTOS DE PESQUISA EM CIÊNCIA DA COMPUTAÇÃO II",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Sistemas de transmissão e suas caracterísiticas. Topologias de redes de computadores, Arquitetura de redes, Técnicas de Acesso ao Meio. Interconexão de Redes, Projeto de Topologia. Desempenho e confiabilidade de redes. Redes de Alta Velocidade. Redes Industriais. Referências: Histórico de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Não Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_11=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_11&id=16572&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_11=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_11&id=16572&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MAT568"
+          ],
+          "equivalences": [
+            "MAT568"
+          ]
+        },
+        {
+          "code": "IC0036",
+          "name": "INTELIGÊNCIA ARTIFICIAL",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Sistemas de transmissão e suas caracterísiticas. Topologias de redes de computadores, Arquitetura de redes, Técnicas de Acesso ao Meio. Interconexão de Redes, Projeto de Topologia. Desempenho e confiabilidade de redes. Redes de Alta Velocidade. Redes Industriais. Referências: Histórico de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Não Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_12=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_12&id=16578&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_12=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_12&id=16578&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MAT568"
+          ],
+          "equivalences": [
+            "MAT568"
+          ]
+        },
+        {
+          "code": "IC0003",
+          "name": "LOGICA E METODOS FORMAIS",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Sistemas de transmissão e suas caracterísiticas. Topologias de redes de computadores, Arquitetura de redes, Técnicas de Acesso ao Meio. Interconexão de Redes, Projeto de Topologia. Desempenho e confiabilidade de redes. Redes de Alta Velocidade. Redes Industriais. Referências: Histórico de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Não Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_13=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_13&id=16545&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_13=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_13&id=16545&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MAT568"
+          ],
+          "equivalences": [
+            "MAT568"
+          ]
+        },
+        {
+          "code": "IC0002",
+          "name": "REDES DE COMPUTADORES",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Sistemas de transmissão e suas caracterísiticas. Topologias de redes de computadores, Arquitetura de redes, Técnicas de Acesso ao Meio. Interconexão de Redes, Projeto de Topologia. Desempenho e confiabilidade de redes. Redes de Alta Velocidade. Redes Industriais. Referências: Histórico de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Não Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_14=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_14&id=16544&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_14=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_14&id=16544&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MAT568"
+          ],
+          "equivalences": [
+            "MAT568"
+          ]
+        },
+        {
+          "code": "IC0037",
+          "name": "REUSO DE SOFTWARE",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "Ementa não disponível na listagem pública do SIGAA.",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_15=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_15&id=16579&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_15=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_15&id=16579&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09"
+        },
+        {
+          "code": "IC0028",
+          "name": "SEMINÁRIOS CIENTÍFICOS",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Evolução da Web. Introdução aos sistemas Hipermídia e Web. Linguagens de marcação de conteúdo. Tópicos avançados em Sistemas Web. Referências: Histórico de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Não Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_16=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_16&id=16570&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_16=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_16&id=16570&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE75"
+          ],
+          "equivalences": [
+            "MATE75"
+          ]
+        },
+        {
+          "code": "IC0001",
+          "name": "SISTEMAS OPERACIONAIS",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Evolução da Web. Introdução aos sistemas Hipermídia e Web. Linguagens de marcação de conteúdo. Tópicos avançados em Sistemas Web. Referências: Histórico de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Não Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_17=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_17&id=16543&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_17=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_17&id=16543&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE75"
+          ],
+          "equivalences": [
+            "MATE75"
+          ]
+        },
+        {
+          "code": "IC0038",
+          "name": "SISTEMAS WEB",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Evolução da Web. Introdução aos sistemas Hipermídia e Web. Linguagens de marcação de conteúdo. Tópicos avançados em Sistemas Web. Referências: Histórico de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Não Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_18=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_18&id=16580&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_18=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_18&id=16580&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE75"
+          ],
+          "equivalences": [
+            "MATE75"
+          ]
+        },
+        {
+          "code": "IC0039",
+          "name": "TEORIA DA COMPUTAÇÃO",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagem de temas atuais , circunstanciais e/ou inovadores de problemas relacionados á área de Arquitetura de Computadores. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_19=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_19&id=16581&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_19=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_19&id=16581&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE78"
+          ],
+          "equivalences": [
+            "MATE78"
+          ]
+        },
+        {
+          "code": "IC0005",
+          "name": "TOLERÂNCIA A FALHAS",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagem de temas atuais , circunstanciais e/ou inovadores de problemas relacionados á área de Arquitetura de Computadores. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_20=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_20&id=16547&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_20=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_20&id=16547&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE78"
+          ],
+          "equivalences": [
+            "MATE78"
+          ]
+        },
+        {
+          "code": "IC0040",
+          "name": "TÓPICOS EM ARQUITETURA DE COMPUTADORES I",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagem de temas atuais , circunstanciais e/ou inovadores de problemas relacionados á área de Arquitetura de Computadores. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_21=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_21&id=16582&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_21=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_21&id=16582&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE78"
+          ],
+          "equivalences": [
+            "MATE78"
+          ]
+        },
+        {
+          "code": "IC0064",
+          "name": "TÓPICOS EM ARQUITETURA DE COMPUTADORES II",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagem de temas atuais , circunstanciais e/ou inovadores de problemas relacionados á área de Arquitetura de Computadores. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_22=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_22&id=16606&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_22=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_22&id=16606&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE78"
+          ],
+          "equivalences": [
+            "MATE78"
+          ]
+        },
+        {
+          "code": "IC0065",
+          "name": "TÓPICOS EM ARQUITETURA DE COMPUTADORES III",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagens de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à área de Banco de Dados. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_23=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_23&id=16607&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_23=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_23&id=16607&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE14"
+          ],
+          "equivalences": [
+            "MATE14"
+          ]
+        },
+        {
+          "code": "IC0066",
+          "name": "TÓPICOS EM ARQUITETURA DE COMPUTADORES IV",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagens de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à área de Banco de Dados. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_24=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_24&id=16608&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_24=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_24&id=16608&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE14"
+          ],
+          "equivalences": [
+            "MATE14"
+          ]
+        },
+        {
+          "code": "IC0007",
+          "name": "TÓPICOS EM BANCO DE DADOS I",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagens de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à área de Banco de Dados. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_25=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_25&id=16549&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_25=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_25&id=16549&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE14"
+          ],
+          "equivalences": [
+            "MATE14"
+          ]
+        },
+        {
+          "code": "IC0058",
+          "name": "TÓPICOS EM BANCO DE DADOS II",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagens de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à área de Banco de Dados. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_26=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_26&id=16600&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_26=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_26&id=16600&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE14"
+          ],
+          "equivalences": [
+            "MATE14"
+          ]
+        },
+        {
+          "code": "IC0059",
+          "name": "Tópicos em Banco de Dados III",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagens de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à área de Computação Visual. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_27=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_27&id=16601&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_27=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_27&id=16601&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE20"
+          ],
+          "equivalences": [
+            "MATE20"
+          ]
+        },
+        {
+          "code": "IC0013",
+          "name": "Tópicos em Banco de Dados IV",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagens de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à área de Computação Visual. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_28=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_28&id=16555&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_28=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_28&id=16555&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE20"
+          ],
+          "equivalences": [
+            "MATE20"
+          ]
+        },
+        {
+          "code": "IC0009",
+          "name": "TÓPICOS EM COMPUTAÇÃO VISUAL I",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagens de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à área de Computação Visual. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_29=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_29&id=16551&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_29=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_29&id=16551&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE20"
+          ],
+          "equivalences": [
+            "MATE20"
+          ]
+        },
+        {
+          "code": "IC0016",
+          "name": "Tópicos em Computação Visual II",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagens de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à área de Computação Visual. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_30=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_30&id=16558&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_30=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_30&id=16558&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE20"
+          ],
+          "equivalences": [
+            "MATE20"
+          ]
+        },
+        {
+          "code": "IC0017",
+          "name": "Tópicos em Computação Visual III",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagens de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à Engenharia de Software. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_31=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_31&id=16559&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_31=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_31&id=16559&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE08"
+          ],
+          "equivalences": [
+            "MATE08"
+          ]
+        },
+        {
+          "code": "IC0018",
+          "name": "Tópicos em Computação Visual IV",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagens de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à Engenharia de Software. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_32=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_32&id=16560&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_32=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_32&id=16560&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE28"
+          ],
+          "equivalences": [
+            "MATE28"
+          ]
+        },
+        {
+          "code": "IC0010",
+          "name": "TÓPICOS EM ENGENHARIA DE SOFTWARE I",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagens de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à Engenharia de Software. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_33=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_33&id=16552&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_33=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_33&id=16552&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE08"
+          ],
+          "equivalences": [
+            "MATE08"
+          ]
+        },
+        {
+          "code": "IC0019",
+          "name": "Tópicos em Engenharia de Software II",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "Ementa não disponível na listagem pública do SIGAA.",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_34=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_34&id=16561&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_34=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_34&id=16561&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09"
+        },
+        {
+          "code": "IC0020",
+          "name": "Tópicos em Engenharia de Software III",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "Ementa não disponível na listagem pública do SIGAA.",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_35=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_35&id=16562&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_35=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_35&id=16562&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09"
+        },
+        {
+          "code": "IC0021",
+          "name": "Tópicos em Engenharia de Software IV",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagens de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à Teoria da Computação Lógica ou Métodos Formais. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_36=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_36&id=16563&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_36=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_36&id=16563&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE82"
+          ],
+          "equivalences": [
+            "MATE82"
+          ]
+        },
+        {
+          "code": "IC0041",
+          "name": "TÓPICOS EM FUNDAMENTOS DA COMPUTAÇÃO I",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagens de temas atuais, circunetanciais e/ou inovadores de problemas relacionados `Teoria da Computação Lógica ou Métodos Formais. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_37=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_37&id=16583&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_37=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_37&id=16583&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE84"
+          ],
+          "equivalences": [
+            "MATE84"
+          ]
+        },
+        {
+          "code": "IC0042",
+          "name": "TÓPICOS EM FUNDAMENTOS DA COMPUTAÇÃO II",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Não definido Referências: Histórico de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_38=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_38&id=16584&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_38=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_38&id=16584&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATF25"
+          ],
+          "equivalences": [
+            "MATF25"
+          ]
+        },
+        {
+          "code": "IC0043",
+          "name": "TÓPICOS EM FUNDAMENTOS DA COMPUTAÇÃO III",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "Ementa não disponível na listagem pública do SIGAA.",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_39=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_39&id=16585&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_39=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_39&id=16585&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09"
+        },
+        {
+          "code": "IC0044",
+          "name": "TÓPICOS EM FUNDAMENTOS DA COMPUTAÇÃO IV",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Não definido Referências: Histórico de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_40=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_40&id=16586&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_40=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_40&id=16586&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATF26"
+          ],
+          "equivalences": [
+            "MATF26"
+          ]
+        },
+        {
+          "code": "IC0052",
+          "name": "TÓPICOS EM INFORMÁTICA E EDUCAÇÃO I",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Referências: Histórico de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 1 Quantidade de Avaliações: Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_41=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_41&id=16594&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_41=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_41&id=16594&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATF26"
+          ],
+          "equivalences": [
+            "MATF26"
+          ]
+        },
+        {
+          "code": "IC0053",
+          "name": "TÓPICOS EM INFORMÁTICA E EDUCAÇÃO II",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagens de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à área de Inteligência Computacional. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_42=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_42&id=16595&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_42=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_42&id=16595&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE32"
+          ],
+          "equivalences": [
+            "MATE32"
+          ]
+        },
+        {
+          "code": "IC0012",
+          "name": "TÓPICOS EM INTELIGÊNCIA COMPUTACIONAL I",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "Ementa não disponível na listagem pública do SIGAA.",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_43=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_43&id=16554&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_43=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_43&id=16554&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09"
+        },
+        {
+          "code": "IC0022",
+          "name": "Tópicos em Inteligência Computacional II",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Não definido Referências: Histórico de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_44=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_44&id=16564&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_44=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_44&id=16564&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATF27"
+          ],
+          "equivalences": [
+            "MATF27"
+          ]
+        },
+        {
+          "code": "IC0023",
+          "name": "Tópicos em Inteligência Computacional III",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "Ementa não disponível na listagem pública do SIGAA.",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_45=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_45&id=16565&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_45=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_45&id=16565&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09"
+        },
+        {
+          "code": "IC0024",
+          "name": "Tópicos em Inteligência Computacional IV",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Não definido Referências: Histórico de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_46=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_46&id=16566&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_46=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_46&id=16566&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE09"
+          ],
+          "equivalences": [
+            "MATE09"
+          ]
+        },
+        {
+          "code": "IC0054",
+          "name": "TÓPICOS EM INTERAÇÃO HUMANO- COMPUTADOR I",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Não definido Referências: Histórico de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_47=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_47&id=16596&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_47=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_47&id=16596&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE09"
+          ],
+          "equivalences": [
+            "MATE09"
+          ]
+        },
+        {
+          "code": "IC0055",
+          "name": "TÓPICOS EM INTERAÇÃO HUMANO-COMPUTADOR II",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "Ementa não disponível na listagem pública do SIGAA.",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_48=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_48&id=16597&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_48=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_48&id=16597&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09"
+        },
+        {
+          "code": "IC0011",
+          "name": "TÓPICOS EM METODOS FRMAIS E TEORIA DA COMPUTAÇÃO I",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagens de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à área de Redes de Computadores. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Não Horário Flexível do Docente: Não Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Não Necessita de Orientador: Não Exige Horário: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_49=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_49&id=16553&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_49=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_49&id=16553&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0
+        },
+        {
+          "code": "IC0008",
+          "name": "TÓPICOS EM REDES DE COMPUTADORES I",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "Ementa não disponível na listagem pública do SIGAA.",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_50=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_50&id=16550&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_50=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_50&id=16550&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09"
+        },
+        {
+          "code": "IC0014",
+          "name": "Tópicos em Redes de Computadores II",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagens de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à ciência da computação. Aprofundamento de técnicas específicas e aplicadas à solução de problemas locais e regionais. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Não Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_51=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_51&id=16556&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_51=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_51&id=16556&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATA25"
+          ],
+          "equivalences": [
+            "MATA25"
+          ]
+        },
+        {
+          "code": "IC0015",
+          "name": "Tópicos em Redes de Computadores III",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagens de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à ciência da computação. Aprofundamento de técnicas específicas e aplicadas à solução de problemas locais e regionais. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Não Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_52=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_52&id=16557&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_52=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_52&id=16557&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATA25"
+          ],
+          "equivalences": [
+            "MATA25"
+          ]
+        },
+        {
+          "code": "IC0060",
+          "name": "Tópicos em Redes de Computadores IV",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "Ementa não disponível na listagem pública do SIGAA.",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_53=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_53&id=16602&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_53=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_53&id=16602&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09"
+        },
+        {
+          "code": "IC0056",
+          "name": "TOPICOS EM SISTEMAS COMPUTACIONAIS III",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagens de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à área de Web e Sistemas de Informação. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_54=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_54&id=16598&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_54=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_54&id=16598&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE87"
+          ],
+          "equivalences": [
+            "MATE87"
+          ]
+        },
+        {
+          "code": "IC0057",
+          "name": "TOPICOS EM SISTEMAS COMPUTACIONAIS IV",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "Ementa não disponível na listagem pública do SIGAA.",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_55=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_55&id=16599&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_55=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_55&id=16599&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09"
+        },
+        {
+          "code": "IC0045",
+          "name": "TÓPICOS EM SISTEMAS DE INFORMAÇÃO E WEB I",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "Ementa não disponível na listagem pública do SIGAA.",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_56=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_56&id=16587&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_56=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_56&id=16587&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09"
+        },
+        {
+          "code": "IC0046",
+          "name": "TÓPICOS EM SISTEMAS DE INFORMAÇÃO E WEB II",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Não definido Referências: Histórico de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_57=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_57&id=16588&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_57=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_57&id=16588&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE01"
+          ],
+          "equivalences": [
+            "MATE01"
+          ]
+        },
+        {
+          "code": "IC0047",
+          "name": "TÓPICOS EM SISTEMAS DE INFORMAÇÃO E WEB III",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Não definido Referências: Histórico de",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_58=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_58&id=16589&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_58=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_58&id=16589&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE01"
+          ],
+          "equivalences": [
+            "MATE01"
+          ]
+        },
+        {
+          "code": "IC0048",
+          "name": "TÓPICOS EM SISTEMAS DE INFORMAÇÃO E WEB IV",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "Ementa não disponível na listagem pública do SIGAA.",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_59=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_59&id=16590&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_59=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_59&id=16590&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09"
+        },
+        {
+          "code": "IC0006",
+          "name": "TÓPICOS EM SISTEMAS DE SOFTWARE II",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagens de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à área de Sistemas de Tempo Real. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_60=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_60&id=16548&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_60=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_60&id=16548&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE91"
+          ],
+          "equivalences": [
+            "MATE91"
+          ]
+        },
+        {
+          "code": "IC0049",
+          "name": "TÓPICOS EM SISTEMAS DE TEMPO REAL I",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "Ementa não disponível na listagem pública do SIGAA.",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_61=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_61&id=16591&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_61=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_61&id=16591&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09"
+        },
+        {
+          "code": "IC0067",
+          "name": "TÓPICOS EM SISTEMAS DE TEMPO REAL II",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagens de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à área de Sistemas Distribuídos. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_62=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_62&id=16609&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_62=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_62&id=16609&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE35"
+          ],
+          "equivalences": [
+            "MATE35"
+          ]
+        },
+        {
+          "code": "IC0068",
+          "name": "TÓPICOS EM SISTEMAS DE TEMPO REAL III",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagens de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à área de Sistemas Distribuídos. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_63=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_63&id=16610&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_63=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_63&id=16610&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE35"
+          ],
+          "equivalences": [
+            "MATE35"
+          ]
+        },
+        {
+          "code": "IC0069",
+          "name": "TÓPICOS EM SISTEMAS DE TEMPO REAL IV",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "Ementa não disponível na listagem pública do SIGAA.",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_64=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_64&id=16611&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_64=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_64&id=16611&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09"
+        },
+        {
+          "code": "IC0025",
+          "name": "Tópicos em Sistemas Distribuidos I",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagem de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à área de Sistemas Distribuídos. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_65=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_65&id=16567&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_65=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_65&id=16567&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE37"
+          ],
+          "equivalences": [
+            "MATE37"
+          ]
+        },
+        {
+          "code": "IC0026",
+          "name": "Tópicos em Sistemas Distribuidos II",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "Ementa não disponível na listagem pública do SIGAA.",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_66=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_66&id=16568&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_66=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_66&id=16568&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09"
+        },
+        {
+          "code": "IC0061",
+          "name": "Tópicos em Sistemas Distribuidos III",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagem de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à área de Sistemas Distribuídos. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_67=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_67&id=16603&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_67=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_67&id=16603&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE38"
+          ],
+          "equivalences": [
+            "MATE38"
+          ]
+        },
+        {
+          "code": "IC0027",
+          "name": "Tópicos em Sistemas Distribuidos IV",
+          "department": "Programa SIGAA",
+          "semester": "",
+          "description": "Conteúdo programático não disponível na listagem pública do SIGAA.",
+          "objective": "",
+          "syllabus": "/Descrição: Abordagem de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à área de Sistemas Distribuídos. Trata-se de disciplina sem",
+          "bibliography": "",
+          "prerequeriments": "NAO_SE_APLICA",
+          "methodology": "",
+          "modality": "DISCIPLINA",
+          "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+          "academicLevel": "mestrado",
+          "workload": {
+            "theoretical": 45,
+            "practice": 0,
+            "internship": 0
+          },
+          "detailActionUrl": "https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf",
+          "detailActionPayload": "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_68=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_68&id=16569&publico=public",
+          "detailActionPayloadCandidates": [
+            "formListagemComponentes=formListagemComponentes&formListagemComponentes_SUBMIT=1&javax.faces.ViewState=j_id2&formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_68=formListagemComponentes%3Aj_id_jsp_1092268766_23j_id_68&id=16569&publico=public"
+          ],
+          "detailRequestCookie": "JSESSIONID=27800DA95EDAC108BD452ED32FF0D689.sigaapl09",
+          "workloadExtension": 0,
+          "coRequisites": [
+            "MATE38"
+          ],
+          "equivalences": [
+            "MATE38"
+          ]
+        }
+      ]
+    }
+  ]
+}

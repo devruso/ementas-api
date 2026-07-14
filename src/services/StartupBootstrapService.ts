@@ -10,7 +10,7 @@ import { CrawlerService, ImportComponentsSummary } from './CrawlerService';
 
 const AUTO_IMPORT_FLAG = 'true';
 
-type BootstrapSource = 'sigaa-public' | 'siac';
+type BootstrapSource = 'sigaa-public' | 'sigaa-snapshot' | 'siac';
 
 const DEFAULT_SIGAA_SOURCE_IDS: Record<AcademicLevel, string[]> = {
     [AcademicLevel.GRADUATION]: ['1114'],
@@ -26,7 +26,15 @@ const parseBoolean = (rawValue?: string) => String(rawValue || '').trim().toLowe
 
 const getConfiguredSource = (): BootstrapSource => {
     const rawSource = String(process.env.BOOTSTRAP_IMPORT_SOURCE || 'sigaa-public').trim().toLowerCase();
-    return rawSource === 'siac' ? 'siac' : 'sigaa-public';
+    if (rawSource === 'siac') {
+        return 'siac';
+    }
+
+    if (rawSource === 'sigaa-snapshot') {
+        return 'sigaa-snapshot';
+    }
+
+    return 'sigaa-public';
 };
 
 const getConfiguredAcademicLevel = (): AcademicLevel | 'all' => {
@@ -73,6 +81,10 @@ const parseSourceIdList = (...rawValues: Array<string | undefined>) => {
 const getConfiguredBootstrapSigaaRequestTimeoutMs = () => parsePositiveInt(
     process.env.BOOTSTRAP_SIGAA_REQUEST_TIMEOUT_MS
 );
+
+const getConfiguredSigaaSnapshotPath = () => String(
+    process.env.BOOTSTRAP_SIGAA_SNAPSHOT_PATH || '/app/bootstrap-data/sigaa-bootstrap.snapshot.json'
+).trim();
 
 const getConfiguredGlobalSigaaSourceIds = () => parseSourceIdList(
     process.env.BOOTSTRAP_SIGAA_SOURCE_IDS,
@@ -201,10 +213,22 @@ export const runStartupBootstrapImportIfNeeded = async () => {
         return;
     }
 
-    const sourceType = getConfiguredSigaaSourceType();
     const configuredLevel = getConfiguredAcademicLevel();
     const globalSourceIds = getConfiguredGlobalSigaaSourceIds();
     const sourceIdsByLevel = getConfiguredSigaaSourceIdsByLevel();
+
+    if (source === 'sigaa-snapshot') {
+        const snapshotPath = getConfiguredSigaaSnapshotPath();
+        const summary = await crawlerService.importComponentsFromSigaaSnapshot(userId, snapshotPath, {
+            academicLevel: configuredLevel,
+            globalSourceIds,
+            sourceIdsByLevel,
+        });
+        console.log('[startup-bootstrap] import summary:', summary);
+        return;
+    }
+
+    const sourceType = getConfiguredSigaaSourceType();
     const bootstrapSigaaRequestTimeoutMs = getConfiguredBootstrapSigaaRequestTimeoutMs();
 
     if (configuredLevel === 'all') {

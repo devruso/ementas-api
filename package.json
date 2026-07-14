@@ -21,6 +21,7 @@
     "audit:encoding": "node -r ts-node/register -r dotenv/config src/scripts/audit-imported-text-encoding.ts",
     "invite:cleanup": "node -r ts-node/register -r dotenv/config src/scripts/cleanup-expired-invite-shortlinks.ts",
     "sigaa:full-catalog": "node -r ts-node/register -r dotenv/config src/scripts/sigaa-full-catalog.ts",
+    "sigaa:bootstrap-snapshot": "node -r ts-node/register -r dotenv/config src/scripts/generate-sigaa-bootstrap-snapshot.ts",
     "benchmark:parser": "node -r ts-node/register -r dotenv/config src/scripts/sigaa-parser-benchmark.ts",
     "user:ensure-super-admin": "node -r ts-node/register -r dotenv/config src/scripts/ensure-super-admin.ts",
     "docx:generate-validation-samples": "node -r ts-node/register src/scripts/generate-docx-validation-samples.ts",

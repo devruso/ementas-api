@@ -24,7 +24,7 @@ import { ComponentRelationType } from '../interfaces/ComponentRelationType';
 import { getTextCorruptionScore, repairLikelyUtf8Mojibake } from '../helpers/repairMojibake';
 
 export interface ImportComponentsSummary {
-    source: 'siac' | 'sigaa-public';
+    source: 'siac' | 'sigaa-public' | 'sigaa-snapshot';
     requested: number;
     created: number;
     skippedExisting: number;
@@ -37,6 +37,27 @@ export interface ImportComponentsSummary {
     hasMore?: boolean;
     nextOffset?: number;
 }
+
+type SigaaSnapshotUnit = {
+    sourceType: 'department' | 'program';
+    sourceId: string;
+    academicLevel: AcademicLevel;
+    label?: string;
+    componentCount?: number;
+    components: Array<IComponentInfoCrawler>;
+};
+
+type SigaaSnapshotFile = {
+    generatedAt?: string;
+    units: SigaaSnapshotUnit[];
+};
+
+type SigaaPublicCollectionResult = {
+    componentsInfo: Array<IComponentInfoCrawler>;
+    failed: number;
+    failures: string[];
+    failureCategories: Record<string, number>;
+};
 
 type SigaaComponentDetail = {
     prerequeriments?: string;
@@ -1977,65 +1998,177 @@ export class CrawlerService {
         } as ImportComponentsSummary;
     }
 
-    async importComponentsFromSigaaPublic(
+    private async buildImportSummaryFromComponents(
+        source: 'sigaa-public' | 'sigaa-snapshot',
         userId: string,
-        sourceType: 'department' | 'program',
-        sourceId: string,
-        academicLevel: AcademicLevel | 'all',
+        componentsInfo: Array<IComponentInfoCrawler>,
         options?: {
-            reconcileExisting?: boolean;
+            shouldReconcileExisting?: boolean;
             maxComponents?: number;
-            enrichDetails?: boolean;
             offset?: number;
-            requestTimeoutMs?: number;
         }
     ): Promise<ImportComponentsSummary> {
-        const levels: AcademicLevel[] = academicLevel === 'all'
-            ? [AcademicLevel.GRADUATION, AcademicLevel.MASTERS, AcademicLevel.DOCTORATE]
-            : [academicLevel];
+        const shouldReconcileExisting = options?.shouldReconcileExisting !== false;
+        const maxComponents = Number(options?.maxComponents || 0);
+        const offset = Math.max(0, Number(options?.offset || 0));
 
-        if (levels.length > 1) {
-            const combined: ImportComponentsSummary = {
-                source: 'sigaa-public',
-                requested: 0,
-                created: 0,
-                skippedExisting: 0,
-                reconciled: 0,
-                failed: 0,
-                failures: [],
-                failureCategories: {},
-            };
+        const canonicalComponentsRaw = this
+            .selectCanonicalComponentsByCode(componentsInfo)
+            .sort((a, b) => String(a.code || '').localeCompare(String(b.code || ''), 'pt-BR'));
+        const canonicalComponents = maxComponents
+            ? canonicalComponentsRaw.slice(offset, offset + maxComponents)
+            : canonicalComponentsRaw.slice(offset);
 
-            for (const level of levels) {
-                const partial = await this.importComponentsFromSigaaPublic(userId, sourceType, sourceId, level, options);
-                combined.requested += partial.requested;
-                combined.created += partial.created;
-                combined.skippedExisting += partial.skippedExisting;
-                combined.reconciled = (combined.reconciled || 0) + (partial.reconciled || 0);
-                combined.failed += partial.failed;
-                combined.failures.push(...(partial.failures || []));
+        let created = 0;
+        let skippedExisting = 0;
+        let reconciled = 0;
+        let failed = 0;
+        const failures: string[] = [];
+        const failureCategories: Record<string, number> = {};
 
-                Object.entries(partial.failureCategories || {}).forEach(([key, value]) => {
-                    combined.failureCategories[key] = (combined.failureCategories[key] || 0) + value;
-                });
+        for (const componentData of canonicalComponents) {
+            try {
+                const sanitized = this.sanitizeImportedComponentData(componentData);
+                await this.createComponent(userId, sanitized);
+                created += 1;
+            } catch (err) {
+                const appError = err as AppError;
+
+                if (appError.message === 'Component already exists.') {
+                    if (shouldReconcileExisting) {
+                        const wasReconciled = await this.reconcileExistingComponentFromCrawlerData(componentData);
+
+                        if (wasReconciled) {
+                            reconciled += 1;
+                        }
+                    }
+                    skippedExisting += 1;
+                    continue;
+                }
+
+                failed += 1;
+                this.incrementFailureCategory(failureCategories, this.classifyImportFailure(err));
+                failures.push(`${componentData.code || 'UNKNOWN'}: ${appError.message || 'Unexpected error.'}`);
             }
-
-            combined.failures = Array.from(new Set(combined.failures));
-            return combined;
         }
 
-        const level = levels[0];
-        const shouldReconcileExisting = options?.reconcileExisting ?? true;
-        const shouldEnrichDetails = options?.enrichDetails ?? true;
-        const maxComponents = Number.isFinite(options?.maxComponents)
-            ? Math.max(1, Number(options?.maxComponents))
-            : undefined;
-        const offset = Number.isFinite(options?.offset)
-            ? Math.max(0, Number(options?.offset))
-            : 0;
-        const requestTimeoutMs = Number.isFinite(options?.requestTimeoutMs)
-            ? Math.max(1000, Number(options?.requestTimeoutMs))
-            : this.requestTimeoutMs;
+        return {
+            source,
+            requested: canonicalComponents.length,
+            created,
+            skippedExisting,
+            reconciled,
+            failed,
+            failures,
+            failureCategories,
+            totalAvailable: canonicalComponentsRaw.length,
+            processed: canonicalComponents.length,
+            hasMore: offset + canonicalComponents.length < canonicalComponentsRaw.length,
+            nextOffset: offset + canonicalComponents.length < canonicalComponentsRaw.length
+                ? offset + canonicalComponents.length
+                : undefined,
+        } as ImportComponentsSummary;
+    }
+
+    private loadSigaaSnapshotFile(snapshotPath: string): SigaaSnapshotFile {
+        const resolvedPath = path.isAbsolute(snapshotPath)
+            ? snapshotPath
+            : path.resolve(process.cwd(), snapshotPath);
+
+        if (!fs.existsSync(resolvedPath)) {
+            throw new AppError(`SIGAA snapshot file not found: ${resolvedPath}`, 400);
+        }
+
+        const rawContent = fs.readFileSync(resolvedPath, 'utf8');
+        const parsed = JSON.parse(rawContent) as SigaaSnapshotFile;
+
+        if (!parsed || !Array.isArray(parsed.units)) {
+            throw new AppError('Invalid SIGAA snapshot file: missing units array.', 400);
+        }
+
+        return parsed;
+    }
+
+    async importComponentsFromSigaaSnapshot(
+        userId: string,
+        snapshotPath: string,
+        options?: {
+            academicLevel?: AcademicLevel | 'all';
+            globalSourceIds?: string[];
+            sourceIdsByLevel?: Record<AcademicLevel, string[]>;
+            shouldReconcileExisting?: boolean;
+            maxComponents?: number;
+            offset?: number;
+        }
+    ): Promise<ImportComponentsSummary> {
+        const snapshot = this.loadSigaaSnapshotFile(snapshotPath);
+        const configuredLevel = options?.academicLevel || 'all';
+        const targetLevels = configuredLevel === 'all'
+            ? [AcademicLevel.GRADUATION, AcademicLevel.MASTERS, AcademicLevel.DOCTORATE]
+            : [configuredLevel];
+        const globalSourceIds = (options?.globalSourceIds || [])
+            .map((entry) => String(entry || '').trim())
+            .filter(Boolean);
+        const sourceIdsByLevel = options?.sourceIdsByLevel || {
+            [AcademicLevel.GRADUATION]: [],
+            [AcademicLevel.MASTERS]: [],
+            [AcademicLevel.DOCTORATE]: [],
+        };
+
+        const selectedUnits = snapshot.units.filter((unit) => {
+            if (!unit || !targetLevels.includes(unit.academicLevel)) {
+                return false;
+            }
+
+            const preferredLevelSourceIds = (sourceIdsByLevel[unit.academicLevel] || [])
+                .map((entry) => String(entry || '').trim())
+                .filter(Boolean);
+
+            if (preferredLevelSourceIds.length > 0) {
+                return preferredLevelSourceIds.includes(String(unit.sourceId || '').trim());
+            }
+
+            if (globalSourceIds.length > 0) {
+                return globalSourceIds.includes(String(unit.sourceId || '').trim());
+            }
+
+            return true;
+        });
+
+        if (selectedUnits.length === 0) {
+            throw new AppError('No matching units found in SIGAA snapshot for the configured filters.', 404);
+        }
+
+        const componentsInfo = selectedUnits.flatMap((unit) =>
+            (unit.components || []).map((component) => ({
+                ...component,
+                academicLevel: component.academicLevel || unit.academicLevel,
+                department: component.department || unit.label || 'SIGAA Snapshot',
+            }))
+        );
+
+        if (componentsInfo.length === 0) {
+            throw new AppError('Selected SIGAA snapshot units do not contain components.', 404);
+        }
+
+        return this.buildImportSummaryFromComponents('sigaa-snapshot', userId, componentsInfo, {
+            shouldReconcileExisting: options?.shouldReconcileExisting,
+            maxComponents: options?.maxComponents,
+            offset: options?.offset,
+        });
+    }
+
+    async collectComponentsFromSigaaPublic(
+        sourceType: 'department' | 'program',
+        sourceId: string,
+        level: AcademicLevel,
+        options?: {
+            enrichDetails?: boolean;
+            requestTimeoutMs?: number;
+        }
+    ): Promise<SigaaPublicCollectionResult> {
+        const shouldEnrichDetails = options?.enrichDetails !== false;
+        const requestTimeoutMs = Number(options?.requestTimeoutMs || this.requestTimeoutMs);
         const normalizedSourceId = String(sourceId).trim();
         this.requestTimeoutMs = requestTimeoutMs;
 
@@ -2098,6 +2231,86 @@ export class CrawlerService {
             }
         }
 
+        if (componentsInfo.length > 0 && shouldEnrichDetails) {
+            componentsInfo = await this.enrichSigaaComponentsFromPublicDetails(componentsInfo, 4);
+        }
+
+        return {
+            componentsInfo,
+            failed,
+            failures,
+            failureCategories,
+        };
+    }
+
+    async importComponentsFromSigaaPublic(
+        userId: string,
+        sourceType: 'department' | 'program',
+        sourceId: string,
+        academicLevel: AcademicLevel | 'all',
+        options?: {
+            reconcileExisting?: boolean;
+            maxComponents?: number;
+            enrichDetails?: boolean;
+            offset?: number;
+            requestTimeoutMs?: number;
+        }
+    ): Promise<ImportComponentsSummary> {
+        const levels: AcademicLevel[] = academicLevel === 'all'
+            ? [AcademicLevel.GRADUATION, AcademicLevel.MASTERS, AcademicLevel.DOCTORATE]
+            : [academicLevel];
+
+        if (levels.length > 1) {
+            const combined: ImportComponentsSummary = {
+                source: 'sigaa-public',
+                requested: 0,
+                created: 0,
+                skippedExisting: 0,
+                reconciled: 0,
+                failed: 0,
+                failures: [],
+                failureCategories: {},
+            };
+
+            for (const level of levels) {
+                const partial = await this.importComponentsFromSigaaPublic(userId, sourceType, sourceId, level, options);
+                combined.requested += partial.requested;
+                combined.created += partial.created;
+                combined.skippedExisting += partial.skippedExisting;
+                combined.reconciled = (combined.reconciled || 0) + (partial.reconciled || 0);
+                combined.failed += partial.failed;
+                combined.failures.push(...(partial.failures || []));
+
+                Object.entries(partial.failureCategories || {}).forEach(([key, value]) => {
+                    combined.failureCategories[key] = (combined.failureCategories[key] || 0) + value;
+                });
+            }
+
+            combined.failures = Array.from(new Set(combined.failures));
+            return combined;
+        }
+
+        const level = levels[0];
+        const shouldReconcileExisting = options?.reconcileExisting ?? true;
+        const maxComponents = Number.isFinite(options?.maxComponents)
+            ? Math.max(1, Number(options?.maxComponents))
+            : undefined;
+        const offset = Number.isFinite(options?.offset)
+            ? Math.max(0, Number(options?.offset))
+            : 0;
+        const requestTimeoutMs = Number.isFinite(options?.requestTimeoutMs)
+            ? Math.max(1000, Number(options?.requestTimeoutMs))
+            : this.requestTimeoutMs;
+        const {
+            componentsInfo,
+            failed,
+            failures,
+            failureCategories,
+        } = await this.collectComponentsFromSigaaPublic(sourceType, sourceId, level, {
+            enrichDetails: options?.enrichDetails,
+            requestTimeoutMs,
+        });
+
         if (componentsInfo.length === 0) {
             if (failed > 0) {
                 return {
@@ -2113,64 +2326,28 @@ export class CrawlerService {
 
             throw new AppError('No components found in SIGAA public source.', 404);
         }
-
-        if (shouldEnrichDetails) {
-            componentsInfo = await this.enrichSigaaComponentsFromPublicDetails(componentsInfo, 4);
-        }
-
-        const canonicalComponentsRaw = this
-            .selectCanonicalComponentsByCode(componentsInfo)
-            .sort((a, b) => String(a.code || '').localeCompare(String(b.code || ''), 'pt-BR'));
-        const canonicalComponents = maxComponents
-            ? canonicalComponentsRaw.slice(offset, offset + maxComponents)
-            : canonicalComponentsRaw.slice(offset);
-
-        let created = 0;
-        let skippedExisting = 0;
-        let reconciled = 0;
-
-        for (const componentData of canonicalComponents) {
-            try {
-                const sanitized = this.sanitizeImportedComponentData(componentData);
-                await this.createComponent(userId, sanitized);
-                created += 1;
-            } catch (err) {
-                const appError = err as AppError;
-
-                if (appError.message === 'Component already exists.') {
-                    if (shouldReconcileExisting) {
-                        const wasReconciled = await this.reconcileExistingComponentFromCrawlerData(componentData);
-
-                        if (wasReconciled) {
-                            reconciled += 1;
-                        }
-                    }
-                    skippedExisting += 1;
-                    continue;
-                }
-
-                failed += 1;
-                this.incrementFailureCategory(failureCategories, this.classifyImportFailure(err));
-                failures.push(`${componentData.code || 'UNKNOWN'}: ${appError.message || 'Unexpected error.'}`);
+        const persistenceSummary = await this.buildImportSummaryFromComponents(
+            'sigaa-public',
+            userId,
+            componentsInfo,
+            {
+                shouldReconcileExisting,
+                maxComponents,
+                offset,
             }
-        }
+        );
 
-        return {
-            source: 'sigaa-public',
-            requested: canonicalComponents.length,
-            created,
-            skippedExisting,
-            reconciled,
-            failed,
-            failures,
-            failureCategories,
-            totalAvailable: canonicalComponentsRaw.length,
-            processed: canonicalComponents.length,
-            hasMore: offset + canonicalComponents.length < canonicalComponentsRaw.length,
-            nextOffset: offset + canonicalComponents.length < canonicalComponentsRaw.length
-                ? offset + canonicalComponents.length
-                : undefined,
-        } as ImportComponentsSummary;
+        persistenceSummary.failed += failed;
+        persistenceSummary.failures = Array.from(new Set([
+            ...(persistenceSummary.failures || []),
+            ...failures,
+        ]));
+
+        Object.entries(failureCategories).forEach(([key, value]) => {
+            persistenceSummary.failureCategories[key] = (persistenceSummary.failureCategories[key] || 0) + Number(value || 0);
+        });
+
+        return persistenceSummary;
     }
 
 }

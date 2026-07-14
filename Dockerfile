@@ -28,6 +28,7 @@ ADD package.json package-lock.json /app/
 RUN npm ci --omit=dev
 COPY --from=build /app/dist/ /app/
 COPY --from=build /app/UFBA_TEMPLATE.docx /app/
+COPY --from=build /app/bootstrap-data/ /app/bootstrap-data/
 COPY ormconfig.ts /app/
 COPY ormconfig.js /app/
 EXPOSE 3333
