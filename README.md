@@ -88,6 +88,7 @@ Observações:
 - Para migrar para serviço da universidade compatível com S3, mantenha `STORAGE_PROVIDER=s3` apenas quando `STORAGE_S3_ENABLED=true` e as credenciais estiverem configuradas.
 - Se `STORAGE_S3_REGION` não for informado, o backend faz fallback para `us-east-1`, que costuma ser o valor esperado em MinIO.
 - Para validar a configuração dentro do container antes de testar a UI, rode `npm run storage:smoke-test`.
+- Para validar o fluxo completo de assinatura via API, rode `npm run signature:smoke-test -- --baseUrl=http://127.0.0.1:3333 --email=SEU_EMAIL --password=SUA_SENHA`.
 
 ### Assinatura do professor (texto + arquivo)
 
