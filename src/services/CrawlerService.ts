@@ -2043,55 +2043,58 @@ export class CrawlerService {
             throw new AppError('Invalid SIGAA source id.', 400);
         }
 
-        const sourceUrls = this.getSigaaSourceUrls(sourceType, normalizedSourceId, level);
         let componentsInfo: Array<IComponentInfoCrawler> = [];
         let failed = 0;
         const failures: string[] = [];
         const failureCategories: Record<string, number> = {};
 
-        for (const sourceUrl of sourceUrls) {
-            let data: ArrayBuffer;
-
-            try {
-                const response = await this.executeSigaaRequestWithRetry(
-                    `sigaa-source:${sourceType}:${normalizedSourceId}:${level}`,
-                    () => axios.get<ArrayBuffer>(
-                        sourceUrl,
-                        this.buildSigaaRequestConfig({
-                            responseType: 'arraybuffer',
-                            responseEncoding: 'binary',
-                            timeout: requestTimeoutMs,
-                        })
-                    )
-                );
-                const sourceCookie = this.buildCookieHeader(response.headers?.['set-cookie']);
-                data = response.data;
-
-                const html = this.decodeHtmlBuffer(data);
-                const $ = cheerio.load(html);
-
-                componentsInfo = this.extractSigaaListRows($, sourceType, level, sourceCookie);
-
-                if (componentsInfo.length > 0) {
-                    break;
-                }
-            } catch (error) {
-                failed += 1;
-                const category = this.classifyImportFailure(error);
-                this.incrementFailureCategory(failureCategories, category);
-                failures.push(`SIGAA_SOURCE: ${sourceUrl} (${category}).`);
-                continue;
-            }
+        try {
+            // Prefer the public search form first. It is the most stable path for
+            // course units/colegiados and avoids long timeouts on direct SIGAA pages.
+            componentsInfo = await this.searchSigaaComponentsByUnit(sourceType, normalizedSourceId, level);
+        } catch (error) {
+            failed += 1;
+            const category = this.classifyImportFailure(error);
+            this.incrementFailureCategory(failureCategories, category);
+            failures.push(`SIGAA_SEARCH: ${sourceType}:${normalizedSourceId}:${level} (${category}).`);
         }
 
         if (componentsInfo.length === 0) {
-            try {
-                componentsInfo = await this.searchSigaaComponentsByUnit(sourceType, normalizedSourceId, level);
-            } catch (error) {
-                failed += 1;
-                const category = this.classifyImportFailure(error);
-                this.incrementFailureCategory(failureCategories, category);
-                failures.push(`SIGAA_SEARCH: ${sourceType}:${normalizedSourceId}:${level} (${category}).`);
+            const sourceUrls = this.getSigaaSourceUrls(sourceType, normalizedSourceId, level);
+
+            for (const sourceUrl of sourceUrls) {
+                let data: ArrayBuffer;
+
+                try {
+                    const response = await this.executeSigaaRequestWithRetry(
+                        `sigaa-source:${sourceType}:${normalizedSourceId}:${level}`,
+                        () => axios.get<ArrayBuffer>(
+                            sourceUrl,
+                            this.buildSigaaRequestConfig({
+                                responseType: 'arraybuffer',
+                                responseEncoding: 'binary',
+                                timeout: requestTimeoutMs,
+                            })
+                        )
+                    );
+                    const sourceCookie = this.buildCookieHeader(response.headers?.['set-cookie']);
+                    data = response.data;
+
+                    const html = this.decodeHtmlBuffer(data);
+                    const $ = cheerio.load(html);
+
+                    componentsInfo = this.extractSigaaListRows($, sourceType, level, sourceCookie);
+
+                    if (componentsInfo.length > 0) {
+                        break;
+                    }
+                } catch (error) {
+                    failed += 1;
+                    const category = this.classifyImportFailure(error);
+                    this.incrementFailureCategory(failureCategories, category);
+                    failures.push(`SIGAA_SOURCE: ${sourceUrl} (${category}).`);
+                    continue;
+                }
             }
         }
 
