@@ -67,6 +67,8 @@ type SigaaComponentDetail = {
     objective?: string;
     methodology?: string;
     learningAssessment?: string;
+    department?: string;
+    semester?: string;
     workload?: {
         theoretical: number;
         practice: number;
@@ -89,6 +91,8 @@ type SigaaDetailRawFields = {
     objective?: string;
     methodology?: string;
     learningAssessment?: string;
+    department?: string;
+    semester?: string;
 };
 
 type SigaaDetailActionRequest = {
@@ -105,6 +109,8 @@ const SIGAA_LABEL_MATCHERS = {
     objective: /^objetiv(?:o|os)$/i,
     methodology: /^metodologia$/i,
     learningAssessment: /^(avaliac(?:ao|ao\s+da\s+aprendizagem)|avaliacao\s+da\s+aprendizagem)$/i,
+    department: /^(unidade\s+respons[aá]vel|departamento|programa|colegiado|instituto)$/i,
+    semester: /^(semestre|per[ií]odo)$/i,
 };
 
 export class CrawlerService {
@@ -446,7 +452,12 @@ export class CrawlerService {
         };
 
         const normalizeImportedNarrativeField = (rawValue: unknown) => {
-            const normalized = this.normalizeParagraphText(rawValue).replace(/\s+/g, ' ').trim();
+            const normalized = this.normalizeParagraphText(rawValue)
+                .replace(/\s+/g, ' ')
+                .replace(/\s*<<\s*Voltar\s+SIGAA[\s\S]*$/i, '')
+                .replace(/\s*SIGAA\s*\|\s*STI\/SUPAC[\s\S]*$/i, '')
+                .replace(/\s*Copyright[\s\S]*$/i, '')
+                .trim();
 
             if (!normalized) {
                 return '';
@@ -680,10 +691,14 @@ export class CrawlerService {
         const normalized = rawDepartment.replace(/\s+/g, ' ').trim();
 
         if (normalized) {
-            return normalized;
+            return normalized
+                .replace(/\bcomponentes?\s+curriculares?\b/gi, '')
+                .replace(/\s*[|:-]\s*$/g, '')
+                .replace(/\s{2,}/g, ' ')
+                .trim();
         }
 
-        return sourceType === 'department' ? 'Departamento SIGAA' : 'Programa SIGAA';
+        return '';
     }
 
     private getSigaaSourceUrls(
@@ -1027,6 +1042,8 @@ export class CrawlerService {
 
         onclickValues.forEach((onclick, index) => {
             const parsed = this.parseSigaaJsfOnclickInvocation(onclick);
+            const anchor = $row.find('a[onclick]').get(index);
+            const anchorTitle = String(anchor ? $(anchor).attr('title') || '' : '').trim();
 
             if (!parsed) {
                 return;
@@ -1059,14 +1076,20 @@ export class CrawlerService {
             });
 
             let priority = 0;
-            if (Object.prototype.hasOwnProperty.call(parsed.params, 'idComponente')) {
+            if (/^Detalhes do Componente Curricular$/i.test(anchorTitle)) {
+                priority += 200;
+            }
+            if (/^Programa Atual do Componente$/i.test(anchorTitle)) {
                 priority += 100;
             }
+            if (Object.prototype.hasOwnProperty.call(parsed.params, 'idComponente')) {
+                priority += 20;
+            }
             if (Object.prototype.hasOwnProperty.call(parsed.params, 'publico')) {
-                priority += 40;
+                priority += 10;
             }
             if (Object.prototype.hasOwnProperty.call(parsed.params, 'id')) {
-                priority += 20;
+                priority += 40;
             }
             priority += Math.max(0, 10 - index);
 
@@ -1179,6 +1202,14 @@ export class CrawlerService {
         }
         if (!target.learningAssessment && SIGAA_LABEL_MATCHERS.learningAssessment.test(label)) {
             target.learningAssessment = value;
+            return;
+        }
+        if (!target.department && SIGAA_LABEL_MATCHERS.department.test(label)) {
+            target.department = value;
+            return;
+        }
+        if (!target.semester && SIGAA_LABEL_MATCHERS.semester.test(label)) {
+            target.semester = value;
         }
     }
 
@@ -1367,6 +1398,8 @@ export class CrawlerService {
             objective: objective || undefined,
             methodology: methodology || undefined,
             learningAssessment: learningAssessment || undefined,
+            department: structuredFields.department || undefined,
+            semester: structuredFields.semester || undefined,
             workload: {
                 theoretical,
                 practice,
@@ -1502,6 +1535,18 @@ export class CrawlerService {
         component: IComponentInfoCrawler,
         detail: SigaaComponentDetail
     ) {
+        if (detail.department) {
+            const normalizedDepartment = this.sanitizeTextField(detail.department);
+            if (normalizedDepartment && !component.department) {
+                component.department = normalizedDepartment;
+            }
+        }
+        if (detail.semester) {
+            const normalizedSemester = this.sanitizeTextField(detail.semester);
+            if (normalizedSemester && !component.semester) {
+                component.semester = normalizedSemester;
+            }
+        }
         if (detail.prerequeriments) {
             component.prerequeriments = detail.prerequeriments;
         }
@@ -1646,10 +1691,10 @@ export class CrawlerService {
         const foundItems = new Map<string, IComponentInfoCrawler>();
         const formContexts = this.buildSigaaFormContexts($);
         const pageDepartmentLabel =
-            $('h1, h2')
+            $('h1, h2, h3, title, .descricao, .info, .nome')
                 .map((_, el) => $(el).text().replace(/\s+/g, ' ').trim())
                 .toArray()
-                .find((text) => /departamento|programa|computa|informa/i.test(text)) || '';
+                .find((text) => /departamento|programa|instituto|colegiado|computa|inform[aá]tica/i.test(text)) || '';
 
         $('tr').each((_, row) => {
             const $row = $(row);
@@ -1691,9 +1736,9 @@ export class CrawlerService {
                 .trim();
             const name = (rawName || `Disciplina ${code}`).slice(0, 255);
 
-            const departmentCell = rowCells.find((cell) => /\b(departamento|instituto)\b/i.test(cell));
+            const departmentCell = rowCells.find((cell) => /\b(departamento|instituto|colegiado)\b/i.test(cell));
             const programCell = sourceType === 'program'
-                ? rowCells.find((cell) => /\bprograma\b/i.test(cell) && !/\/[A-Z]{2,6}[0-9]{2,4}/i.test(cell))
+                ? rowCells.find((cell) => /\b(programa|p[oó]s-gradua[cç][aã]o|pgcomp)\b/i.test(cell) && !/\/[A-Z]{2,6}[0-9]{2,4}/i.test(cell))
                 : undefined;
 
             const department = this.normalizeDepartmentLabel(

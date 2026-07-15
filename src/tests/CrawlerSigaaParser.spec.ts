@@ -211,6 +211,38 @@ describe('CrawlerService SIGAA parser', () => {
         expect(result[0].detailActionPayload).toContain('javax.faces.ViewState=j_id1');
     });
 
+    it('should prefer the details JSF action over the program action when both are present', () => {
+        const html = `
+          <html>
+            <body>
+              <form id="formListagemComponentes" action="/sigaa/public/componentes/busca_componentes.jsf">
+                <input type="hidden" name="javax.faces.ViewState" value="j_id1" />
+              </form>
+              <table>
+                <tr class="linhaPar">
+                  <td>MAT154</td>
+                  <td>SISTEMAS OPERACIONAIS</td>
+                  <td>DISCIPLINA</td>
+                  <td>60h</td>
+                  <td>
+                    <a href="#" title="Detalhes do Componente Curricular" onclick="if(typeof jsfcljs == 'function'){jsfcljs(document.getElementById('formListagemComponentes'),{'formListagemComponentes:j_id_jsp_109_23':'formListagemComponentes:j_id_jsp_109_23','id':'45325','publico':'public'},'');}return false"><img src="/sigaa/img/view.gif" /></a>
+                    <a href="#" title="Programa Atual do Componente" onclick="if(typeof jsfcljs == 'function'){jsfcljs(document.getElementById('formListagemComponentes'),{'formListagemComponentes:j_id_jsp_109_27':'formListagemComponentes:j_id_jsp_109_27','idComponente':'45325'},'');}return false"><img src="/sigaa/img/report.png" /></a>
+                  </td>
+                </tr>
+              </table>
+            </body>
+          </html>
+        `;
+
+        const $ = cheerio.load(html);
+        const result = (service as any).extractSigaaListRows($, 'department', AcademicLevel.GRADUATION);
+
+        expect(result).toHaveLength(1);
+        expect(result[0].detailActionPayload).toContain('id=45325');
+        expect(result[0].detailActionPayload).not.toContain('idComponente=45325');
+        expect(result[0].detailActionPayloadCandidates[0]).toContain('id=45325');
+    });
+
       it('should parse detail labels with hyphen separators and label variants', () => {
         const fixturePath = path.resolve(__dirname, 'fixtures/sigaa/detail-variation-hyphen.html');
         const html = fs.readFileSync(fixturePath, 'utf-8');

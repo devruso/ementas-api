@@ -113,7 +113,7 @@ class UserService {
         }
 
         const userExists = await this.userRepository.findOne({
-            where: { email: normalizedEmail },
+            where: { email: normalizedEmail, isDeleted: false },
         });
 
         if (userExists) {
@@ -155,7 +155,7 @@ class UserService {
         }
 
         const userExists = await this.userRepository.findOne({
-            where: { email: normalizedEmail },
+            where: { email: normalizedEmail, isDeleted: false },
         });
 
         if (userExists) {
