@@ -12,6 +12,7 @@ import { createStorageProvider } from './storage';
 import { StorageProviderKind } from './storage';
 import { SignatureImageUploadValidator } from './signature/SignatureImageUploadValidator';
 import { buildInviteEmailTemplate, buildTeacherCredentialsEmailTemplate } from '../helpers/emailTemplates';
+import { buildPasswordResetLink, generatePasswordResetToken } from '../helpers/passwordReset';
 
 class UserService {
 
@@ -164,6 +165,8 @@ class UserService {
 
         const temporaryPassword = this.generateTemporaryPassword();
         const passwordHash = crypto.createHmac('sha256', temporaryPassword).digest('hex');
+        const passwordSetupToken = generatePasswordResetToken(normalizedEmail);
+        const passwordSetupLink = buildPasswordResetLink(passwordSetupToken);
 
         const user = this.userRepository.create({
             name: name.trim(),
@@ -182,7 +185,7 @@ class UserService {
                 const credentialsEmail = buildTeacherCredentialsEmailTemplate(
                     name.trim(),
                     normalizedEmail,
-                    temporaryPassword,
+                    passwordSetupLink,
                     adminUser.name
                 );
 
@@ -206,6 +209,7 @@ class UserService {
             name: createdUser.name,
             email: createdUser.email,
             temporaryPassword,
+            passwordSetupLink,
             emailDeliveryStatus,
             emailDeliveryError,
         };

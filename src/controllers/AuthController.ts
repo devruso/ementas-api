@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { LoginRequestDto, RefreshTokenRequestDto, ResetPasswordRequestDto } from '../dtos/auth';
+import { ConfirmResetPasswordRequestDto, LoginRequestDto, RefreshTokenRequestDto, ResetPasswordRequestDto } from '../dtos/auth';
 import { AuthService } from '../services/AuthService';
 
 class AuthController {
@@ -41,7 +41,16 @@ class AuthController {
         const authService = new AuthService();
         await authService.resetPassword(email);
 
-        return response.status(201).json({ message: 'A new password has been sent to your email if it is valid. Do not forget to check the spam box!' });
+        return response.status(201).json({ message: 'A password reset link has been sent to your email if it is valid. Do not forget to check the spam box!' });
+    }
+
+    async confirmResetPassword(request: Request, response: Response) {
+        const { token, password } = request.body as ConfirmResetPasswordRequestDto;
+
+        const authService = new AuthService();
+        const result = await authService.confirmResetPassword(token, password);
+
+        return response.status(200).json(result);
     }
 
 }

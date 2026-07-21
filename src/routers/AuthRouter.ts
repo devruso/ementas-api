@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { AuthController } from '../controllers/AuthController';
-import { LoginRequestDto, RefreshTokenRequestDto, ResetPasswordRequestDto } from '../dtos/auth';
+import { LoginRequestDto, RefreshTokenRequestDto, ResetPasswordRequestDto, ConfirmResetPasswordRequestDto } from '../dtos/auth';
 import { ensureAuthenticated } from '../middlewares/EnsureAuthenticated';
 import { makeValidateBody } from '../middlewares/Validator';
 
@@ -113,5 +113,6 @@ authRouter.post('/refresh', makeValidateBody(RefreshTokenRequestDto), authContro
 *         description: Internal Server Error
 */
 authRouter.post('/reset-password', makeValidateBody(ResetPasswordRequestDto), authController.resetPassword);
+authRouter.post('/reset-password/confirm', makeValidateBody(ConfirmResetPasswordRequestDto), authController.confirmResetPassword);
 
 export { authRouter };

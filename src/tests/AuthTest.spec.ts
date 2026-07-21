@@ -1,6 +1,7 @@
 import { UserController } from '../controllers/UserController';
 import { AuthController } from '../controllers/AuthController';
 import { UserInviteService } from '../services/UserInviteService';
+import { generatePasswordResetToken } from '../helpers/passwordReset';
 import connection from './connection';
 
 jest.mock('../middlewares/Mailer', () => ({
@@ -196,5 +197,42 @@ describe('Reset password user', ()=>{
         });
         const res = new MockExpressResponse();
         await expect(authController.resetPassword(req, res)).rejects.toHaveProperty('statusCode', 400);
+    });
+
+    it('should be able to confirm password reset with token', async ()=>{
+        const authController = new AuthController();
+        const token = generatePasswordResetToken('test@ufba.br');
+        const req = new MockExpressRequest({
+            method:'POST',
+            headers: {
+                'Content-Type':'application/json',
+            },
+            body:{
+                token,
+                password:'Newpass123!'
+            }
+        });
+        const res = new MockExpressResponse();
+
+        await authController.confirmResetPassword(req, res);
+
+        expect(res.statusCode).toBe(200);
+
+        const loginController = new AuthController();
+        const loginReq = new MockExpressRequest({
+            method:'POST',
+            headers: {
+                'Content-Type':'application/json',
+            },
+            body:{
+                'email': 'test@ufba.br',
+                'password':'Newpass123!'
+            }
+        });
+        const loginRes = new MockExpressResponse();
+
+        await loginController.login(loginReq, loginRes);
+
+        expect(loginRes.statusCode).toBe(201);
     });
 });

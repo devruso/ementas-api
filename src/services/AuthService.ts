@@ -8,6 +8,7 @@ import { AppError } from './../errors/AppError';
 import Mailer from '../middlewares/Mailer';
 import { assertUfbaInstitutionalEmail, normalizeEmail } from '../helpers/institutionalEmail';
 import { buildResetPasswordEmailTemplate } from '../helpers/emailTemplates';
+import { buildPasswordResetLink, generatePasswordResetToken, resolvePasswordResetEmailFromToken } from '../helpers/passwordReset';
 
 type CurrentUserResponse = Pick<
     User,
@@ -182,17 +183,49 @@ class AuthService {
         }
 
         try {
-            const generatedHash = Math.random().toString(36).substring(2);
-            const generatedPassword = crypto.createHmac('sha256', generatedHash).digest('hex');
-            const resetPasswordEmail = buildResetPasswordEmailTemplate(generatedHash);
+            const resetPasswordToken = generatePasswordResetToken(normalizedEmail);
+            const resetPasswordLink = buildPasswordResetLink(resetPasswordToken);
+            const resetPasswordEmail = buildResetPasswordEmailTemplate(resetPasswordLink);
 
-            await this.userRepository.createQueryBuilder().update(User).set({ password: generatedPassword }).where('email = :email', { email: normalizedEmail }).execute();
             await Mailer.execute(normalizedEmail, 'Nova Senha - EMENTAS', resetPasswordEmail);
         }
         catch (err) {
             console.log(err);
             throw new AppError('Nao foi possivel enviar o e-mail de recuperacao de senha.', 400);
         }
+    }
+
+    async confirmResetPassword(token: string, password: string) {
+        const normalizedToken = typeof token === 'string' ? token.trim() : '';
+        const normalizedPassword = typeof password === 'string' ? password.trim() : '';
+
+        if (!normalizedToken || !normalizedPassword) {
+            throw new AppError('Token and password are required.', 400);
+        }
+
+        const email = resolvePasswordResetEmailFromToken(normalizedToken);
+
+        if (!assertUfbaInstitutionalEmail(email)) {
+            throw new AppError('Only UFBA institutional email addresses are allowed.', 400);
+        }
+
+        const user = await this.userRepository.findOne({
+            where: { email, isDeleted: false },
+        });
+
+        if (!user) {
+            throw new AppError('This password reset link is invalid or expired.', 401);
+        }
+
+        const passwordHash = crypto.createHmac('sha256', normalizedPassword).digest('hex');
+
+        await this.userRepository.createQueryBuilder()
+            .update(User)
+            .set({ password: passwordHash })
+            .where('email = :email', { email })
+            .execute();
+
+        return { email };
     }
 
     generateUserInvite() {

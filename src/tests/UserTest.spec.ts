@@ -192,6 +192,7 @@ describe('Create teacher by admin', () => {
         );
 
         expect(result).toHaveProperty('temporaryPassword');
+        expect(result).toHaveProperty('passwordSetupLink');
         expect(result).toMatchObject({
             name: 'Professor Claudio',
             email: 'claudio@ufba.br',

@@ -6,15 +6,6 @@ const escapeHtml = (value: string) =>
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
 
-const resolveSystemBaseUrl = () => {
-    return String(
-        process.env.APP_PUBLIC_URL
-        || process.env.FRONTEND_BASE_URL
-        || process.env.FRONTEND_URL
-        || 'https://ementas.app.ic.ufba.br'
-    ).trim().replace(/\/+$/, '');
-};
-
 const resolveEmailLogoUrl = () => {
     return String(
         process.env.EMAIL_LOGO_URL
@@ -95,14 +86,12 @@ export const buildInviteEmailTemplate = (inviteLink: string) => {
     };
 };
 
-export const buildTeacherCredentialsEmailTemplate = (teacherName: string, email: string, temporaryPassword: string, actorName: string) => {
-    const safeTeacherName = escapeHtml(teacherName);
+export const buildTeacherCredentialsEmailTemplate = (teacherName: string, email: string, passwordSetupLink: string, actorName: string) => {
     const safeEmail = escapeHtml(email);
-    const safePassword = escapeHtml(temporaryPassword);
-    const safeActorName = escapeHtml(actorName);
+    const safePasswordSetupLink = escapeHtml(passwordSetupLink);
 
     return {
-        text: `Olá ${teacherName},\n\nSeu acesso ao Ementas foi criado por ${actorName}.\n\nE-mail: ${email}\nSenha provisória: ${temporaryPassword}\n\nAo entrar, altere sua senha imediatamente.\n\nEquipe Ementas`,
+        text: `Olá ${teacherName},\n\nSeu acesso ao Ementas foi criado por ${actorName}.\n\nE-mail: ${email}\n\nUse o link abaixo para definir sua senha:\n${passwordSetupLink}\n\nEquipe Ementas`,
         html: renderBaseTemplate(
             'Credenciais iniciais - Ementas',
             `Olá, ${teacherName}`,
@@ -112,36 +101,33 @@ export const buildTeacherCredentialsEmailTemplate = (teacherName: string, email:
                  <td style="font-size:14px;color:#4b5563;">E-mail institucional</td>
                  <td style="font-size:14px;font-weight:600;color:#1f2937;">${safeEmail}</td>
                </tr>
-               <tr>
-                 <td style="font-size:14px;color:#4b5563;">Senha provisória</td>
-                 <td style="font-size:14px;font-weight:700;color:#1f2937;">${safePassword}</td>
-               </tr>
              </table>
-             <p style="margin:16px 0 0;padding:12px 14px;border-radius:12px;background:#eef4ff;color:#1f3f7d;font-size:14px;line-height:1.6;">Por segurança, altere sua senha no primeiro acesso.</p>`,
+             <p style="margin:16px 0 18px;font-size:15px;line-height:1.7;color:#374151;">Para concluir o acesso, crie sua senha no botão abaixo:</p>
+             <p style="margin:0 0 20px;">
+               <a href="${safePasswordSetupLink}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 20px;background:#2f67c8;color:#ffffff;text-decoration:none;font-weight:700;border-radius:12px;">Definir senha</a>
+             </p>
+             <p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:#6b7280;">Se o botão não abrir, use este link:</p>
+             <p style="margin:0;font-size:13px;line-height:1.6;"><a href="${safePasswordSetupLink}" target="_blank" rel="noopener noreferrer" style="color:#1d4b9c;word-break:break-all;">${safePasswordSetupLink}</a></p>`,
             undefined
         ),
     };
 };
 
-export const buildResetPasswordEmailTemplate = (temporaryPassword: string) => {
-    const safePassword = escapeHtml(temporaryPassword);
-  const systemUrl = resolveSystemBaseUrl();
-  const safeSystemUrl = escapeHtml(systemUrl);
+export const buildResetPasswordEmailTemplate = (resetLink: string) => {
+    const safeResetLink = escapeHtml(resetLink);
 
     return {
-    text: `Olá,\n\nSua senha do Ementas foi redefinida.\n\nNova senha provisória: ${temporaryPassword}\n\nAcesse o sistema: ${systemUrl}\n\nRecomendamos alterar a senha após o login.\n\nEquipe Ementas`,
+        text: `Olá,\n\nRecebemos sua solicitação para redefinir a senha do Ementas.\n\nAcesse o link abaixo para criar uma nova senha:\n${resetLink}\n\nEquipe Ementas`,
         html: renderBaseTemplate(
             'Recuperação de senha - Ementas',
-            'Senha redefinida',
+            'Redefinir senha',
             'Recebemos sua solicitação de recuperação de senha.',
-            `<p style="margin:0 0 12px;font-size:15px;line-height:1.7;color:#374151;">Sua nova senha provisória é:</p>
-             <p style="margin:0 0 18px;padding:12px 14px;border-radius:12px;background:#f3f4f6;color:#111827;font-size:16px;font-weight:700;letter-spacing:0.02em;">${safePassword}</p>
-       <p style="margin:0 0 16px;">
-         <a href="${safeSystemUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 20px;background:#2f67c8;color:#ffffff;text-decoration:none;font-weight:700;border-radius:12px;">Acessar sistema</a>
-       </p>
-       <p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:#6b7280;">Se o botão não abrir, use este link:</p>
-       <p style="margin:0 0 18px;font-size:13px;line-height:1.6;"><a href="${safeSystemUrl}" target="_blank" rel="noopener noreferrer" style="color:#1d4b9c;word-break:break-all;">${safeSystemUrl}</a></p>
-             <p style="margin:0;font-size:14px;line-height:1.6;color:#4b5563;">Depois de entrar no sistema, altere sua senha por segurança.</p>`,
+            `<p style="margin:0 0 12px;font-size:15px;line-height:1.7;color:#374151;">Clique no botão abaixo para criar uma nova senha:</p>
+             <p style="margin:0 0 16px;">
+               <a href="${safeResetLink}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 20px;background:#2f67c8;color:#ffffff;text-decoration:none;font-weight:700;border-radius:12px;">Redefinir senha</a>
+             </p>
+             <p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:#6b7280;">Se o botão não abrir, use este link:</p>
+             <p style="margin:0;font-size:13px;line-height:1.6;"><a href="${safeResetLink}" target="_blank" rel="noopener noreferrer" style="color:#1d4b9c;word-break:break-all;">${safeResetLink}</a></p>`,
             undefined
         ),
     };
