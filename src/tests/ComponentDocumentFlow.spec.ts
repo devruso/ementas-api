@@ -608,16 +608,22 @@ describe('Component document flow', () => {
         const findExactIndex = (label: string) => paragraphTexts.findIndex((text) => normalize(text) === normalize(label));
         const modalityHeaderIndex = findExactIndex('MODALIDADE/ SUBMODALIDADE');
         const prereqHeaderIndex = findExactIndex('PRÉ-REQUISITO (POR CURSO)');
+        const modalitySearchEndIndex = findExactIndex('CARGA HORÁRIA (docente/turma)');
         expect(modalityHeaderIndex).toBeGreaterThan(-1);
         expect(prereqHeaderIndex).toBeGreaterThan(modalityHeaderIndex);
+        expect(modalitySearchEndIndex).toBeGreaterThan(prereqHeaderIndex);
 
         const modalityValue = paragraphTexts
-            .slice(modalityHeaderIndex + 1, prereqHeaderIndex)
-            .find((text) => text.length > 0);
+            .slice(modalityHeaderIndex + 1, modalitySearchEndIndex)
+            .find((text) => {
+                const normalized = normalize(text);
+                return normalized.includes('DISCIPLINA')
+                    && (normalized.includes('TEORIC') || normalized.includes('PRAT'));
+            });
         expect(['Presencial', 'Disciplina Teórico /Prática']).toContain(modalityValue);
 
         const modalityArtifacts = paragraphTexts
-            .slice(modalityHeaderIndex + 1, prereqHeaderIndex)
+            .slice(modalityHeaderIndex + 1, modalitySearchEndIndex)
             .filter((text) => {
                 const normalized = normalize(text);
                 return normalized.includes('DISCIPLINA')

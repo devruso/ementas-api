@@ -625,6 +625,9 @@ export class ComponentService {
                 normalizedText.includes('DISCIPLINA')
                 && (normalizedText.includes('TEORIC') || normalizedText.includes('PRAT'))
             );
+            const isWorkloadMarkerText = (normalizedText: string) => (
+                /^(T|T\/P|P|PP|EXT|E|TOTAL|NAO SE APLICA|\d+)$/.test(normalizedText)
+            );
 
             const isBoldParagraph = (paragraphXml: string) => /<w:pPr[\s\S]*?<w:rPr>[\s\S]*?<w:b\/>/.test(paragraphXml);
 
@@ -639,7 +642,7 @@ export class ComponentService {
                 for (let index = start + 1; index < end; index += 1) {
                     const normalized = normalizeHeading(texts[index]);
 
-                    if (!normalized || sectionHeaders.has(normalized)) {
+                    if (!normalized || sectionHeaders.has(normalized) || isWorkloadMarkerText(normalized)) {
                         continue;
                     }
 
@@ -708,10 +711,17 @@ export class ComponentService {
                 return -1;
             };
 
-            const modalityValueIndex = findModalityTarget(
+            let modalityValueIndex = findModalityTarget(
                 modalityHeaderIndex,
                 prereqHeaderIndex > 0 ? prereqHeaderIndex : workloadEnd
             );
+
+            if (modalityValueIndex < 0 && prereqHeaderIndex > modalityHeaderIndex) {
+                modalityValueIndex = findModalityTarget(
+                    prereqHeaderIndex,
+                    teacherWorkloadStart > prereqHeaderIndex ? teacherWorkloadStart : workloadEnd
+                );
+            }
 
             const prereqValueIndex = findPrereqTarget(
                 prereqHeaderIndex,
