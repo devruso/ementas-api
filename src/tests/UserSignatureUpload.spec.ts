@@ -3,6 +3,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from '@jest/glob
 
 import { UserController } from '../controllers/UserController';
 import { UserInviteService } from '../services/UserInviteService';
+import { createValidSignaturePng } from '../scripts/helpers/createValidSignaturePng';
 import connection from './connection';
 
 /* eslint-disable */
@@ -57,7 +58,7 @@ describe('User signature upload flow', () => {
             .put('/api/users/update/signature/file')
             .set('Authorization', `Bearer ${token}`)
             .field('signature', 'Assina123!')
-            .attach('signatureFile', Buffer.from('fake-signature-file'), {
+            .attach('signatureFile', createValidSignaturePng(320, 80), {
                 filename: 'assinatura.png',
                 contentType: 'image/png',
             });

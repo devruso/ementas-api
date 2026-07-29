@@ -16,7 +16,9 @@ describe('DocxSignatureEmbedder', () => {
             heightPx: 80,
         });
 
-        expect(updatedParagraph).toContain('Nome: Prof. Teste Assinatura:');
+        expect(updatedParagraph.indexOf('<w:drawing>')).toBeLessThan(updatedParagraph.indexOf('Nome: Prof. Teste Assinatura:'));
+        expect(updatedParagraph).toContain('Nome: Prof. Teste Assinatura: ____________________________________');
+        expect(updatedParagraph).toContain('<w:jc w:val="right"/>');
         expect(updatedParagraph).toContain('<w:drawing>');
         expect(zip.readAsText('[Content_Types].xml')).toContain('Extension="png"');
         expect(zip.readAsText('word/_rels/document.xml.rels')).toContain('relationships/image');
@@ -51,7 +53,9 @@ describe('DocxSignatureEmbedder', () => {
         expect(updatedParagraph).toContain('xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"');
         expect(updatedParagraph).toContain('<a:srcRect/>');
         expect(updatedParagraph).toContain('<a:ln/>');
-        expect(updatedParagraph).toContain('Nome: Jamilson Assinatura:');
+        expect(updatedParagraph.indexOf('<w:drawing>')).toBeLessThan(updatedParagraph.indexOf('Nome: Jamilson Assinatura:'));
+        expect(updatedParagraph).toContain('Nome: Jamilson Assinatura: ____________________________________');
+        expect(updatedParagraph).toContain('<w:jc w:val="right"/>');
         expect(updatedParagraph).toContain('r:embed="rId9"');
 
         const relsXml = zip.readAsText('word/_rels/document.xml.rels');

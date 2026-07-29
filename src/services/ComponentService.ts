@@ -896,7 +896,7 @@ export class ComponentService {
                     approvedBy,
                     signatureAsset
                 );
-                texts[signatureLineIndex] = `Nome: ${approvedBy} Assinatura:`;
+                texts[signatureLineIndex] = `Nome: ${approvedBy} Assinatura: ____________________________________`;
             } else {
                 replaceIndex(signatureLineIndex, `Nome: ${approvedBy} Assinatura: ____________________________________`);
             }

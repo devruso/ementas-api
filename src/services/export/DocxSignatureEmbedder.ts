@@ -79,6 +79,22 @@ export class DocxSignatureEmbedder {
         ].join('');
     }
 
+    private withJustification(paragraphProperties: string, justification: 'center' | 'right') {
+        if (!paragraphProperties) {
+            return `<w:pPr><w:jc w:val="${justification}"/></w:pPr>`;
+        }
+
+        if (/<w:jc\b[^>]*\/>/.test(paragraphProperties)) {
+            return paragraphProperties.replace(/<w:jc\b[^>]*\/>/, `<w:jc w:val="${justification}"/>`);
+        }
+
+        if (/<w:pPr\s*\/>/.test(paragraphProperties)) {
+            return `<w:pPr><w:jc w:val="${justification}"/></w:pPr>`;
+        }
+
+        return paragraphProperties.replace('</w:pPr>', `<w:jc w:val="${justification}"/></w:pPr>`);
+    }
+
     embedSignature(zip: any, paragraphXml: string, approvedBy: string, asset: SignatureAsset) {
         const contentTypesXml = zip.readAsText('[Content_Types].xml');
         const documentRelsPath = 'word/_rels/document.xml.rels';
@@ -88,12 +104,15 @@ export class DocxSignatureEmbedder {
         const paragraphStartTag = paragraphXml.match(/^<w:p\b[^>]*>/)?.[0] || '<w:p>';
         const paragraphProperties = paragraphXml.match(/<w:pPr[\s\S]*?<\/w:pPr>|<w:pPr\s*\/>/)?.[0] || '';
         const drawingXml = this.buildDrawingXml(relationshipId, asset, Number(relationshipId.replace('rId', '')) + 1000);
+        const imageParagraphProperties = this.withJustification(paragraphProperties, 'right');
         const updatedParagraphXml = [
             paragraphStartTag,
-            paragraphProperties,
-            '<w:r><w:rPr><w:noProof/></w:rPr></w:r>',
-            `<w:r><w:rPr><w:noProof/></w:rPr><w:t xml:space="preserve">Nome: ${approvedBy} Assinatura: </w:t></w:r>`,
+            imageParagraphProperties,
             `<w:r>${drawingXml}</w:r>`,
+            '</w:p>',
+            paragraphStartTag,
+            paragraphProperties,
+            `<w:r><w:rPr><w:noProof/></w:rPr><w:t xml:space="preserve">Nome: ${approvedBy} Assinatura: ____________________________________</w:t></w:r>`,
             '</w:p>',
         ].join('');
 
