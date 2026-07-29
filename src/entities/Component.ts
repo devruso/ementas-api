@@ -148,6 +148,8 @@ class Component {
             this.name = draft.name;
         if (draft.department != null)
             this.department = draft.department;
+        if (draft.departmentId !== undefined)
+            this.departmentId = draft.departmentId;
         if (draft.program != null)
             this.program = draft.program;
         if (draft.semester != null)

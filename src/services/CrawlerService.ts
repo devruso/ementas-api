@@ -25,6 +25,7 @@ import { ComponentCurriculumContext } from '../entities/ComponentCurriculumConte
 import { ComponentCurriculumContextRepository } from '../repositories/ComponentCurriculumContextRepository';
 import { getTextCorruptionScore, repairLikelyUtf8Mojibake } from '../helpers/repairMojibake';
 import { composeBibliographySections, normalizeReferenceSections, splitBibliographySections } from '../helpers/referenceSections';
+import { DepartmentResolutionService } from './DepartmentResolutionService';
 
 export interface ImportComponentsSummary {
     source: 'siac' | 'sigaa-public' | 'sigaa-snapshot';
@@ -138,6 +139,7 @@ export class CrawlerService {
     private componentLogRepository: Repository<ComponentLog>;
     private componentRelationRepository: Repository<ComponentRelation>;
     private componentCurriculumContextRepository: Repository<ComponentCurriculumContext>;
+    private departmentResolutionService: DepartmentResolutionService;
     private workloadService: WorkloadService;
     private sigaaDetailCache = new Map<string, SigaaComponentDetail | null>();
     private sigaaDetailInFlight = new Map<string, Promise<SigaaComponentDetail | null>>();
@@ -150,6 +152,7 @@ export class CrawlerService {
         this.componentLogRepository = getCustomRepository(ComponentLogRepository);
         this.componentRelationRepository = getCustomRepository(ComponentRelationRepository);
         this.componentCurriculumContextRepository = getCustomRepository(ComponentCurriculumContextRepository);
+        this.departmentResolutionService = new DepartmentResolutionService();
         this.workloadService = new WorkloadService();
         this.requestTimeoutMs = Number(process.env.CRAWLER_HTTP_TIMEOUT_MS || 45000);
         const configuredFamily = Number(process.env.CRAWLER_HTTP_FAMILY || 0);
@@ -335,6 +338,31 @@ export class CrawlerService {
         }
 
         let changed = false;
+        const resolvedDepartment = await this.departmentResolutionService.resolveDepartment(data.department);
+
+        if (resolvedDepartment) {
+            if (
+                existingComponent.departmentId !== resolvedDepartment.id
+                || existingComponent.department !== resolvedDepartment.name
+            ) {
+                existingComponent.departmentId = resolvedDepartment.id;
+                existingComponent.department = resolvedDepartment.name;
+                changed = true;
+            }
+
+            if (
+                existingComponent.draft
+                && (
+                    existingComponent.draft.departmentId !== resolvedDepartment.id
+                    || existingComponent.draft.department !== resolvedDepartment.name
+                )
+            ) {
+                existingComponent.draft.departmentId = resolvedDepartment.id;
+                existingComponent.draft.department = resolvedDepartment.name;
+                changed = true;
+            }
+        }
+
         const normalizedIncomingPrereq = this.normalizePrerequeriments(data.prerequeriments);
         const currentPrereq = this.normalizePrerequeriments(existingComponent.prerequeriments);
 
@@ -2384,6 +2412,7 @@ export class CrawlerService {
         }
 
         try {
+            const department = await this.departmentResolutionService.resolveDepartment(data.department);
             const [ componentWorkload, draftWorkload ] = await Promise.all(
                 new Array(2)
                     .fill(null)
@@ -2400,7 +2429,8 @@ export class CrawlerService {
                 workloadId: componentWorkload.id,
                 code: data.code,
                 name: data.name,
-                department: data.department,
+                department: department?.name || data.department,
+                departmentId: department?.id || null,
                 semester: data.semester,
                 program: data.description,
                 objective: data.objective,

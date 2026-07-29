@@ -8,7 +8,7 @@ import { makeValidateBody } from '../middlewares/Validator';
 const departmentRouter = Router();
 const departmentController = new DepartmentController();
 
-departmentRouter.get('/', ensureAuthenticated, ensureAdminAuthenticated, departmentController.getDepartments);
+departmentRouter.get('/', ensureAuthenticated, departmentController.getDepartments);
 
 departmentRouter.post(
     '/',

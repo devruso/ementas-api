@@ -49,7 +49,8 @@ class DepartmentService {
     }
 
     private async syncDepartmentRelations(department: Department, previousName?: string) {
-        const previous = previousName ? previousName.toLowerCase() : null;
+        const previous = previousName ? previousName.trim().toLowerCase() : null;
+        const code = department.code?.trim().toLowerCase() || null;
 
         await this.componentRepository
             .createQueryBuilder()
@@ -60,6 +61,7 @@ class DepartmentService {
             })
             .where('department_id = :departmentId', { departmentId: department.id })
             .orWhere('LOWER(TRIM(department)) = LOWER(TRIM(:name))', { name: department.name })
+            .orWhere(code ? 'LOWER(TRIM(department)) = :code' : '1=0', { code })
             .orWhere(previous ? 'LOWER(TRIM(department)) = :previous' : '1=0', { previous })
             .execute();
 
@@ -72,6 +74,7 @@ class DepartmentService {
             })
             .where('department_id = :departmentId', { departmentId: department.id })
             .orWhere('LOWER(TRIM(department)) = LOWER(TRIM(:name))', { name: department.name })
+            .orWhere(code ? 'LOWER(TRIM(department)) = :code' : '1=0', { code })
             .orWhere(previous ? 'LOWER(TRIM(department)) = :previous' : '1=0', { previous })
             .execute();
     }
@@ -93,7 +96,9 @@ class DepartmentService {
         const sortOrder = options?.sortOrder === 'DESC' ? 'DESC' : 'ASC';
 
         const query = this.departmentRepository
-            .createQueryBuilder('departments');
+            .createQueryBuilder('departments')
+            .loadRelationCountAndMap('departments.componentCount', 'departments.components')
+            .loadRelationCountAndMap('departments.componentDraftCount', 'departments.componentDrafts');
 
         if (normalizedSearch) {
             query.where('LOWER(departments.name) LIKE :search', { search: `%${normalizedSearch}%` })

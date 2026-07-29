@@ -23,6 +23,7 @@ import {
     normalizeReferenceSections,
     splitBibliographySections,
 } from '../helpers/referenceSections';
+import { DepartmentResolutionService } from './DepartmentResolutionService';
 
 export class ComponentDraftService {
 
@@ -33,6 +34,7 @@ export class ComponentDraftService {
     private componentLogRepository: Repository<ComponentLog>;
     private userRepository: Repository<User>;
     private workloadService: WorkloadService;
+    private departmentResolutionService: DepartmentResolutionService;
 
     private readonly mutableDraftFields: Array<keyof UpdateComponentRequestDto> = [
         'code',
@@ -60,6 +62,7 @@ export class ComponentDraftService {
         this.componentLogRepository = getCustomRepository(ComponentLogRepository);
         this.userRepository = getCustomRepository(UserRepository);
         this.workloadService = new WorkloadService();
+        this.departmentResolutionService = new DepartmentResolutionService();
     }
 
     private buildApprovalVersionCode(agreementDate: Date | string, agreementNumber: string) {
@@ -300,7 +303,7 @@ export class ComponentDraftService {
         const sortMap: Record<string, string> = {
             code: 'drafts.code',
             name: 'drafts.name',
-            department: 'drafts.department',
+            department: 'COALESCE(departmentRef.name, drafts.department)',
             semester: 'drafts.semester',
             createdAt: 'drafts.createdAt',
             updatedAt: 'drafts.updatedAt',
@@ -310,6 +313,7 @@ export class ComponentDraftService {
 
         const query = this.componentDraftRepository
             .createQueryBuilder('drafts')
+            .leftJoinAndSelect('drafts.departmentRef', 'departmentRef')
             .leftJoinAndSelect('drafts.workload', 'workload');
 
         if (search) {
@@ -362,8 +366,9 @@ export class ComponentDraftService {
                     normalizedCode
                 ),
                 userId: userId,
-            };
+            } as CreateDraftRequestDto & { userId: string; departmentId?: string | null; workloadId?: string };
             this.syncReferenceFields(draftDto);
+            await this.departmentResolutionService.applyDepartment(draftDto);
 
             const [ draftWorkload, componentWorkload ] = await Promise.all([
                 this.workloadService.create(draftDto.workload ?? {}),
@@ -436,6 +441,7 @@ export class ComponentDraftService {
             }
 
             this.syncReferenceFields(sanitizedRequestDto);
+            await this.departmentResolutionService.applyDepartment(sanitizedRequestDto);
 
             if(sanitizedRequestDto.workload != null) {
                 const workloadData = {

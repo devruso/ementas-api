@@ -25,6 +25,10 @@ class Department {
 
     @OneToMany(() => ComponentDraft, (draft) => draft.departmentRef)
         componentDrafts: ComponentDraft[];
+
+    componentCount?: number;
+
+    componentDraftCount?: number;
 }
 
 export { Department };

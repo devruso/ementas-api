@@ -29,6 +29,7 @@ import { LibreOfficeDocxToPdfConverter } from './export/LibreOfficeDocxToPdfConv
 import { DocxSignatureEmbedder } from './export/DocxSignatureEmbedder';
 import { ProcessedSignatureImage } from './export/SignatureImageProcessor';
 import { UserSignatureAssetService } from './export/UserSignatureAssetService';
+import { DepartmentResolutionService } from './DepartmentResolutionService';
 
 export class ComponentService {
     private componentRepository: Repository<Component>;
@@ -38,6 +39,7 @@ export class ComponentService {
     private readonly pdfConverter: DocxToPdfConverter;
     private readonly signatureAssetService: UserSignatureAssetService;
     private readonly docxSignatureEmbedder: DocxSignatureEmbedder;
+    private readonly departmentResolutionService: DepartmentResolutionService;
 
     private readonly mutableComponentFields: Array<keyof UpdateComponentRequestDto> = [
         'code',
@@ -71,6 +73,7 @@ export class ComponentService {
         this.pdfConverter = pdfConverter;
         this.signatureAssetService = new UserSignatureAssetService();
         this.docxSignatureEmbedder = new DocxSignatureEmbedder();
+        this.departmentResolutionService = new DepartmentResolutionService();
     }
 
     private normalizeTemplateText(value: string | undefined, emptyText = 'Não se aplica') {
@@ -147,6 +150,10 @@ export class ComponentService {
         return `translate(LOWER(${column}), 'áàâãäåéèêëíìîïóòôõöúùûüçñ', 'aaaaaaeeeeiiiiooooouuuucn')`;
     }
 
+
+    private isUuid(value?: string) {
+        return Boolean(value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value));
+    }
 
     private decodeXmlText(value: string) {
         return value
@@ -1009,7 +1016,7 @@ export class ComponentService {
         const sortMap: Record<string, string> = {
             code: 'components.code',
             name: 'components.name',
-            department: 'components.department',
+            department: 'COALESCE(departmentRef.name, components.department)',
             academicLevel: 'components.academicLevel',
             semester: 'components.semester',
             createdAt: 'components.createdAt',
@@ -1025,7 +1032,9 @@ export class ComponentService {
 
         const query = this.componentRepository
             .createQueryBuilder('components')
+            .leftJoinAndSelect('components.departmentRef', 'departmentRef')
             .leftJoinAndSelect('components.draft', 'draft')
+            .leftJoinAndSelect('draft.departmentRef', 'draft_departmentRef')
             .leftJoinAndSelect('components.logs', 'logs')
             .leftJoinAndSelect('components.workload', 'workload')
             .leftJoinAndSelect('components.curriculumContexts', 'curriculumContexts')
@@ -1049,14 +1058,26 @@ export class ComponentService {
 
         if (normalizedDepartment) {
             const normalizedDepartmentColumn = this.accentInsensitiveSql('components.department');
+            const normalizedDepartmentRefNameColumn = this.accentInsensitiveSql("COALESCE(departmentRef.name, '')");
+            const normalizedDepartmentRefCodeColumn = this.accentInsensitiveSql("COALESCE(departmentRef.code, '')");
 
-            if (normalizedDepartment === '__dcc__') {
+            if (this.isUuid(normalizedDepartment)) {
+                query.andWhere('components.departmentId = :departmentId', {
+                    departmentId: normalizedDepartment,
+                });
+            } else if (normalizedDepartment === '__dcc__') {
                 query.andWhere(new Brackets((subQuery) => {
                     subQuery
                         .where(`${normalizedDepartmentColumn} LIKE :dccByName`, {
                             dccByName: '%ciencia da computacao%',
                         })
                         .orWhere(`${normalizedDepartmentColumn} LIKE :dccByAcronym`, {
+                            dccByAcronym: '%dcc%',
+                        })
+                        .orWhere(`${normalizedDepartmentRefNameColumn} LIKE :dccByName`, {
+                            dccByName: '%ciencia da computacao%',
+                        })
+                        .orWhere(`${normalizedDepartmentRefCodeColumn} LIKE :dccByAcronym`, {
                             dccByAcronym: '%dcc%',
                         });
                 }));
@@ -1068,13 +1089,21 @@ export class ComponentService {
                         })
                         .orWhere(`${normalizedDepartmentColumn} LIKE :dciByAcronym`, {
                             dciByAcronym: '%dci%',
+                        })
+                        .orWhere(`${normalizedDepartmentRefNameColumn} LIKE :dciByName`, {
+                            dciByName: '%computacao interdisciplinar%',
+                        })
+                        .orWhere(`${normalizedDepartmentRefCodeColumn} LIKE :dciByAcronym`, {
+                            dciByAcronym: '%dci%',
                         });
                 }));
             } else {
-                query.andWhere(
-                    `${normalizedDepartmentColumn} = :department`,
-                    { department: normalizedDepartment }
-                );
+                query.andWhere(new Brackets((subQuery) => {
+                    subQuery
+                        .where(`${normalizedDepartmentColumn} = :department`, { department: normalizedDepartment })
+                        .orWhere(`${normalizedDepartmentRefNameColumn} = :department`, { department: normalizedDepartment })
+                        .orWhere(`${normalizedDepartmentRefCodeColumn} = :department`, { department: normalizedDepartment });
+                }));
             }
         }
 
@@ -1091,7 +1120,9 @@ export class ComponentService {
 
         const component = await this.componentRepository
             .createQueryBuilder('components')
+            .leftJoinAndSelect('components.departmentRef', 'departmentRef')
             .leftJoinAndSelect('components.draft', 'draft')
+            .leftJoinAndSelect('draft.departmentRef', 'draft_departmentRef')
             .leftJoinAndSelect('components.logs', 'logs')
             .leftJoinAndSelect('components.workload', 'workload')
             .leftJoinAndSelect('components.curriculumContexts', 'curriculumContexts')
@@ -1131,8 +1162,9 @@ export class ComponentService {
                     normalizedCode
                 ),
                 userId: userId,
-            };
+            } as CreateComponentRequestDto & { userId: string; departmentId?: string | null; workloadId?: string };
             this.syncReferenceFields(componentDto);
+            await this.departmentResolutionService.applyDepartment(componentDto);
 
             const [ componentWorkload, draftWorkload ] = await Promise.all(
                 new Array(2)
@@ -1223,6 +1255,7 @@ export class ComponentService {
             }
 
             this.syncReferenceFields(sanitizedComponentDto);
+            await this.departmentResolutionService.applyDepartment(sanitizedComponentDto);
 
             if (sanitizedComponentDto.workload != null) {
                 const workloadData = {
