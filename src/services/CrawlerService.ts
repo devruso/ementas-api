@@ -15,13 +15,16 @@ import { ComponentLogRepository } from '../repositories/ComponentLogRepository';
 import { ComponentStatus } from '../interfaces/ComponentStatus';
 import { ComponentLogType } from '../interfaces/ComponentLogType';
 import { AcademicLevel } from '../interfaces/AcademicLevel';
-import { IComponentInfoCrawler } from '../interfaces/IComponentInfoCrawler';
+import { IComponentCurriculumContextCrawler, IComponentInfoCrawler } from '../interfaces/IComponentInfoCrawler';
 import { ComponentDraft } from '../entities/ComponentDraft';
 import { ComponentDraftRepository } from '../repositories/ComponentDraftRepository';
 import { ComponentRelation } from '../entities/ComponentRelation';
 import { ComponentRelationRepository } from '../repositories/ComponentRelationRepository';
 import { ComponentRelationType } from '../interfaces/ComponentRelationType';
+import { ComponentCurriculumContext } from '../entities/ComponentCurriculumContext';
+import { ComponentCurriculumContextRepository } from '../repositories/ComponentCurriculumContextRepository';
 import { getTextCorruptionScore, repairLikelyUtf8Mojibake } from '../helpers/repairMojibake';
+import { composeBibliographySections, normalizeReferenceSections, splitBibliographySections } from '../helpers/referenceSections';
 
 export interface ImportComponentsSummary {
     source: 'siac' | 'sigaa-public' | 'sigaa-snapshot';
@@ -63,12 +66,17 @@ type SigaaComponentDetail = {
     prerequeriments?: string;
     coRequisites?: string[];
     equivalences?: string[];
+    description?: string;
     syllabus?: string;
     objective?: string;
     methodology?: string;
     learningAssessment?: string;
+    bibliography?: string;
+    referencesBasic?: string;
+    referencesComplementary?: string;
     department?: string;
     semester?: string;
+    curriculumContexts?: IComponentCurriculumContextCrawler[];
     workload?: {
         theoretical: number;
         practice: number;
@@ -84,13 +92,18 @@ type SigaaJsfFormContext = {
 };
 
 type SigaaDetailRawFields = {
+    code?: string;
     prerequeriments?: string;
     coReqRaw?: string;
     equivalencesRaw?: string;
+    description?: string;
     syllabus?: string;
     objective?: string;
     methodology?: string;
     learningAssessment?: string;
+    bibliography?: string;
+    referencesBasic?: string;
+    referencesComplementary?: string;
     department?: string;
     semester?: string;
 };
@@ -102,13 +115,18 @@ type SigaaDetailActionRequest = {
 };
 
 const SIGAA_LABEL_MATCHERS = {
+    code: /^codigo$/i,
     prerequeriments: /^(pre\s*requisit(?:o|os)|prerequisit(?:o|os))$/i,
     coReqRaw: /^(co\s*requisit(?:o|os)|correquisit(?:o|os))$/i,
     equivalencesRaw: /^(equivalenc(?:ia|ias)|equivalente(?:\(s\))?)$/i,
-    syllabus: /^ementa$/i,
+    description: /^(conteudo\s*programatico|programa|conteudo)$/i,
+    syllabus: /^(ementa|ementa\s*descricao|descricao)$/i,
     objective: /^objetiv(?:o|os)$/i,
-    methodology: /^metodologia$/i,
-    learningAssessment: /^(avaliac(?:ao|ao\s+da\s+aprendizagem)|avaliacao\s+da\s+aprendizagem)$/i,
+    methodology: /^(metodologia|procedimentos?\s+de\s+ensino|procedimentos?\s+metodologicos?)$/i,
+    learningAssessment: /^(avaliac(?:ao|ao\s+da\s+aprendizagem)|avaliacao\s+da\s+aprendizagem|criterios?\s+de\s+avaliacao)$/i,
+    bibliography: /^(referencias?|bibliografia)$/i,
+    referencesBasic: /^(referencias?\s+basicas?|bibliografia\s+basica)$/i,
+    referencesComplementary: /^(referencias?\s+complementares|bibliografia\s+complementar)$/i,
     department: /^(unidade\s+respons[aá]vel|departamento|programa|colegiado|instituto)$/i,
     semester: /^(semestre|per[ií]odo)$/i,
 };
@@ -119,6 +137,7 @@ export class CrawlerService {
     private componentDraftRepository : Repository<ComponentDraft>;
     private componentLogRepository: Repository<ComponentLog>;
     private componentRelationRepository: Repository<ComponentRelation>;
+    private componentCurriculumContextRepository: Repository<ComponentCurriculumContext>;
     private workloadService: WorkloadService;
     private sigaaDetailCache = new Map<string, SigaaComponentDetail | null>();
     private sigaaDetailInFlight = new Map<string, Promise<SigaaComponentDetail | null>>();
@@ -130,6 +149,7 @@ export class CrawlerService {
         this.componentDraftRepository = getCustomRepository(ComponentDraftRepository);
         this.componentLogRepository = getCustomRepository(ComponentLogRepository);
         this.componentRelationRepository = getCustomRepository(ComponentRelationRepository);
+        this.componentCurriculumContextRepository = getCustomRepository(ComponentCurriculumContextRepository);
         this.workloadService = new WorkloadService();
         this.requestTimeoutMs = Number(process.env.CRAWLER_HTTP_TIMEOUT_MS || 45000);
         const configuredFamily = Number(process.env.CRAWLER_HTTP_FAMILY || 0);
@@ -245,6 +265,27 @@ export class CrawlerService {
         return current;
     }
 
+    private mergeCrawlerComponentMetadata(
+        primary: IComponentInfoCrawler,
+        secondary: IComponentInfoCrawler
+    ): IComponentInfoCrawler {
+        return {
+            ...primary,
+            coRequisites: Array.from(new Set([
+                ...(primary.coRequisites || []),
+                ...(secondary.coRequisites || []),
+            ])),
+            equivalences: Array.from(new Set([
+                ...(primary.equivalences || []),
+                ...(secondary.equivalences || []),
+            ])),
+            curriculumContexts: this.mergeCurriculumContextLists(
+                primary.curriculumContexts,
+                secondary.curriculumContexts
+            ),
+        };
+    }
+
     private selectCanonicalComponentsByCode(components: Array<IComponentInfoCrawler>) {
         const canonicalByCode = new Map<string, IComponentInfoCrawler>();
 
@@ -256,9 +297,12 @@ export class CrawlerService {
                 continue;
             }
 
+            const selected = this.chooseBestComponentCandidate(current, component);
+            const other = selected === current ? component : current;
+
             canonicalByCode.set(
                 component.code,
-                this.chooseBestComponentCandidate(current, component)
+                this.mergeCrawlerComponentMetadata(selected, other)
             );
         }
 
@@ -314,8 +358,8 @@ export class CrawlerService {
         }
 
         const textFields: Array<
-            'syllabus' | 'objective' | 'methodology' | 'learningAssessment'
-        > = ['syllabus', 'objective', 'methodology', 'learningAssessment'];
+            'syllabus' | 'objective' | 'methodology' | 'learningAssessment' | 'bibliography' | 'referencesBasic' | 'referencesComplementary'
+        > = ['syllabus', 'objective', 'methodology', 'learningAssessment', 'bibliography', 'referencesBasic', 'referencesComplementary'];
 
         for (const field of textFields) {
             const incomingValue = String((data as any)[field] || '').trim();
@@ -328,6 +372,17 @@ export class CrawlerService {
             (existingComponent as any)[field] = incomingValue;
             if (existingComponent.draft) {
                 (existingComponent.draft as any)[field] = incomingValue;
+            }
+            changed = true;
+        }
+
+        const incomingProgram = String(data.description || '').trim();
+        const currentProgram = String(existingComponent.program || '').trim();
+
+        if (this.shouldAdoptIncomingField(currentProgram, incomingProgram)) {
+            existingComponent.program = incomingProgram;
+            if (existingComponent.draft) {
+                existingComponent.draft.program = incomingProgram;
             }
             changed = true;
         }
@@ -361,6 +416,16 @@ export class CrawlerService {
 
         if (newRelations.length > 0) {
             await this.componentRelationRepository.save(newRelations);
+            changed = true;
+        }
+
+        const hasNewCurriculumContexts = await this.syncComponentCurriculumContexts(
+            existingComponent.id,
+            data.curriculumContexts,
+            data.academicLevel || existingComponent.academicLevel
+        );
+
+        if (hasNewCurriculumContexts) {
             changed = true;
         }
 
@@ -432,6 +497,144 @@ export class CrawlerService {
         return Array.from(new Set(normalized));
     }
 
+    private isSigaaYes(rawValue?: string): boolean {
+        const value = this.normalizeSigaaLabel(repairLikelyUtf8Mojibake(String(rawValue || '')));
+
+        return value === 'sim' || value === 's';
+    }
+
+    private parseSigaaRecommendedPeriod(rawValue?: unknown): number | null {
+        const value = String(rawValue ?? '').trim();
+        const match = value.match(/\d+/);
+
+        if (!match) {
+            return null;
+        }
+
+        const period = Number(match[0]);
+
+        return Number.isFinite(period) && period >= 0 ? period : null;
+    }
+
+    private extractCourseNameFromCurriculumName(curriculumName: string): string {
+        const sanitized = this.sanitizeTextField(curriculumName);
+        const segments = sanitized
+            .split(/\s+-\s+/)
+            .map((segment) => segment.trim())
+            .filter(Boolean);
+
+        return segments[0] || sanitized;
+    }
+
+    private buildCurriculumContextSourceKey(context: IComponentCurriculumContextCrawler): string {
+        const text = [
+            context.curriculumCode,
+            context.implementationSemester,
+            context.recommendedPeriod ?? '',
+            context.curriculumName,
+        ].join('|').toLowerCase();
+        let hash = 0;
+
+        for (let index = 0; index < text.length; index += 1) {
+            hash = ((hash << 5) - hash) + text.charCodeAt(index);
+            hash |= 0;
+        }
+
+        return [
+            this.sanitizeTextField(context.curriculumCode).toUpperCase(),
+            this.sanitizeTextField(context.implementationSemester),
+            context.recommendedPeriod ?? '',
+            Math.abs(hash).toString(36),
+        ].join(':');
+    }
+
+    private normalizeCurriculumContexts(
+        rawContexts?: IComponentCurriculumContextCrawler[],
+        fallbackAcademicLevel?: AcademicLevel
+    ): IComponentCurriculumContextCrawler[] {
+        const contexts = (rawContexts || [])
+            .map((context) => {
+                const curriculumCode = this.sanitizeTextField(context.curriculumCode).toUpperCase();
+                const curriculumName = this.sanitizeTextField(context.curriculumName);
+
+                if (!curriculumCode || !curriculumName) {
+                    return null;
+                }
+
+                return {
+                    curriculumCode,
+                    curriculumName,
+                    courseName: this.sanitizeTextField(context.courseName)
+                        || this.extractCourseNameFromCurriculumName(curriculumName),
+                    implementationSemester: this.sanitizeTextField(context.implementationSemester),
+                    recommendedPeriod: this.parseSigaaRecommendedPeriod(context.recommendedPeriod),
+                    isRequired: Boolean(context.isRequired),
+                    isActive: Boolean(context.isActive),
+                    prerequeriments: this.isNotApplicablePrerequeriment(context.prerequeriments)
+                        ? ''
+                        : this.normalizePrerequeriments(context.prerequeriments),
+                    academicLevel: context.academicLevel || fallbackAcademicLevel || AcademicLevel.GRADUATION,
+                } as IComponentCurriculumContextCrawler;
+            })
+            .filter(Boolean) as IComponentCurriculumContextCrawler[];
+
+        const byKey = new Map<string, IComponentCurriculumContextCrawler>();
+        contexts.forEach((context) => {
+            byKey.set(this.buildCurriculumContextSourceKey(context), context);
+        });
+
+        return Array.from(byKey.values());
+    }
+
+    private mergeCurriculumContextLists(
+        left?: IComponentCurriculumContextCrawler[],
+        right?: IComponentCurriculumContextCrawler[]
+    ): IComponentCurriculumContextCrawler[] {
+        return this.normalizeCurriculumContexts([
+            ...(left || []),
+            ...(right || []),
+        ]);
+    }
+
+    private async syncComponentCurriculumContexts(
+        componentId: string,
+        contexts?: IComponentCurriculumContextCrawler[],
+        fallbackAcademicLevel?: AcademicLevel
+    ): Promise<boolean> {
+        const normalizedContexts = this.normalizeCurriculumContexts(contexts, fallbackAcademicLevel);
+
+        if (normalizedContexts.length === 0) {
+            return false;
+        }
+
+        const existingContexts = await this.componentCurriculumContextRepository.find({
+            where: { componentId },
+        });
+        const existingKeys = new Set(existingContexts.map((context) => context.sourceKey));
+        const contextsToCreate = normalizedContexts
+            .filter((context) => !existingKeys.has(this.buildCurriculumContextSourceKey(context)))
+            .map((context) => this.componentCurriculumContextRepository.create({
+                componentId,
+                sourceKey: this.buildCurriculumContextSourceKey(context),
+                curriculumCode: context.curriculumCode,
+                curriculumName: context.curriculumName,
+                courseName: context.courseName || this.extractCourseNameFromCurriculumName(context.curriculumName),
+                implementationSemester: context.implementationSemester || '',
+                recommendedPeriod: context.recommendedPeriod ?? null,
+                isRequired: context.isRequired,
+                isActive: context.isActive,
+                prerequeriments: context.prerequeriments || '',
+                academicLevel: context.academicLevel || fallbackAcademicLevel || AcademicLevel.GRADUATION,
+            }));
+
+        if (contextsToCreate.length === 0) {
+            return false;
+        }
+
+        await this.componentCurriculumContextRepository.save(contextsToCreate);
+        return true;
+    }
+
     private sanitizeImportedComponentData(data: IComponentInfoCrawler): IComponentInfoCrawler {
         const code = this.sanitizeTextField(data.code).toUpperCase();
 
@@ -491,6 +694,13 @@ export class CrawlerService {
         const learningAssessment = normalizeImportedNarrativeField(data.learningAssessment)
             || 'Não há Avaliação de Aprendizagem cadastrada';
         const bibliography = normalizeImportedNarrativeField(data.bibliography);
+        const referenceSectionsFromBibliography = splitBibliographySections(bibliography);
+        const referenceSections = normalizeReferenceSections(
+            normalizeImportedNarrativeField(data.referencesBasic) || referenceSectionsFromBibliography.basic,
+            normalizeImportedNarrativeField(data.referencesComplementary) || referenceSectionsFromBibliography.complementary
+        );
+        const normalizedBibliography = composeBibliographySections(referenceSections.basic, referenceSections.complementary)
+            || bibliography;
 
         return {
             ...data,
@@ -501,7 +711,9 @@ export class CrawlerService {
             description,
             objective,
             syllabus,
-            bibliography,
+            bibliography: normalizedBibliography,
+            referencesBasic: referenceSections.basic,
+            referencesComplementary: referenceSections.complementary,
             prerequeriments: this.normalizePrerequeriments(data.prerequeriments),
             methodology,
             modality: this.sanitizeTextField(data.modality, 'DISCIPLINA'),
@@ -509,6 +721,10 @@ export class CrawlerService {
             academicLevel: data.academicLevel ?? AcademicLevel.GRADUATION,
             coRequisites: this.normalizeRelationCodes(data.coRequisites),
             equivalences: this.normalizeRelationCodes(data.equivalences),
+            curriculumContexts: this.normalizeCurriculumContexts(
+                data.curriculumContexts,
+                data.academicLevel ?? AcademicLevel.GRADUATION
+            ),
             workload,
         };
     }
@@ -1137,6 +1353,156 @@ export class CrawlerService {
         return [];
     }
 
+    private normalizeSigaaSemester(rawValue?: string): string | undefined {
+        const text = String(rawValue || '').replace(/\s+/g, ' ').trim();
+
+        if (!text) {
+            return undefined;
+        }
+
+        const dottedMatch = text.match(/\b((?:19|20)\d{2})\s*[.\-/]\s*([12])\b/);
+        if (dottedMatch?.[1] && dottedMatch?.[2]) {
+            return `${dottedMatch[1]}.${dottedMatch[2]}`;
+        }
+
+        const compactMatch = text.match(/\b((?:19|20)\d{2})([12])\b/);
+        if (compactMatch?.[1] && compactMatch?.[2]) {
+            return `${compactMatch[1]}.${compactMatch[2]}`;
+        }
+
+        return undefined;
+    }
+
+    private extractSigaaSemesterFromComponentCode(rawValue?: string): string | undefined {
+        const match = String(rawValue || '').match(/\/\s*((?:19|20)\d{2}[12])\b/);
+        return this.normalizeSigaaSemester(match?.[1]);
+    }
+
+    private compareSigaaSemesters(left: string, right: string) {
+        const toComparableNumber = (value: string) => {
+            const match = value.match(/^((?:19|20)\d{2})\.([12])$/);
+            return match ? Number(match[1]) * 10 + Number(match[2]) : 0;
+        };
+
+        return toComparableNumber(left) - toComparableNumber(right);
+    }
+
+    private extractSigaaImplementationSemester($: CheerioAPI): string | undefined {
+        const allSemesters: string[] = [];
+        const activeSemesters: string[] = [];
+
+        $('table').each((_, table) => {
+            const $table = $(table);
+            const headers = $table
+                .find('thead tr')
+                .first()
+                .children('th, td')
+                .map((__, header) => this.normalizeSigaaLabel($(header).text()))
+                .toArray();
+            const implementationIndex = headers.findIndex((header) =>
+                /ano\W*periodo\s*de\s*implementacao|inicio\s*da\s*vigencia/.test(header)
+            );
+
+            if (implementationIndex < 0) {
+                return;
+            }
+
+            const activeIndex = headers.findIndex((header) => /^ativo$/.test(header));
+
+            $table.find('tr').each((__, row) => {
+                const cells = $(row).children('td, th')
+                    .map((___, cell) => $(cell).text().replace(/\s+/g, ' ').trim())
+                    .toArray();
+                const semester = this.normalizeSigaaSemester(cells[implementationIndex]);
+
+                if (!semester) {
+                    return;
+                }
+
+                allSemesters.push(semester);
+
+                if (activeIndex >= 0 && /^sim$/i.test(String(cells[activeIndex] || '').trim())) {
+                    activeSemesters.push(semester);
+                }
+            });
+        });
+
+        const candidates = activeSemesters.length > 0 ? activeSemesters : allSemesters;
+
+        return candidates
+            .filter((semester, index, list) => list.indexOf(semester) === index)
+            .sort((left, right) => this.compareSigaaSemesters(right, left))[0];
+    }
+
+    private extractSigaaCurriculumContexts($: CheerioAPI): IComponentCurriculumContextCrawler[] {
+        const contexts: IComponentCurriculumContextCrawler[] = [];
+
+        $('table').each((_, table) => {
+            const $table = $(table);
+            let headers = $table
+                .find('thead tr')
+                .first()
+                .children('th, td')
+                .map((__, header) => this.normalizeSigaaLabel($(header).text()))
+                .toArray();
+
+            if (headers.length === 0) {
+                headers = $table
+                    .find('tr')
+                    .first()
+                    .children('th, td')
+                    .map((__, header) => this.normalizeSigaaLabel($(header).text()))
+                    .toArray();
+            }
+
+            const codeIndex = headers.findIndex((header) => /^codigo$/.test(header));
+            const implementationIndex = headers.findIndex((header) =>
+                /ano\W*periodo\s*de\s*implementacao|inicio\s*da\s*vigencia/.test(header)
+            );
+            const matrixIndex = headers.findIndex((header) => /matriz\s*curricular|curriculo/.test(header));
+            const requiredIndex = headers.findIndex((header) => /obrigatoria/.test(header));
+            const periodIndex = headers.findIndex((header) => /^periodo$/.test(header));
+            const activeIndex = headers.findIndex((header) => /^ativo$/.test(header));
+
+            if (codeIndex < 0 || implementationIndex < 0 || matrixIndex < 0) {
+                return;
+            }
+
+            const rows = $table.find('tbody tr').length > 0
+                ? $table.find('tbody tr')
+                : $table.find('tr').slice(1);
+
+            rows.each((__, row) => {
+                const cells = $(row)
+                    .children('td, th')
+                    .map((___, cell) => $(cell).text().replace(/\s+/g, ' ').trim())
+                    .toArray();
+
+                const curriculumCode = this.sanitizeTextField(cells[codeIndex]).toUpperCase();
+                const implementationSemester = this.normalizeSigaaSemester(cells[implementationIndex]) || '';
+                const curriculumName = this.sanitizeTextField(cells[matrixIndex]);
+
+                if (!curriculumCode || !curriculumName) {
+                    return;
+                }
+
+                contexts.push({
+                    curriculumCode,
+                    curriculumName,
+                    courseName: this.extractCourseNameFromCurriculumName(curriculumName),
+                    implementationSemester,
+                    recommendedPeriod: periodIndex >= 0
+                        ? this.parseSigaaRecommendedPeriod(cells[periodIndex])
+                        : null,
+                    isRequired: requiredIndex >= 0 ? this.isSigaaYes(cells[requiredIndex]) : false,
+                    isActive: activeIndex >= 0 ? this.isSigaaYes(cells[activeIndex]) : false,
+                });
+            });
+        });
+
+        return this.normalizeCurriculumContexts(contexts);
+    }
+
     private extractFieldFromDetailText(text: string, labelVariants: string[], stopLabels: string[]): string {
         const escapedLabels = labelVariants.map((label) => label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
         const escapedStops = stopLabels.map((label) => label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
@@ -1169,10 +1535,29 @@ export class CrawlerService {
         rawLabel: string,
         rawValue: string
     ) {
-        const label = this.normalizeSigaaLabel(rawLabel);
-        const value = String(rawValue || '').replace(/\s+/g, ' ').trim();
+        const label = this.normalizeSigaaLabel(repairLikelyUtf8Mojibake(rawLabel))
+            .replace(/[()\/]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+        const value = repairLikelyUtf8Mojibake(String(rawValue || ''))
+            .replace(/\s+/g, ' ')
+            .replace(/^\s*\/+\s*/, '')
+            .trim();
 
         if (!label || !value) {
+            return;
+        }
+
+        if (!target.code && SIGAA_LABEL_MATCHERS.code.test(label)) {
+            target.code = value;
+            return;
+        }
+
+        if (/^(n[aã]o\s+(definido|aplic[aá]vel|informado)\b[.!]?|[-–—]+$)/i.test(value)) {
+            return;
+        }
+
+        if (/^institucional\s*:/i.test(value) && /quantidade\s+de\s+avalia[cç][õo]es/i.test(value)) {
             return;
         }
 
@@ -1186,6 +1571,10 @@ export class CrawlerService {
         }
         if (!target.equivalencesRaw && SIGAA_LABEL_MATCHERS.equivalencesRaw.test(label)) {
             target.equivalencesRaw = value;
+            return;
+        }
+        if (!target.description && SIGAA_LABEL_MATCHERS.description.test(label)) {
+            target.description = value;
             return;
         }
         if (!target.syllabus && SIGAA_LABEL_MATCHERS.syllabus.test(label)) {
@@ -1204,6 +1593,18 @@ export class CrawlerService {
             target.learningAssessment = value;
             return;
         }
+        if (!target.referencesBasic && SIGAA_LABEL_MATCHERS.referencesBasic.test(label)) {
+            target.referencesBasic = value;
+            return;
+        }
+        if (!target.referencesComplementary && SIGAA_LABEL_MATCHERS.referencesComplementary.test(label)) {
+            target.referencesComplementary = value;
+            return;
+        }
+        if (!target.bibliography && SIGAA_LABEL_MATCHERS.bibliography.test(label)) {
+            target.bibliography = value;
+            return;
+        }
         if (!target.department && SIGAA_LABEL_MATCHERS.department.test(label)) {
             target.department = value;
             return;
@@ -1217,7 +1618,7 @@ export class CrawlerService {
         const fields: SigaaDetailRawFields = {};
 
         $('table tr').each((_, tr) => {
-            const $cells = $(tr).find('th, td');
+            const $cells = $(tr).children('th, td');
             if ($cells.length < 2) {
                 return;
             }
@@ -1274,26 +1675,56 @@ export class CrawlerService {
         return fields;
     }
 
+    private sanitizeSigaaDetailTextValue(value?: string): string | undefined {
+        const normalized = repairLikelyUtf8Mojibake(String(value || ''))
+            .replace(/\s+/g, ' ')
+            .replace(/^\s*\/+\s*/, '')
+            .trim();
+
+        if (!normalized) {
+            return undefined;
+        }
+
+        if (/^(n[aã]o\s+(definido|aplic[aá]vel|informado)\b[.!]?|[-–—]+$)/i.test(normalized)) {
+            return undefined;
+        }
+
+        if (/^descri[cç][aã]o\s*:\s*n[aã]o\s+definido/i.test(normalized)) {
+            return undefined;
+        }
+
+        if (/^institucional\s*:/i.test(normalized) && /quantidade\s+de\s+avalia[cç][õo]es/i.test(normalized)) {
+            return undefined;
+        }
+
+        return normalized;
+    }
+
     private hasUsefulSigaaDetail(detail?: SigaaComponentDetail | null): boolean {
         if (!detail) {
             return false;
         }
 
         const hasTextualContent = [
+            detail.description,
             detail.syllabus,
             detail.objective,
             detail.methodology,
             detail.learningAssessment,
+            detail.bibliography,
+            detail.referencesBasic,
+            detail.referencesComplementary,
         ].some((value) => this.hasMeaningfulText(value));
         const hasPrereq = !this.isNotApplicablePrerequeriment(detail.prerequeriments);
         const hasRelations = (detail.coRequisites?.length || 0) > 0 || (detail.equivalences?.length || 0) > 0;
+        const hasCurriculumContexts = (detail.curriculumContexts?.length || 0) > 0;
         const hasWorkload =
             Number(detail.workload?.theoretical || 0) > 0
             || Number(detail.workload?.practice || 0) > 0
             || Number(detail.workload?.internship || 0) > 0
             || Number(detail.workload?.extension || 0) > 0;
 
-        return hasTextualContent || hasPrereq || hasRelations || hasWorkload;
+        return hasTextualContent || hasPrereq || hasRelations || hasCurriculumContexts || hasWorkload;
     }
 
     private parseSigaaComponentDetailPage($: CheerioAPI): SigaaComponentDetail {
@@ -1317,15 +1748,31 @@ export class CrawlerService {
             'Equivalente(s)',
             'Equivalente',
             'Ementa',
+            'Ementa/Descricao',
+            'Ementa/Descrição',
+            'Descricao',
+            'Descrição',
             'Objetivos',
             'Objetivo',
+            'Conteudo Programatico',
+            'Conteúdo Programático',
+            'Programa',
             'Metodologia',
+            'Procedimentos de Ensino',
+            'Procedimentos Metodologicos',
+            'Procedimentos Metodológicos',
             'Avaliação',
             'Avaliacao',
             'Avaliação da Aprendizagem',
             'Avaliacao da Aprendizagem',
             'Carga Horária',
             'Carga Horaria',
+            'Referencias Basicas',
+            'Referências Básicas',
+            'Referencias Complementares',
+            'Referências Complementares',
+            'Referencias',
+            'Referências',
             'Bibliografia',
             'Teórica',
             'Teorica',
@@ -1361,14 +1808,47 @@ export class CrawlerService {
             ['Equivalências', 'Equivalencias', 'Equivalente(s)', 'Equivalente'],
             stopLabels
         );
-        const syllabus = structuredFields.syllabus || this.extractFieldFromDetailText(pageText, ['Ementa'], stopLabels);
+        const description = structuredFields.description || this.extractFieldFromDetailText(
+            pageText,
+            ['Conteudo Programatico', 'Conteúdo Programático', 'Programa'],
+            stopLabels
+        );
+        const syllabus = structuredFields.syllabus || this.extractFieldFromDetailText(
+            pageText,
+            ['Ementa/Descricao', 'Ementa/Descrição', 'Ementa', 'Descricao', 'Descrição'],
+            stopLabels
+        );
         const objective = structuredFields.objective || this.extractFieldFromDetailText(pageText, ['Objetivos', 'Objetivo'], stopLabels);
-        const methodology = structuredFields.methodology || this.extractFieldFromDetailText(pageText, ['Metodologia'], stopLabels);
+        const methodology = structuredFields.methodology || this.extractFieldFromDetailText(
+            pageText,
+            ['Metodologia', 'Procedimentos de Ensino', 'Procedimentos Metodologicos', 'Procedimentos Metodológicos'],
+            stopLabels
+        );
         const learningAssessment = structuredFields.learningAssessment || this.extractFieldFromDetailText(
             pageText,
             ['Avaliação', 'Avaliacao', 'Avaliação da Aprendizagem', 'Avaliacao da Aprendizagem'],
             stopLabels
         );
+
+        const referencesBasic = structuredFields.referencesBasic || this.extractFieldFromDetailText(
+            pageText,
+            ['Referencias Basicas', 'Referências Básicas', 'Bibliografia Basica', 'Bibliografia Básica'],
+            stopLabels
+        );
+        const referencesComplementary = structuredFields.referencesComplementary || this.extractFieldFromDetailText(
+            pageText,
+            ['Referencias Complementares', 'Referências Complementares', 'Bibliografia Complementar'],
+            stopLabels
+        );
+        const bibliography = structuredFields.bibliography || this.extractFieldFromDetailText(
+            pageText,
+            ['Referencias', 'Referências', 'Bibliografia'],
+            stopLabels
+        );
+        const semester = structuredFields.semester
+            || this.extractSigaaSemesterFromComponentCode(structuredFields.code)
+            || this.extractSigaaImplementationSemester($);
+        const curriculumContexts = this.extractSigaaCurriculumContexts($);
 
         const extractHours = (patterns: RegExp[]) => {
             for (const pattern of patterns) {
@@ -1394,12 +1874,17 @@ export class CrawlerService {
             prerequeriments: prerequeriments ? this.normalizePrerequeriments(prerequeriments) : undefined,
             coRequisites: this.normalizeCodeList(coReqRaw),
             equivalences: this.normalizeCodeList(equivalencesRaw),
-            syllabus: syllabus || undefined,
-            objective: objective || undefined,
-            methodology: methodology || undefined,
-            learningAssessment: learningAssessment || undefined,
-            department: structuredFields.department || undefined,
-            semester: structuredFields.semester || undefined,
+            description: this.sanitizeSigaaDetailTextValue(description),
+            syllabus: this.sanitizeSigaaDetailTextValue(syllabus),
+            objective: this.sanitizeSigaaDetailTextValue(objective),
+            methodology: this.sanitizeSigaaDetailTextValue(methodology),
+            learningAssessment: this.sanitizeSigaaDetailTextValue(learningAssessment),
+            bibliography: this.sanitizeSigaaDetailTextValue(bibliography),
+            referencesBasic: this.sanitizeSigaaDetailTextValue(referencesBasic),
+            referencesComplementary: this.sanitizeSigaaDetailTextValue(referencesComplementary),
+            department: this.sanitizeSigaaDetailTextValue(structuredFields.department),
+            semester: this.sanitizeSigaaDetailTextValue(semester),
+            curriculumContexts,
             workload: {
                 theoretical,
                 practice,
@@ -1550,6 +2035,9 @@ export class CrawlerService {
         if (detail.prerequeriments) {
             component.prerequeriments = detail.prerequeriments;
         }
+        if (detail.description) {
+            component.description = detail.description;
+        }
         if (detail.syllabus) {
             component.syllabus = detail.syllabus;
         }
@@ -1561,6 +2049,15 @@ export class CrawlerService {
         }
         if (detail.learningAssessment) {
             component.learningAssessment = detail.learningAssessment;
+        }
+        if (detail.bibliography) {
+            component.bibliography = detail.bibliography;
+        }
+        if (detail.referencesBasic) {
+            component.referencesBasic = detail.referencesBasic;
+        }
+        if (detail.referencesComplementary) {
+            component.referencesComplementary = detail.referencesComplementary;
         }
         if (detail.workload) {
             const fallback = component.workload || { theoretical: 0, practice: 0, internship: 0 };
@@ -1582,10 +2079,91 @@ export class CrawlerService {
         if (detail.equivalences?.length) {
             component.equivalences = detail.equivalences;
         }
+
+        if (detail.curriculumContexts?.length) {
+            component.curriculumContexts = this.mergeCurriculumContextLists(
+                component.curriculumContexts,
+                detail.curriculumContexts.map((context) => ({
+                    ...context,
+                    academicLevel: context.academicLevel || component.academicLevel,
+                }))
+            );
+        }
+    }
+
+    private mergeSigaaComponentDetails(
+        current: SigaaComponentDetail | null,
+        incoming: SigaaComponentDetail
+    ): SigaaComponentDetail {
+        const merged: SigaaComponentDetail = {
+            ...(current || {}),
+        };
+        const textFields: Array<keyof Pick<
+            SigaaComponentDetail,
+            | 'prerequeriments'
+            | 'description'
+            | 'syllabus'
+            | 'objective'
+            | 'methodology'
+            | 'learningAssessment'
+            | 'bibliography'
+            | 'referencesBasic'
+            | 'referencesComplementary'
+            | 'department'
+            | 'semester'
+        >> = [
+            'prerequeriments',
+            'description',
+            'syllabus',
+            'objective',
+            'methodology',
+            'learningAssessment',
+            'bibliography',
+            'referencesBasic',
+            'referencesComplementary',
+            'department',
+            'semester',
+        ];
+
+        textFields.forEach((field) => {
+            const value = incoming[field];
+
+            if (this.hasMeaningfulText(value)) {
+                (merged as Record<string, unknown>)[field] = value;
+            }
+        });
+
+        if (incoming.coRequisites?.length) {
+            merged.coRequisites = Array.from(new Set([...(merged.coRequisites || []), ...incoming.coRequisites]));
+        }
+
+        if (incoming.equivalences?.length) {
+            merged.equivalences = Array.from(new Set([...(merged.equivalences || []), ...incoming.equivalences]));
+        }
+
+        if (incoming.curriculumContexts?.length) {
+            merged.curriculumContexts = this.mergeCurriculumContextLists(
+                merged.curriculumContexts,
+                incoming.curriculumContexts
+            );
+        }
+
+        if (incoming.workload) {
+            const fallback = merged.workload || { theoretical: 0, practice: 0, internship: 0, extension: 0 };
+            merged.workload = {
+                theoretical: incoming.workload.theoretical || fallback.theoretical || 0,
+                practice: incoming.workload.practice || fallback.practice || 0,
+                internship: incoming.workload.internship || fallback.internship || 0,
+                extension: incoming.workload.extension || fallback.extension || 0,
+            };
+        }
+
+        return merged;
     }
 
     private async fetchSigaaComponentDetail(component: IComponentInfoCrawler): Promise<SigaaComponentDetail | null> {
         const requestSequence = this.getSigaaDetailRequestSequence(component);
+        let mergedDetail: SigaaComponentDetail | null = null;
 
         for (const request of requestSequence) {
             try {
@@ -1621,14 +2199,14 @@ export class CrawlerService {
                 this.captureSigaaDetailDebugSnapshot(component, request, html, parsed);
 
                 if (this.hasUsefulSigaaDetail(parsed)) {
-                    return parsed;
+                    mergedDetail = this.mergeSigaaComponentDetails(mergedDetail, parsed);
                 }
             } catch {
                 continue;
             }
         }
 
-        return null;
+        return mergedDetail;
     }
 
     async enrichSigaaComponentsFromPublicDetails(
@@ -1748,6 +2326,7 @@ export class CrawlerService {
 
             const totalHours = this.extractSigaaWorkloadHours(rowCells);
             const componentType = this.extractSigaaComponentType(rowCells);
+            const semester = this.extractSigaaSemesterFromComponentCode(rowCells.join(' ')) || '';
             const detailHref =
                 $row
                     .find('a')
@@ -1769,7 +2348,7 @@ export class CrawlerService {
                 code,
                 name,
                 department,
-                semester: '',
+                semester,
                 description: 'Conteúdo programático não disponível na listagem pública do SIGAA.',
                 objective: '',
                 syllabus: 'Ementa não disponível na listagem pública do SIGAA.',
@@ -1827,6 +2406,8 @@ export class CrawlerService {
                 objective: data.objective,
                 syllabus: data.syllabus,
                 bibliography: data.bibliography,
+                referencesBasic: data.referencesBasic,
+                referencesComplementary: data.referencesComplementary,
                 academicLevel: data.academicLevel ?? AcademicLevel.GRADUATION,
                 status: ComponentStatus.PUBLISHED,
                 prerequeriments: this.normalizePrerequeriments(data.prerequeriments),
@@ -1862,6 +2443,12 @@ export class CrawlerService {
             if (relationsToPersist.length > 0) {
                 await this.componentRelationRepository.save(relationsToPersist);
             }
+
+            await this.syncComponentCurriculumContexts(
+                component.id,
+                data.curriculumContexts,
+                data.academicLevel ?? AcademicLevel.GRADUATION
+            );
 
             const draft = this.componentDraftRepository.create({
                 ...component,

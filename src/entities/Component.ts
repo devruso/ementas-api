@@ -18,6 +18,7 @@ import { ComponentDraft } from './ComponentDraft';
 import { AcademicLevel } from '../interfaces/AcademicLevel';
 import { ComponentRelation } from './ComponentRelation';
 import { Department } from './Department';
+import { ComponentCurriculumContext } from './ComponentCurriculumContext';
 
 @Entity('components')
 class Component {
@@ -108,6 +109,9 @@ class Component {
 
     @OneToMany(() => ComponentRelation, (componentRelation) => componentRelation.component)
         relations: ComponentRelation[];
+
+    @OneToMany(() => ComponentCurriculumContext, (curriculumContext) => curriculumContext.component)
+        curriculumContexts?: ComponentCurriculumContext[];
     
     @OneToOne(() => ComponentDraft, (componentDraft) => componentDraft.component)
     @JoinColumn({ name: 'component_draft_id' })

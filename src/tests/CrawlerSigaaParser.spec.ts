@@ -364,4 +364,146 @@ describe('CrawlerService SIGAA parser', () => {
           })
         );
       });
+
+      it('should extract semester from SIGAA component version suffix in listing rows', () => {
+        const html = `
+          <table>
+            <tr class="linhaPar">
+              <td>MATA34/20151</td>
+              <td>EXAME DE QUALIFICACAO</td>
+              <td>ATIVIDADE</td>
+            </tr>
+          </table>
+        `;
+
+        const $ = cheerio.load(html);
+        const result = (service as any).extractSigaaListRows($, 'program', AcademicLevel.MASTERS);
+
+        expect(result).toHaveLength(1);
+        expect(result[0]).toEqual(
+          expect.objectContaining({
+            code: 'MATA34',
+            semester: '2015.1',
+            academicLevel: AcademicLevel.MASTERS,
+          })
+        );
+      });
+
+      it('should keep explicit SIGAA academic level from import level', () => {
+        const html = `
+          <table>
+            <tr class="linhaPar">
+              <td>PGCOMP/IC0032</td>
+              <td>BANCO DE DADOS</td>
+              <td>DISCIPLINA</td>
+            </tr>
+          </table>
+        `;
+
+        const $ = cheerio.load(html);
+        const result = (service as any).extractSigaaListRows($, 'program', AcademicLevel.DOCTORATE);
+
+        expect(result[0].academicLevel).toBe(AcademicLevel.DOCTORATE);
+      });
+
+      it('should ignore administrative SIGAA detail labels in captured component pages', () => {
+        const fixturePath = path.resolve(
+          __dirname,
+          'fixtures/sigaa/detail-signatures/2026-05-05T21-47-09-913Z__GICC0005__detail-action-2.html'
+        );
+        const html = fs.readFileSync(fixturePath, 'utf-8');
+        const $ = cheerio.load(html);
+
+        const result = (service as any).parseSigaaComponentDetailPage($);
+
+        expect(result.syllabus).toBeUndefined();
+        expect(result.learningAssessment).toBeUndefined();
+        expect(result.prerequeriments).toBe('NAO_SE_APLICA');
+      });
+
+      it('should extract semester from SIGAA detail component code version', () => {
+        const fixturePath = path.resolve(
+          __dirname,
+          'fixtures/sigaa/detail-signatures/2026-05-05T21-47-18-083Z__MATE93__detail-action-2.html'
+        );
+        const html = fs.readFileSync(fixturePath, 'utf-8');
+        const $ = cheerio.load(html);
+
+        const result = (service as any).parseSigaaComponentDetailPage($);
+
+        expect(result.semester).toBe('2015.1');
+      });
+
+      it('should fallback to active curriculum implementation semester from SIGAA detail page', () => {
+        const fixturePath = path.resolve(
+          __dirname,
+          'fixtures/sigaa/detail-signatures/2026-05-05T21-47-09-913Z__GICC0005__detail-action-2.html'
+        );
+        const html = fs.readFileSync(fixturePath, 'utf-8');
+        const $ = cheerio.load(html);
+
+        const result = (service as any).parseSigaaComponentDetailPage($);
+
+        expect(result.semester).toBe('2025.2');
+      });
+
+      it('should extract course curriculum contexts from SIGAA detail page', () => {
+        const fixturePath = path.resolve(
+          __dirname,
+          'fixtures/sigaa/detail-signatures/2026-05-05T21-47-09-913Z__GICC0005__detail-action-2.html'
+        );
+        const html = fs.readFileSync(fixturePath, 'utf-8');
+        const $ = cheerio.load(html);
+
+        const result = (service as any).parseSigaaComponentDetailPage($);
+
+        expect(result.curriculumContexts.length).toBeGreaterThan(5);
+        expect(result.curriculumContexts).toEqual(expect.arrayContaining([
+          expect.objectContaining({
+            curriculumCode: '408121',
+            implementationSemester: '2024.2',
+            recommendedPeriod: 2,
+            isRequired: true,
+            isActive: false,
+          }),
+          expect.objectContaining({
+            curriculumCode: 'G20251X',
+            implementationSemester: '2025.2',
+            recommendedPeriod: 0,
+            isRequired: false,
+            isActive: true,
+          }),
+        ]));
+      });
+
+      it('should parse program content and references from SIGAA program page labels', () => {
+        const html = `
+          <html>
+            <body>
+              <table>
+                <tr><th>Conteúdo Programático</th><td>1. Grafos. 2. Caminhos mínimos.</td></tr>
+                <tr><th>Ementa</th><td>Fundamentos de algoritmos em grafos.</td></tr>
+                <tr><th>Procedimentos de Ensino</th><td>Aulas e listas práticas.</td></tr>
+                <tr><th>Critérios de Avaliação</th><td>Provas e projeto.</td></tr>
+                <tr><th>Referências Básicas</th><td>CORMEN, T. Algoritmos. 2022.</td></tr>
+                <tr><th>Referências Complementares</th><td>SEDGEWICK, R. Algorithms. 2011.</td></tr>
+              </table>
+            </body>
+          </html>
+        `;
+        const $ = cheerio.load(html);
+
+        const result = (service as any).parseSigaaComponentDetailPage($);
+
+        expect(result).toEqual(
+          expect.objectContaining({
+            description: '1. Grafos. 2. Caminhos mínimos.',
+            syllabus: 'Fundamentos de algoritmos em grafos.',
+            methodology: 'Aulas e listas práticas.',
+            learningAssessment: 'Provas e projeto.',
+            referencesBasic: 'CORMEN, T. Algoritmos. 2022.',
+            referencesComplementary: 'SEDGEWICK, R. Algorithms. 2011.',
+          })
+        );
+      });
 });

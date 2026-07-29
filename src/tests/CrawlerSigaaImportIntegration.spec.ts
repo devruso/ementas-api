@@ -6,6 +6,7 @@ import { AcademicLevel } from '../interfaces/AcademicLevel';
 import { UserRepository } from '../repositories/UserRepository';
 import { ComponentRepository } from '../repositories/ComponentRepository';
 import { ComponentRelationRepository } from '../repositories/ComponentRelationRepository';
+import { ComponentCurriculumContextRepository } from '../repositories/ComponentCurriculumContextRepository';
 import { UserRole } from '../interfaces/UserRole';
 import { ComponentRelationType } from '../interfaces/ComponentRelationType';
 import connection from './connection';
@@ -29,7 +30,7 @@ describe('CrawlerService SIGAA import integration', () => {
         mockedAxios.post.mockReset();
     });
 
-    it('should fallback to JSF search flow when direct source returns no components', async () => {
+    it('should prefer JSF search flow before direct source fallback', async () => {
         const service = Object.create(CrawlerService.prototype) as CrawlerService;
 
         (service as any).getSigaaSourceUrls = jest.fn().mockReturnValue([
@@ -40,7 +41,6 @@ describe('CrawlerService SIGAA import integration', () => {
             .spyOn(service as any, 'createComponent')
             .mockResolvedValue(undefined);
 
-        const emptyDirectPage = '<html><body><p>Nenhuma turma encontrada</p></body></html>';
         const jsfSearchFormPage = `
             <html>
               <body>
@@ -64,9 +64,7 @@ describe('CrawlerService SIGAA import integration', () => {
             </html>
         `;
 
-        mockedAxios.get
-            .mockResolvedValueOnce({ data: Buffer.from(emptyDirectPage, 'latin1') } as any)
-            .mockResolvedValueOnce({ data: Buffer.from(jsfSearchFormPage, 'latin1') } as any);
+        mockedAxios.get.mockResolvedValueOnce({ data: Buffer.from(jsfSearchFormPage, 'latin1') } as any);
 
         mockedAxios.post.mockResolvedValueOnce({
             data: Buffer.from(jsfSearchResultPage, 'latin1'),
@@ -79,7 +77,7 @@ describe('CrawlerService SIGAA import integration', () => {
             AcademicLevel.MASTERS
         );
 
-        expect(mockedAxios.get).toHaveBeenCalledTimes(2);
+        expect(mockedAxios.get).toHaveBeenCalledTimes(1);
         expect(mockedAxios.post).toHaveBeenCalledTimes(1);
 
         const [postUrl, postBody] = mockedAxios.post.mock.calls[0];
@@ -187,6 +185,81 @@ describe('CrawlerService SIGAA import integration', () => {
         ]));
     });
 
+    it('should persist SIGAA course curriculum contexts during import', async () => {
+        const service = new CrawlerService();
+        const userRepository = getCustomRepository(UserRepository);
+        const componentRepository = getCustomRepository(ComponentRepository);
+        const curriculumContextRepository = getCustomRepository(ComponentCurriculumContextRepository);
+
+        const user = await userRepository.save(userRepository.create({
+            name: 'Crawler Curriculum Admin',
+            email: 'crawler-curriculum-admin@test.com',
+            password: '123456',
+            role: UserRole.ADMIN,
+        }));
+
+        await service.createComponent(user.id, {
+            code: 'IC0009',
+            name: 'INTRODUCAO A PROGRAMACAO',
+            department: 'INSTITUTO DE COMPUTACAO',
+            semester: '2025.1',
+            description: 'conteudo',
+            objective: '',
+            syllabus: 'ementa',
+            bibliography: '',
+            prerequeriments: 'NAO_SE_APLICA',
+            methodology: '',
+            modality: 'DISCIPLINA',
+            learningAssessment: '',
+            academicLevel: AcademicLevel.GRADUATION,
+            workload: { theoretical: 60, practice: 0, internship: 0 },
+            curriculumContexts: [
+                {
+                    curriculumCode: 'G20251',
+                    curriculumName: 'CIENCIA DA COMPUTACAO - SALVADOR - BACHARELADO - Presencial - MT',
+                    implementationSemester: '2025.1',
+                    recommendedPeriod: 1,
+                    isRequired: true,
+                    isActive: true,
+                    academicLevel: AcademicLevel.GRADUATION,
+                },
+                {
+                    curriculumCode: 'G20252',
+                    curriculumName: 'SISTEMAS DE INFORMACAO - SALVADOR - BACHARELADO - Presencial - MT',
+                    implementationSemester: '2025.1',
+                    recommendedPeriod: 2,
+                    isRequired: false,
+                    isActive: true,
+                    academicLevel: AcademicLevel.GRADUATION,
+                },
+            ],
+        });
+
+        const component = await componentRepository.findOne({ where: { code: 'IC0009' } });
+        const contexts = await curriculumContextRepository.find({
+            where: { componentId: component?.id },
+            order: { recommendedPeriod: 'ASC' } as any,
+        });
+
+        expect(contexts).toHaveLength(2);
+        expect(contexts).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+                curriculumCode: 'G20251',
+                courseName: 'CIENCIA DA COMPUTACAO',
+                implementationSemester: '2025.1',
+                recommendedPeriod: 1,
+                isRequired: true,
+                isActive: true,
+            }),
+            expect.objectContaining({
+                curriculumCode: 'G20252',
+                courseName: 'SISTEMAS DE INFORMACAO',
+                recommendedPeriod: 2,
+                isRequired: false,
+            }),
+        ]));
+    });
+
     it('should fallback to secondary JSF payload when first onclick payload returns non-detail page', async () => {
         const service = new CrawlerService();
 
@@ -216,6 +289,46 @@ describe('CrawlerService SIGAA import integration', () => {
             expect.objectContaining({
                 prerequeriments: 'MATA07',
                 syllabus: 'Fundamentos de redes.',
+            })
+        );
+    });
+
+    it('should merge SIGAA detail and current program payloads during enrichment', async () => {
+        const service = new CrawlerService();
+
+        mockedAxios.post
+            .mockResolvedValueOnce({
+                data: Buffer.from(
+                    '<html><body><table><tr><th>PrÃ©-Requisitos</th><td>MATA07</td></tr><tr><th>Ementa/DescriÃ§Ã£o</th><td>Fundamentos de redes.</td></tr><tr><th>Carga HorÃ¡ria TeÃ³rica</th><td>45 h.</td></tr></table></body></html>',
+                    'latin1'
+                ),
+            } as any)
+            .mockResolvedValueOnce({
+                data: Buffer.from(
+                    '<html><body><table><tr><th>ConteÃºdo ProgramÃ¡tico</th><td>Camada fÃ­sica, enlace e redes IP.</td></tr><tr><th>ReferÃªncias BÃ¡sicas</th><td>KUROSE, J. Redes de Computadores. 2021.</td></tr><tr><th>ReferÃªncias Complementares</th><td>TANENBAUM, A. Redes de Computadores. 2011.</td></tr></table></body></html>',
+                    'latin1'
+                ),
+            } as any);
+
+        const detail = await (service as any).fetchSigaaComponentDetail({
+            code: 'MATA85',
+            detailActionUrl: 'https://sigaa.ufba.br/sigaa/public/departamento/componentes.jsf',
+            detailActionPayload: 'form=a&id=222&publico=public',
+            detailActionPayloadCandidates: ['form=a&id=222&publico=public', 'form=a&idComponente=111'],
+            detailRequestCookie: 'JSESSIONID=abc123',
+        });
+
+        expect(mockedAxios.post).toHaveBeenCalledTimes(2);
+        expect(detail).toEqual(
+            expect.objectContaining({
+                prerequeriments: 'MATA07',
+                syllabus: 'Fundamentos de redes.',
+                description: 'Camada física, enlace e redes IP.',
+                referencesBasic: 'KUROSE, J. Redes de Computadores. 2021.',
+                referencesComplementary: 'TANENBAUM, A. Redes de Computadores. 2011.',
+                workload: expect.objectContaining({
+                    theoretical: 45,
+                }),
             })
         );
     });
@@ -775,7 +888,7 @@ describe('CrawlerService SIGAA import integration', () => {
         expect(secondSnapshot).toEqual(firstSnapshot);
     });
 
-    it('should categorize timeout during source collection and continue import on fallback source', async () => {
+    it('should not use direct source fallback when JSF search succeeds', async () => {
         const service = new CrawlerService();
         const userRepository = getCustomRepository(UserRepository);
 
@@ -846,11 +959,9 @@ describe('CrawlerService SIGAA import integration', () => {
             requested: 1,
             created: 1,
             skippedExisting: 0,
-            failed: 1,
+            failed: 0,
         });
-        expect(result.failureCategories).toMatchObject({
-            source_timeout: 1,
-        });
-        expect(result.failures.join(' ')).toContain('SIGAA_SOURCE');
+        expect(result.failureCategories).toEqual({});
+        expect(result.failures).toEqual([]);
     });
 });

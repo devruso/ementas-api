@@ -136,7 +136,12 @@ describe('Component import governance', () => {
                 academicLevel: 'graduacao',
             },
         });
-        expect(importSpy).toHaveBeenCalledWith(admin.id, 'department', '1114', 'graduacao');
+        expect(importSpy).toHaveBeenCalledWith(admin.id, 'department', '1114', 'graduacao', {
+            reconcileExisting: true,
+            enrichDetails: true,
+            maxComponents: undefined,
+            requestTimeoutMs: undefined,
+        });
     });
 
     it('should return SIAC import summary for admin users', async () => {

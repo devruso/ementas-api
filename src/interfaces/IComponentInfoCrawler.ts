@@ -1,5 +1,17 @@
 import { AcademicLevel } from './AcademicLevel';
 
+export interface IComponentCurriculumContextCrawler {
+    curriculumCode: string;
+    curriculumName: string;
+    courseName?: string;
+    implementationSemester?: string;
+    recommendedPeriod?: number | null;
+    isRequired: boolean;
+    isActive: boolean;
+    prerequeriments?: string;
+    academicLevel?: AcademicLevel;
+}
+
 export interface IComponentInfoCrawler {
     code: string;
     name: string;
@@ -9,6 +21,8 @@ export interface IComponentInfoCrawler {
     objective: string;
     syllabus: string;
     bibliography: string;
+    referencesBasic?: string;
+    referencesComplementary?: string;
     prerequeriments?: string;
     methodology?: string;
     modality?: string;
@@ -21,6 +35,7 @@ export interface IComponentInfoCrawler {
     detailRequestCookie?: string;
     coRequisites?: string[];
     equivalences?: string[];
+    curriculumContexts?: IComponentCurriculumContextCrawler[];
     workloadExtension?: number;
     workload?: {
         theoretical: number;

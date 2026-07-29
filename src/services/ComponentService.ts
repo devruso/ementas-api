@@ -1018,6 +1018,7 @@ export class ComponentService {
             .leftJoinAndSelect('components.draft', 'draft')
             .leftJoinAndSelect('components.logs', 'logs')
             .leftJoinAndSelect('components.workload', 'workload')
+            .leftJoinAndSelect('components.curriculumContexts', 'curriculumContexts')
             .leftJoinAndSelect('draft.workload', 'draft_workload')
             .leftJoinAndSelect('logs.user', 'logs_user')
             .where('components.status IN (:...allowedStatuses)', { allowedStatuses });
@@ -1083,6 +1084,7 @@ export class ComponentService {
             .leftJoinAndSelect('components.draft', 'draft')
             .leftJoinAndSelect('components.logs', 'logs')
             .leftJoinAndSelect('components.workload', 'workload')
+            .leftJoinAndSelect('components.curriculumContexts', 'curriculumContexts')
             .leftJoinAndSelect('draft.workload', 'draft_workload')
             .leftJoinAndSelect('logs.user', 'logs_user')
             .where({
