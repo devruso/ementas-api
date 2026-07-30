@@ -30,6 +30,7 @@ import { DocxSignatureEmbedder } from './export/DocxSignatureEmbedder';
 import { ProcessedSignatureImage } from './export/SignatureImageProcessor';
 import { UserSignatureAssetService } from './export/UserSignatureAssetService';
 import { DepartmentResolutionService } from './DepartmentResolutionService';
+import { getCourseFilterAliases, normalizeCourseNameFromSource, normalizeProgrammaticSemester } from '../helpers/courseCatalog';
 
 export class ComponentService {
     private componentRepository: Repository<Component>;
@@ -100,6 +101,26 @@ export class ComponentService {
             .toLowerCase()
             .normalize('NFD')
             .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    private normalizeComponentCourseForDisplay<T extends Component | ComponentDraft>(component: T) {
+        const normalizedCourse = normalizeCourseNameFromSource(component.departmentRef?.name || component.department);
+
+        if (normalizedCourse) {
+            component.department = normalizedCourse;
+
+            if (component.departmentRef) {
+                component.departmentRef.name = normalizedCourse;
+            }
+        }
+
+        component.semester = normalizeProgrammaticSemester(component.semester);
+
+        if ('draft' in component && component.draft) {
+            this.normalizeComponentCourseForDisplay(component.draft);
+        }
+
+        return component;
     }
 
     private sanitizeComponentUpdateDto(payload: UpdateComponentRequestDto) {
@@ -536,7 +557,7 @@ export class ComponentService {
         const referencesComplementary = toReferenceLines(formatAbntReferenceBlock(data.referencesComplementary || bibliographySections.complementary), 'Não informado');
 
         // Preenche semestre com o valor recebido da API/front-end, sem depender de exemplos do template.
-        const normalizedSemester = this.normalizeSectionText(data.semester, 'Não informado');
+        const normalizedSemester = this.normalizeSectionText(normalizeProgrammaticSemester(data.semester), 'Não informado');
         texts.forEach((text, index) => {
             if (/^Semestre\s+\d{4}\.\d$/i.test(text)) {
                 replaceIndex(index, `Semestre ${normalizedSemester}`);
@@ -1098,11 +1119,20 @@ export class ComponentService {
                         });
                 }));
             } else {
+                const courseAliases = getCourseFilterAliases(options?.department);
+
                 query.andWhere(new Brackets((subQuery) => {
-                    subQuery
-                        .where(`${normalizedDepartmentColumn} = :department`, { department: normalizedDepartment })
-                        .orWhere(`${normalizedDepartmentRefNameColumn} = :department`, { department: normalizedDepartment })
-                        .orWhere(`${normalizedDepartmentRefCodeColumn} = :department`, { department: normalizedDepartment });
+                    if (courseAliases.length > 0) {
+                        subQuery
+                            .where(`${normalizedDepartmentColumn} IN (:...courseAliases)`, { courseAliases })
+                            .orWhere(`${normalizedDepartmentRefNameColumn} IN (:...courseAliases)`, { courseAliases })
+                            .orWhere(`${normalizedDepartmentRefCodeColumn} IN (:...courseAliases)`, { courseAliases });
+                    } else {
+                        subQuery
+                            .where(`${normalizedDepartmentColumn} = :department`, { department: normalizedDepartment })
+                            .orWhere(`${normalizedDepartmentRefNameColumn} = :department`, { department: normalizedDepartment })
+                            .orWhere(`${normalizedDepartmentRefCodeColumn} = :department`, { department: normalizedDepartment });
+                    }
                 }));
             }
         }
@@ -1112,7 +1142,7 @@ export class ComponentService {
             .addOrderBy('logs.createdAt', 'DESC')
             .getMany();
 
-        return components;
+        return components.map((component) => this.normalizeComponentCourseForDisplay(component));
     }
 
     async getComponentByCode(code: string) {
@@ -1140,7 +1170,7 @@ export class ComponentService {
 
         if (!component) throw new AppError('Component not found.', 404);
 
-        return component;
+        return this.normalizeComponentCourseForDisplay(component);
     }
 
     async create(userId: string, requestDto: CreateComponentRequestDto) {

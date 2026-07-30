@@ -133,7 +133,7 @@ class AuthService {
         const user = await this.userRepository.findOne({ id: payload.id });
 
         if (!user) {
-            throw new AppError('User does not exists!', 400);
+            throw new AppError('User not found.', 401);
         }
 
         return this.buildAuthResponse({ id: user.id, name: user.name, email: user.email });
@@ -143,7 +143,7 @@ class AuthService {
         const user = await this.userRepository.findOne({ id: userId });
 
         if (!user) {
-            throw new AppError('User does not exists!', 400);
+            throw new AppError('User not found.', 401);
         }
 
         return {

@@ -26,6 +26,7 @@ import { ComponentCurriculumContextRepository } from '../repositories/ComponentC
 import { getTextCorruptionScore, repairLikelyUtf8Mojibake } from '../helpers/repairMojibake';
 import { composeBibliographySections, normalizeReferenceSections, splitBibliographySections } from '../helpers/referenceSections';
 import { DepartmentResolutionService } from './DepartmentResolutionService';
+import { normalizeCourseNameFromSource, normalizeProgrammaticSemester } from '../helpers/courseCatalog';
 
 export interface ImportComponentsSummary {
     source: 'siac' | 'sigaa-public' | 'sigaa-snapshot';
@@ -338,7 +339,9 @@ export class CrawlerService {
         }
 
         let changed = false;
-        const resolvedDepartment = await this.departmentResolutionService.resolveDepartment(data.department);
+        const resolvedDepartment = await this.departmentResolutionService.resolveDepartment(
+            normalizeCourseNameFromSource(data.department)
+        );
 
         if (resolvedDepartment) {
             if (
@@ -734,8 +737,8 @@ export class CrawlerService {
             ...data,
             code,
             name,
-            department: this.sanitizeTextField(data.department, 'Departamento SIGAA'),
-            semester: this.sanitizeTextField(data.semester),
+            department: normalizeCourseNameFromSource(this.sanitizeTextField(data.department, 'Curso SIGAA')),
+            semester: normalizeProgrammaticSemester(data.semester),
             description,
             objective,
             syllabus,
@@ -2412,7 +2415,8 @@ export class CrawlerService {
         }
 
         try {
-            const department = await this.departmentResolutionService.resolveDepartment(data.department);
+            const courseName = normalizeCourseNameFromSource(data.department);
+            const department = await this.departmentResolutionService.resolveDepartment(courseName);
             const [ componentWorkload, draftWorkload ] = await Promise.all(
                 new Array(2)
                     .fill(null)
@@ -2429,9 +2433,9 @@ export class CrawlerService {
                 workloadId: componentWorkload.id,
                 code: data.code,
                 name: data.name,
-                department: department?.name || data.department,
+                department: department?.name || courseName || data.department,
                 departmentId: department?.id || null,
-                semester: data.semester,
+                semester: normalizeProgrammaticSemester(data.semester),
                 program: data.description,
                 objective: data.objective,
                 syllabus: data.syllabus,

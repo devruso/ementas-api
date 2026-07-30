@@ -532,7 +532,8 @@ describe('CrawlerService SIGAA import integration', () => {
         });
         expect(persisted).toBeTruthy();
         expect(persisted?.name).toBe('BANCO DE DADOS ORIGINAL');
-        expect(persisted?.department).toBe('PGCOMP');
+        expect(persisted?.department).toBe('Programa de Pós-Graduação em Ciência da Computação');
+        expect(persisted?.semester).toBe('2026.2');
         expect(persisted?.program).toBe('conteudo original');
         expect(persisted?.syllabus).toBe('ementa original');
         expect(persisted?.prerequeriments).toBe('MAT001');
