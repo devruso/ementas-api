@@ -21,9 +21,9 @@ export class standardizeCoursesAndSemester1782100000000 implements MigrationInte
         for (const course of courses) {
             await queryRunner.query(
                 `INSERT INTO "departments" ("name")
-                 SELECT $1
+                 SELECT $1::varchar
                  WHERE NOT EXISTS (
-                     SELECT 1 FROM "departments" d WHERE LOWER(TRIM(d."name")) = LOWER(TRIM($1))
+                     SELECT 1 FROM "departments" d WHERE LOWER(TRIM(d."name")) = LOWER(TRIM($1::varchar))
                  )`,
                 [course]
             );
