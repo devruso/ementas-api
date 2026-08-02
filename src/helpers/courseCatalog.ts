@@ -5,7 +5,7 @@ export const COURSE_CATALOG = {
     INFORMATION_SYSTEMS_BACHELOR: 'Bacharelado em Sistemas de Informa\u00e7\u00e3o',
     COMPUTING_TEACHING_DEGREE: 'Licenciatura em Computa\u00e7\u00e3o',
     PGCOMP: 'Programa de P\u00f3s-Gradua\u00e7\u00e3o em Ci\u00eancia da Computa\u00e7\u00e3o',
-    PMCC: 'Programa Multidisciplinar em Ci\u00eancia da Computa\u00e7\u00e3o',
+    PMCC: 'Programa de P\u00f3s-Gradua\u00e7\u00e3o em Mecatr\u00f4nica',
 } as const;
 
 const normalizeForMatch = (value?: string | null) => String(value || '')
@@ -51,6 +51,12 @@ const courseAliases: Record<string, string[]> = {
     ],
     [COURSE_CATALOG.PMCC]: [
         COURSE_CATALOG.PMCC,
+        'PROGRAMA DE P\u00d3S-GRADUA\u00c7\u00c3O EM MECATR\u00d4NICA',
+        'PROGRAMA DE POS-GRADUACAO EM MECATRONICA',
+        'PROGRAMA DE P\u00d3S-GRADUA\u00c7\u00c3O EM MECATR\u00d4NICA (PMCC)',
+        'PROGRAMA DE POS-GRADUACAO EM MECATRONICA (PMCC)',
+        'PROGRAMA DE P\u00d3S-GRADUA\u00c7\u00c3O EM CI\u00caNCIA DA COMPUTA\u00c7\u00c3O (PMCC)',
+        'PROGRAMA DE POS-GRADUACAO EM CIENCIA DA COMPUTACAO (PMCC)',
         'PROGRAMA MULTIDISCIPLINAR EM CI\u00caNCIA DA COMPUTA\u00c7\u00c3O',
         'PROGRAMA MULTIDISCIPLINAR EM CIENCIA DA COMPUTACAO',
         'PMCC',
@@ -59,7 +65,9 @@ const courseAliases: Record<string, string[]> = {
 
 const normalizedAliasToCourse = new Map<string, string>(
     Object.entries(courseAliases)
-        .flatMap(([courseName, aliases]) => aliases.map((alias) => [normalizeForMatch(alias), courseName] as [string, string]))
+        .flatMap(([ courseName, aliases ]) => aliases.map(
+            (alias) => [ normalizeForMatch(alias), courseName ] as [ string, string ]
+        ))
 );
 
 export const normalizeCourseNameFromSource = (value?: string | null) => {
@@ -76,7 +84,11 @@ export const normalizeCourseNameFromSource = (value?: string | null) => {
         return directMatch;
     }
 
-    if (normalized.includes('MULTIDISCIPLINAR') && normalized.includes('CIENCIA DA COMPUTACAO')) {
+    if (
+        normalized.includes('PMCC')
+        || normalized.includes('MECATRONICA')
+        || (normalized.includes('MULTIDISCIPLINAR') && normalized.includes('CIENCIA DA COMPUTACAO'))
+    ) {
         return COURSE_CATALOG.PMCC;
     }
 
@@ -113,7 +125,7 @@ export const getCourseFilterAliases = (courseName?: string | null) => {
     const canonicalName = normalizeCourseNameFromSource(courseName);
     const aliases = courseAliases[canonicalName] || [];
 
-    return Array.from(new Set([canonicalName, ...aliases]))
+    return Array.from(new Set([ canonicalName, ...aliases ]))
         .filter(Boolean)
         .map(normalizeForAccentInsensitiveSql);
 };

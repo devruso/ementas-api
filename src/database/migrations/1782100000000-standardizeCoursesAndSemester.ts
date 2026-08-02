@@ -4,7 +4,7 @@ const COMPUTER_SCIENCE_BACHELOR = 'Bacharelado em Ci\u00eancia da Computa\u00e7\
 const INFORMATION_SYSTEMS_BACHELOR = 'Bacharelado em Sistemas de Informa\u00e7\u00e3o';
 const COMPUTING_TEACHING_DEGREE = 'Licenciatura em Computa\u00e7\u00e3o';
 const PGCOMP = 'Programa de P\u00f3s-Gradua\u00e7\u00e3o em Ci\u00eancia da Computa\u00e7\u00e3o';
-const PMCC = 'Programa Multidisciplinar em Ci\u00eancia da Computa\u00e7\u00e3o';
+const PMCC = 'Programa de P\u00f3s-Gradua\u00e7\u00e3o em Mecatr\u00f4nica';
 
 export class standardizeCoursesAndSemester1782100000000 implements MigrationInterface {
     name = 'standardizeCoursesAndSemester1782100000000';
@@ -25,7 +25,7 @@ export class standardizeCoursesAndSemester1782100000000 implements MigrationInte
                  WHERE NOT EXISTS (
                      SELECT 1 FROM "departments" d WHERE LOWER(TRIM(d."name")) = LOWER(TRIM($1::varchar))
                  )`,
-                [course]
+                [ course ]
             );
         }
 
@@ -54,6 +54,12 @@ export class standardizeCoursesAndSemester1782100000000 implements MigrationInte
                 ) THEN '${PGCOMP}'
                 WHEN UPPER(TRIM("department")) IN (
                     'PMCC',
+                    'PROGRAMA DE P\u00d3S-GRADUA\u00c7\u00c3O EM MECATR\u00d4NICA',
+                    'PROGRAMA DE POS-GRADUACAO EM MECATRONICA',
+                    'PROGRAMA DE P\u00d3S-GRADUA\u00c7\u00c3O EM MECATR\u00d4NICA (PMCC)',
+                    'PROGRAMA DE POS-GRADUACAO EM MECATRONICA (PMCC)',
+                    'PROGRAMA DE P\u00d3S-GRADUA\u00c7\u00c3O EM CI\u00caNCIA DA COMPUTA\u00c7\u00c3O (PMCC)',
+                    'PROGRAMA DE POS-GRADUACAO EM CIENCIA DA COMPUTACAO (PMCC)',
                     'PROGRAMA MULTIDISCIPLINAR EM CI\u00caNCIA DA COMPUTA\u00c7\u00c3O',
                     'PROGRAMA MULTIDISCIPLINAR EM CIENCIA DA COMPUTACAO'
                 ) THEN '${PMCC}'
@@ -89,8 +95,8 @@ export class standardizeCoursesAndSemester1782100000000 implements MigrationInte
               AND mapped.course_name IS NOT NULL
         `);
 
-        await queryRunner.query(`UPDATE "components" SET "semester" = '2026.2'`);
-        await queryRunner.query(`UPDATE "component_drafts" SET "semester" = '2026.2'`);
+        await queryRunner.query('UPDATE "components" SET "semester" = \'2026.2\'');
+        await queryRunner.query('UPDATE "component_drafts" SET "semester" = \'2026.2\'');
     }
 
     public async down(_queryRunner: QueryRunner): Promise<void> {
