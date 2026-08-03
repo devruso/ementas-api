@@ -1,4 +1,9 @@
-import { COURSE_CATALOG, getCourseFilterAliases, normalizeCourseNameFromSource } from '../helpers/courseCatalog';
+import {
+    COURSE_CATALOG,
+    getCourseFilterAliases,
+    normalizeCourseNameFromSource,
+    normalizeProgrammaticSemester,
+} from '../helpers/courseCatalog';
 
 describe('courseCatalog', () => {
     it('should expose PMCC as the mechatronics graduate program', () => {
@@ -23,5 +28,13 @@ describe('courseCatalog', () => {
             'programa de pos-graduacao em ciencia da computacao (pmcc)',
             'pmcc',
         ]));
+    });
+
+    it('should normalize real academic semester formats without inventing a current semester', () => {
+        expect(normalizeProgrammaticSemester('20132')).toBe('2013.2');
+        expect(normalizeProgrammaticSemester('2013/2')).toBe('2013.2');
+        expect(normalizeProgrammaticSemester('2013.2')).toBe('2013.2');
+        expect(normalizeProgrammaticSemester('')).toBe('');
+        expect(normalizeProgrammaticSemester(undefined)).toBe('');
     });
 });

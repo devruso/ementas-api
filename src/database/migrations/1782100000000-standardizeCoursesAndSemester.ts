@@ -70,8 +70,7 @@ export class standardizeCoursesAndSemester1782100000000 implements MigrationInte
         await queryRunner.query(`
             UPDATE "components" c
             SET "department" = mapped.course_name,
-                "department_id" = d."id",
-                "semester" = '2026.2'
+                "department_id" = d."id"
             FROM (
                 SELECT "id", ${canonicalCourseCase} AS course_name
                 FROM "components"
@@ -84,8 +83,7 @@ export class standardizeCoursesAndSemester1782100000000 implements MigrationInte
         await queryRunner.query(`
             UPDATE "component_drafts" cd
             SET "department" = mapped.course_name,
-                "department_id" = d."id",
-                "semester" = '2026.2'
+                "department_id" = d."id"
             FROM (
                 SELECT "id", ${canonicalCourseCase} AS course_name
                 FROM "component_drafts"
@@ -94,9 +92,6 @@ export class standardizeCoursesAndSemester1782100000000 implements MigrationInte
             WHERE cd."id" = mapped."id"
               AND mapped.course_name IS NOT NULL
         `);
-
-        await queryRunner.query('UPDATE "components" SET "semester" = \'2026.2\'');
-        await queryRunner.query('UPDATE "component_drafts" SET "semester" = \'2026.2\'');
     }
 
     public async down(_queryRunner: QueryRunner): Promise<void> {

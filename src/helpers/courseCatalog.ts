@@ -1,5 +1,3 @@
-export const CURRENT_PROGRAMMATIC_CONTENT_SEMESTER = '2026.2';
-
 export const COURSE_CATALOG = {
     COMPUTER_SCIENCE_BACHELOR: 'Bacharelado em Ci\u00eancia da Computa\u00e7\u00e3o',
     INFORMATION_SYSTEMS_BACHELOR: 'Bacharelado em Sistemas de Informa\u00e7\u00e3o',
@@ -130,4 +128,22 @@ export const getCourseFilterAliases = (courseName?: string | null) => {
         .map(normalizeForAccentInsensitiveSql);
 };
 
-export const normalizeProgrammaticSemester = (_value?: string | null) => CURRENT_PROGRAMMATIC_CONTENT_SEMESTER;
+export const normalizeProgrammaticSemester = (value?: string | null) => {
+    const normalized = String(value || '').replace(/\s+/g, ' ').trim();
+
+    if (!normalized) {
+        return '';
+    }
+
+    const separatedMatch = normalized.match(/\b((?:19|20)\d{2})\s*[.\-/]\s*([12])\b/);
+    if (separatedMatch?.[1] && separatedMatch?.[2]) {
+        return `${separatedMatch[1]}.${separatedMatch[2]}`;
+    }
+
+    const compactMatch = normalized.match(/\b((?:19|20)\d{2})([12])\b/);
+    if (compactMatch?.[1] && compactMatch?.[2]) {
+        return `${compactMatch[1]}.${compactMatch[2]}`;
+    }
+
+    return normalized;
+};
