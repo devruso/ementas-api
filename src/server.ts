@@ -1,5 +1,6 @@
 import { createConnection, getConnectionOptions } from 'typeorm';
 import { app } from './app';
+import { prepareLegacyMigrationBaseline } from './database/prepareLegacyMigrationBaseline';
 import { runStartupBootstrapImportIfNeeded } from './services/StartupBootstrapService';
 import { startUserInviteShortLinkCleanupScheduler } from './services/UserInviteShortLinkCleanupScheduler';
 
@@ -9,6 +10,7 @@ const env = process.env.NODE_ENV || 'local';
 getConnectionOptions()
     .then(async options => {
         const extra = env !== 'local' ? { ssl: { rejectUnauthorized: false } } : undefined;
+        await prepareLegacyMigrationBaseline({ ...options, extra });
         return createConnection({ ...options, extra, migrationsRun: true });
     })
     .then(connection => {
