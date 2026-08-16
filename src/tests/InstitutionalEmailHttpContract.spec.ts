@@ -5,6 +5,7 @@ import { UserController } from '../controllers/UserController';
 import { UserInviteService } from '../services/UserInviteService';
 import { UserRepository } from '../repositories/UserRepository';
 import { UserRole } from '../interfaces/UserRole';
+import { ApiErrorCode } from '../errors/ApiErrorCode';
 import connection from './connection';
 
 /* eslint-disable */
@@ -57,6 +58,13 @@ const createInstitutionalUserAndToken = async (
     };
 };
 
+const institutionalEmailError = {
+    code: ApiErrorCode.AUTH_INSTITUTIONAL_EMAIL_REQUIRED,
+    message: 'Use um e-mail institucional da UFBA.',
+    reason: 'O acesso é restrito a endereços institucionais autorizados.',
+    recovery: 'Informe seu endereço terminado em @ufba.br.',
+};
+
 describe('Institutional email HTTP contract', () => {
     beforeAll(async () => {
         await connection.create();
@@ -79,9 +87,7 @@ describe('Institutional email HTTP contract', () => {
             });
 
         expect(response.statusCode).toBe(400);
-        expect(response.body).toEqual({
-            message: 'Only UFBA institutional email addresses are allowed.',
-        });
+        expect(response.body).toEqual(institutionalEmailError);
     });
 
     it('should return standardized error for reset-password with non-institutional domain', async () => {
@@ -92,9 +98,7 @@ describe('Institutional email HTTP contract', () => {
             });
 
         expect(response.statusCode).toBe(400);
-        expect(response.body).toEqual({
-            message: 'Only UFBA institutional email addresses are allowed.',
-        });
+        expect(response.body).toEqual(institutionalEmailError);
     });
 
     it('should return standardized error for registration with non-institutional domain', async () => {
@@ -109,9 +113,7 @@ describe('Institutional email HTTP contract', () => {
             });
 
         expect(response.statusCode).toBe(400);
-        expect(response.body).toEqual({
-            message: 'Only UFBA institutional email addresses are allowed.',
-        });
+        expect(response.body).toEqual(institutionalEmailError);
     });
 
     it('should return standardized error for update email with non-institutional domain', async () => {
@@ -125,8 +127,6 @@ describe('Institutional email HTTP contract', () => {
             });
 
         expect(response.statusCode).toBe(400);
-        expect(response.body).toEqual({
-            message: 'Only UFBA institutional email addresses are allowed.',
-        });
+        expect(response.body).toEqual(institutionalEmailError);
     });
 });

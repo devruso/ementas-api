@@ -1,6 +1,7 @@
 import { sign, verify } from 'jsonwebtoken';
 
 import { AppError } from '../errors/AppError';
+import { ApiErrorCode } from '../errors/ApiErrorCode';
 
 const DEFAULT_PASSWORD_RESET_TTL_SECONDS = 24 * 60 * 60;
 
@@ -38,6 +39,6 @@ export const resolvePasswordResetEmailFromToken = (token: string) => {
 
         return email;
     } catch {
-        throw new AppError('This password reset link is invalid or expired.', 401);
+        throw AppError.fromCode(ApiErrorCode.AUTH_PASSWORD_RESET_LINK_INVALID);
     }
 };

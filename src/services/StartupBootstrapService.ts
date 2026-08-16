@@ -13,8 +13,8 @@ const AUTO_IMPORT_FLAG = 'true';
 type BootstrapSource = 'sigaa-public' | 'sigaa-snapshot' | 'siac';
 
 const DEFAULT_SIGAA_SOURCE_IDS: Record<AcademicLevel, string[]> = {
-    [AcademicLevel.GRADUATION]: ['1114'],
-    [AcademicLevel.MASTERS]: ['1820'],
+    [AcademicLevel.GRADUATION]: [ '1114' ],
+    [AcademicLevel.MASTERS]: [ '1820' ],
     [AcademicLevel.DOCTORATE]: [],
 };
 
@@ -124,7 +124,7 @@ const mergeImportSummaries = (target: ImportComponentsSummary, partial: ImportCo
     target.failed += partial.failed;
     target.failures.push(...(partial.failures || []));
 
-    Object.entries(partial.failureCategories || {}).forEach(([key, value]) => {
+    Object.entries(partial.failureCategories || {}).forEach(([ key, value ]) => {
         target.failureCategories[key] = (target.failureCategories[key] || 0) + Number(value || 0);
     });
 };
@@ -147,7 +147,11 @@ const ensureBootstrapSuperAdmin = async () => {
 
     const name = String(process.env.BOOTSTRAP_ADMIN_NAME || 'Bootstrap Super Admin').trim();
     const password = process.env.BOOTSTRAP_ADMIN_PASSWORD;
-    const existing = await userRepository.findOne({ where: { email } });
+    const existing = await userRepository.findOne({ where: { email, isDeleted: false } })
+        || await userRepository.findOne({
+            where: { email, isDeleted: true },
+            order: { updatedAt: 'DESC' },
+        });
 
     if (existing) {
         existing.name = existing.name || name;
@@ -232,7 +236,7 @@ export const runStartupBootstrapImportIfNeeded = async () => {
     const bootstrapSigaaRequestTimeoutMs = getConfiguredBootstrapSigaaRequestTimeoutMs();
 
     if (configuredLevel === 'all') {
-        const levels: AcademicLevel[] = [AcademicLevel.GRADUATION, AcademicLevel.MASTERS, AcademicLevel.DOCTORATE];
+        const levels: AcademicLevel[] = [ AcademicLevel.GRADUATION, AcademicLevel.MASTERS, AcademicLevel.DOCTORATE ];
         const combinedSummary: ImportComponentsSummary = {
             source: 'sigaa-public',
             requested: 0,

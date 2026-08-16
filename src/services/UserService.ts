@@ -13,6 +13,7 @@ import { StorageProviderKind } from './storage';
 import { SignatureImageUploadValidator } from './signature/SignatureImageUploadValidator';
 import { buildInviteEmailTemplate, buildTeacherCredentialsEmailTemplate } from '../helpers/emailTemplates';
 import { buildPasswordResetLink, generatePasswordResetToken } from '../helpers/passwordReset';
+import { ApiErrorCode } from '../errors/ApiErrorCode';
 
 class UserService {
 
@@ -24,6 +25,10 @@ class UserService {
 
     private isAdminRole(role?: UserRole) {
         return role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN;
+    }
+
+    private hashPassword(password: string) {
+        return crypto.createHmac('sha256', password).digest('hex');
     }
 
     private generateTemporaryPassword(length = 12) {
@@ -98,7 +103,7 @@ class UserService {
 
     async getUserByID(id: string){
         const user = await this.userRepository.findOne({
-            where: { id },
+            where: { id, isDeleted: false, isUserActive: true },
         });
 
         if (!user) return null;
@@ -110,7 +115,7 @@ class UserService {
         const normalizedEmail = normalizeEmail(email);
 
         if (!assertUfbaInstitutionalEmail(normalizedEmail)) {
-            throw new AppError('Only UFBA institutional email addresses are allowed.', 400);
+            throw AppError.fromCode(ApiErrorCode.AUTH_INSTITUTIONAL_EMAIL_REQUIRED);
         }
 
         const userExists = await this.userRepository.findOne({
@@ -122,10 +127,25 @@ class UserService {
         }
 
         try {
+            const deletedUser = await this.userRepository.findOne({
+                where: { email: normalizedEmail, isDeleted: true },
+                order: { updatedAt: 'DESC' },
+            });
+
+            if (deletedUser) {
+                deletedUser.name = name;
+                deletedUser.password = this.hashPassword(password);
+                deletedUser.role = UserRole.TEACHER;
+                deletedUser.isDeleted = false;
+                deletedUser.isUserActive = true;
+
+                return await this.userRepository.save(deletedUser);
+            }
+
             const user = this.userRepository.create({
                 name,
                 email: normalizedEmail,
-                password: crypto.createHmac('sha256', password).digest('hex'),
+                password: this.hashPassword(password),
             });
 
             return await this.userRepository.save(user);
@@ -142,7 +162,7 @@ class UserService {
         sendCredentialsByEmail = true
     ) {
         const adminUser = await this.userRepository.findOne({
-            where: { id: authenticatedUserId, isDeleted: false },
+            where: { id: authenticatedUserId, isDeleted: false, isUserActive: true },
         });
 
         if (!adminUser || !this.isAdminRole(adminUser.role)) {
@@ -152,7 +172,7 @@ class UserService {
         const normalizedEmail = email.trim().toLowerCase();
 
         if (!assertUfbaInstitutionalEmail(normalizedEmail)) {
-            throw new AppError('Only UFBA institutional email addresses are allowed.', 400);
+            throw AppError.fromCode(ApiErrorCode.AUTH_INSTITUTIONAL_EMAIL_REQUIRED);
         }
 
         const userExists = await this.userRepository.findOne({
@@ -164,16 +184,22 @@ class UserService {
         }
 
         const temporaryPassword = this.generateTemporaryPassword();
-        const passwordHash = crypto.createHmac('sha256', temporaryPassword).digest('hex');
+        const passwordHash = this.hashPassword(temporaryPassword);
         const passwordSetupToken = generatePasswordResetToken(normalizedEmail);
         const passwordSetupLink = buildPasswordResetLink(passwordSetupToken);
 
-        const user = this.userRepository.create({
-            name: name.trim(),
-            email: normalizedEmail,
-            password: passwordHash,
-            role: UserRole.TEACHER,
+        const deletedUser = await this.userRepository.findOne({
+            where: { email: normalizedEmail, isDeleted: true },
+            order: { updatedAt: 'DESC' },
         });
+        const user = deletedUser || this.userRepository.create({ email: normalizedEmail });
+
+        user.name = name.trim();
+        user.email = normalizedEmail;
+        user.password = passwordHash;
+        user.role = UserRole.TEACHER;
+        user.isDeleted = false;
+        user.isUserActive = true;
 
         const createdUser = await this.userRepository.save(user);
 
@@ -221,7 +247,7 @@ class UserService {
         registrationBaseUrl: string
     ) {
         const adminUser = await this.userRepository.findOne({
-            where: { id: authenticatedUserId, isDeleted: false },
+            where: { id: authenticatedUserId, isDeleted: false, isUserActive: true },
         });
 
         if (!adminUser || !this.isAdminRole(adminUser.role)) {
@@ -231,7 +257,7 @@ class UserService {
         const normalizedEmail = normalizeEmail(email);
 
         if (!assertUfbaInstitutionalEmail(normalizedEmail)) {
-            throw new AppError('Only UFBA institutional email addresses are allowed.', 400);
+            throw AppError.fromCode(ApiErrorCode.AUTH_INSTITUTIONAL_EMAIL_REQUIRED);
         }
 
         const normalizedBaseUrl = registrationBaseUrl.trim().replace(/\/+$/, '');
@@ -373,9 +399,9 @@ class UserService {
         targetUserId: string,
         role: UserRole
     ) {
-        const [actor, targetUser] = await Promise.all([
-            this.userRepository.findOne({ where: { id: authenticatedUserId, isDeleted: false } }),
-            this.userRepository.findOne({ where: { id: targetUserId, isDeleted: false } }),
+        const [ actor, targetUser ] = await Promise.all([
+            this.userRepository.findOne({ where: { id: authenticatedUserId, isDeleted: false, isUserActive: true } }),
+            this.userRepository.findOne({ where: { id: targetUserId, isDeleted: false, isUserActive: true } }),
         ]);
 
         if (!actor || actor.role !== UserRole.SUPER_ADMIN) {
@@ -402,7 +428,7 @@ class UserService {
 
     async updatePassword(id: string, password: string){
         const userExists = await this.userRepository.findOne({
-            where: { id }
+            where: { id, isDeleted: false, isUserActive: true }
         });
 
         if(!userExists){
@@ -410,12 +436,12 @@ class UserService {
         }
 
         try {
-            const passwordHashed = crypto.createHmac('sha256', password).digest('hex');
+            const passwordHashed = this.hashPassword(password);
 
             await this.userRepository.createQueryBuilder().update(User).set({ password: passwordHashed }).where('id = :id', { id }).execute();
 
             return await this.userRepository.findOne({
-                where: { id }
+                where: { id, isDeleted: false, isUserActive: true }
             });
         }
         catch (err) {
@@ -427,11 +453,11 @@ class UserService {
         const normalizedEmail = normalizeEmail(email);
 
         if (!assertUfbaInstitutionalEmail(normalizedEmail)) {
-            throw new AppError('Only UFBA institutional email addresses are allowed.', 400);
+            throw AppError.fromCode(ApiErrorCode.AUTH_INSTITUTIONAL_EMAIL_REQUIRED);
         }
 
         const userExists = await this.userRepository.findOne({
-            where: { id }
+            where: { id, isDeleted: false, isUserActive: true }
         });
 
         if(!userExists){
@@ -442,7 +468,7 @@ class UserService {
             await this.userRepository.createQueryBuilder().update(User).set({ email: normalizedEmail }).where('id = :id', { id }).execute();
 
             return await this.userRepository.findOne({
-                where: { id }
+                where: { id, isDeleted: false, isUserActive: true }
             });
         }
         catch (err) {
@@ -451,12 +477,12 @@ class UserService {
     }
 
     async delete(authenticatedUserId: string, id: string){
-        const [actor, userExists] = await Promise.all([
+        const [ actor, userExists ] = await Promise.all([
             this.userRepository.findOne({
-                where: { id: authenticatedUserId, isDeleted: false }
+                where: { id: authenticatedUserId, isDeleted: false, isUserActive: true }
             }),
             this.userRepository.findOne({
-                where: { id, isDeleted: false }
+                where: { id, isDeleted: false, isUserActive: true }
             }),
         ]);
 

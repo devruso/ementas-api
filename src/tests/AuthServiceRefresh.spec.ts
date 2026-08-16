@@ -1,7 +1,7 @@
 import { getCustomRepository } from 'typeorm';
 import { sign, verify } from 'jsonwebtoken';
 
-import { AppError } from '../errors/AppError';
+import { ApiErrorCode } from '../errors/ApiErrorCode';
 import { AuthService } from '../services/AuthService';
 
 jest.mock('typeorm', () => {
@@ -117,9 +117,10 @@ describe('AuthService refresh token flow', () => {
 
         const service = new AuthService();
 
-        await expect(service.refreshSession('invalid-type')).rejects.toEqual(
-            new AppError('Refresh token invalid or expired.', 401)
-        );
+        await expect(service.refreshSession('invalid-type')).rejects.toMatchObject({
+            statusCode: 401,
+            code: ApiErrorCode.AUTH_SESSION_EXPIRED,
+        });
     });
 
     it('should reject refresh when verify throws', async () => {
@@ -129,8 +130,9 @@ describe('AuthService refresh token flow', () => {
 
         const service = new AuthService();
 
-        await expect(service.refreshSession('expired-refresh')).rejects.toEqual(
-            new AppError('Refresh token invalid or expired.', 401)
-        );
+        await expect(service.refreshSession('expired-refresh')).rejects.toMatchObject({
+            statusCode: 401,
+            code: ApiErrorCode.AUTH_SESSION_EXPIRED,
+        });
     });
 });

@@ -2,6 +2,7 @@ import {
     Column,
     CreateDateColumn,
     Entity,
+    Index,
     JoinColumn,
     ManyToOne,
     OneToMany,
@@ -21,6 +22,7 @@ import { Department } from './Department';
 import { ComponentCurriculumContext } from './ComponentCurriculumContext';
 
 @Entity('components')
+@Index('IDX_components_department_id', [ 'departmentId' ])
 class Component {
 
     @PrimaryGeneratedColumn('uuid')

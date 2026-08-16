@@ -18,4 +18,16 @@ router.use('/api/components', componentRouter);
 router.use('/api/component-drafts', componentDraftRouter);
 router.use('/api/departments', departmentRouter);
 
+router.use('/status', statusRouter);
+router.use('/auth', authRouter);
+router.use('/users', userRouter);
+router.use('/invite', userInviteRouter);
+router.use('/components', componentRouter);
+router.use('/component-drafts', componentDraftRouter);
+router.use('/departments', departmentRouter);
+
+router.use('/', authRouter);
+router.use('/', componentRouter);
+router.use('/', userRouter);
+
 export { router };

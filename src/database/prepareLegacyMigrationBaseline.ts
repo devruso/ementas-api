@@ -41,9 +41,9 @@ export const LEGACY_BASELINE_MIGRATIONS: LegacyMigration[] = [
     { timestamp: 1780900000000, name: 'addDepartmentsModule1780900000000' },
     { timestamp: 1781800000000, name: 'fixUniqueEmailConstraintForSoftDelete1781800000000' },
     { timestamp: 1781900000000, name: 'addComponentCurriculumContexts1781900000000' },
-    { timestamp: 1782000000000, name: 'backfillComponentDepartments1782000000000' },
-    { timestamp: 1782100000000, name: 'standardizeCoursesAndSemester1782100000000' },
 ];
+
+const LEGACY_CORE_MIGRATION_COUNT = 11;
 
 const createLegacyBaselineClient = (options: DatabaseOptions) => new Client({
     connectionString: options.url,
@@ -90,68 +90,122 @@ const indexExists = async (client: typeof Client, indexName: string) => {
     return Boolean(result.rows[0]?.exists);
 };
 
-const hasLegacySchemaBaseline = async (client: typeof Client) => {
+const hasColumns = async (client: typeof Client, columns: string[][]) => {
+    for (const [ tableName, columnName ] of columns) {
+        if (!await columnExists(client, tableName, columnName)) {
+            return false;
+        }
+    }
+
+    return true;
+};
+
+const hasTables = async (client: typeof Client, tables: string[]) => {
+    for (const tableName of tables) {
+        if (!await tableExists(client, tableName)) {
+            return false;
+        }
+    }
+
+    return true;
+};
+
+const findLegacyMigrationsAlreadyReflected = async (client: typeof Client) => {
     const requiredTables = [
         'users',
         'component_workloads',
         'components',
         'component_logs',
         'component_drafts',
-        'component_public_shares',
-        'component_relations',
-        'user_invite_short_links',
-        'departments',
-        'component_curriculum_contexts',
     ];
 
     const requiredColumns = [
         [ 'users', 'role' ],
         [ 'users', 'is_user_active' ],
         [ 'users', 'is_deleted' ],
-        [ 'users', 'signature_file_key' ],
         [ 'components', 'component_draft_id' ],
-        [ 'components', 'academic_level' ],
-        [ 'components', 'department_id' ],
-        [ 'components', 'referencesBasic' ],
-        [ 'components', 'referencesComplementary' ],
         [ 'component_drafts', 'component_id' ],
-        [ 'component_drafts', 'department_id' ],
-        [ 'component_drafts', 'referencesBasic' ],
-        [ 'component_drafts', 'referencesComplementary' ],
+        [ 'component_logs', 'component_draft_id' ],
+    ];
+
+    if (!await hasTables(client, requiredTables) || !await hasColumns(client, requiredColumns)) {
+        return [] as LegacyMigration[];
+    }
+
+    const reflectedMigrations = LEGACY_BASELINE_MIGRATIONS.slice(0, LEGACY_CORE_MIGRATION_COUNT);
+
+    if (await hasColumns(client, [
         [ 'component_logs', 'version_code' ],
         [ 'component_logs', 'official_program' ],
         [ 'component_logs', 'official_syllabus' ],
-        [ 'component_logs', 'component_draft_id' ],
+    ])) {
+        reflectedMigrations.push(LEGACY_BASELINE_MIGRATIONS[11]);
+    }
+
+    if (await hasTables(client, [ 'component_public_shares' ]) && await hasColumns(client, [
+        [ 'users', 'signature_hash' ],
+        [ 'users', 'signature_updated_at' ],
+        [ 'components', 'academic_level' ],
+        [ 'component_drafts', 'academic_level' ],
+    ])) {
+        reflectedMigrations.push(LEGACY_BASELINE_MIGRATIONS[12]);
+    }
+
+    if (await hasTables(client, [ 'component_relations' ])) {
+        reflectedMigrations.push(LEGACY_BASELINE_MIGRATIONS[13]);
+    }
+
+    if (await hasColumns(client, [
+        [ 'components', 'referencesBasic' ],
+        [ 'components', 'referencesComplementary' ],
+        [ 'component_drafts', 'referencesBasic' ],
+        [ 'component_drafts', 'referencesComplementary' ],
+    ])) {
+        reflectedMigrations.push(LEGACY_BASELINE_MIGRATIONS[14]);
+    }
+
+    if (await hasColumns(client, [
         [ 'component_workloads', 'student_extension' ],
         [ 'component_workloads', 'teacher_extension' ],
         [ 'component_workloads', 'module_extension' ],
-    ];
-
-    const requiredIndexes = [
-        'UQ_users_email_not_deleted',
-        'UQ_component_logs_approval_agreement_number_normalized',
-        'UQ_departments_name_normalized',
-    ];
-
-    for (const requiredTable of requiredTables) {
-        if (!await tableExists(client, requiredTable)) {
-            return false;
-        }
+    ])) {
+        reflectedMigrations.push(LEGACY_BASELINE_MIGRATIONS[15]);
     }
 
-    for (const [ tableName, columnName ] of requiredColumns) {
-        if (!await columnExists(client, tableName, columnName)) {
-            return false;
-        }
+    if (await indexExists(client, 'UQ_component_logs_approval_agreement_number_normalized')) {
+        reflectedMigrations.push(LEGACY_BASELINE_MIGRATIONS[16]);
     }
 
-    for (const requiredIndex of requiredIndexes) {
-        if (!await indexExists(client, requiredIndex)) {
-            return false;
-        }
+    if (await hasColumns(client, [
+        [ 'users', 'signature_file_key' ],
+        [ 'users', 'signature_file_provider' ],
+        [ 'users', 'signature_file_content_type' ],
+        [ 'users', 'signature_file_size' ],
+        [ 'users', 'signature_file_hash' ],
+    ])) {
+        reflectedMigrations.push(LEGACY_BASELINE_MIGRATIONS[17]);
     }
 
-    return true;
+    if (await hasTables(client, [ 'user_invite_short_links' ])) {
+        reflectedMigrations.push(LEGACY_BASELINE_MIGRATIONS[18]);
+    }
+
+    if (await hasTables(client, [ 'departments' ]) && await hasColumns(client, [
+        [ 'components', 'department_id' ],
+        [ 'component_drafts', 'department_id' ],
+    ])) {
+        reflectedMigrations.push(LEGACY_BASELINE_MIGRATIONS[19]);
+    }
+
+    if (await indexExists(client, 'UQ_users_email_not_deleted')) {
+        reflectedMigrations.push(LEGACY_BASELINE_MIGRATIONS[20]);
+    }
+
+    if (await hasTables(client, [ 'component_curriculum_contexts' ])) {
+        reflectedMigrations.push(LEGACY_BASELINE_MIGRATIONS[21]);
+    }
+
+    return reflectedMigrations;
 };
 
 export const prepareLegacyMigrationBaseline = async (options: DatabaseOptions) => {
@@ -177,26 +231,30 @@ export const prepareLegacyMigrationBaseline = async (options: DatabaseOptions) =
             return;
         }
 
-        if (!await hasLegacySchemaBaseline(client)) {
+        const reflectedMigrations = await findLegacyMigrationsAlreadyReflected(client);
+        if (reflectedMigrations.length === 0) {
             console.log('[migration-baseline] Existing schema does not match legacy baseline; TypeORM will run migrations normally.');
             return;
         }
 
         await client.query('BEGIN');
 
-        for (const migration of LEGACY_BASELINE_MIGRATIONS) {
+        for (const migration of reflectedMigrations) {
             await client.query(
                 `INSERT INTO "migrations" ("timestamp", "name")
-                 SELECT $1, $2
+                 SELECT $1::bigint, $2::varchar
                  WHERE NOT EXISTS (
-                     SELECT 1 FROM "migrations" WHERE "timestamp" = $1 AND "name" = $2
+                     SELECT 1
+                     FROM "migrations"
+                     WHERE "timestamp" = $1::bigint
+                       AND "name" = $2::varchar
                  )`,
                 [ migration.timestamp, migration.name ]
             );
         }
 
         await client.query('COMMIT');
-        console.log(`[migration-baseline] Registered ${LEGACY_BASELINE_MIGRATIONS.length} legacy migrations.`);
+        console.log(`[migration-baseline] Registered ${reflectedMigrations.length} legacy migrations already reflected in the schema.`);
     } catch (error) {
         await client.query('ROLLBACK').catch(() => undefined);
         throw error;

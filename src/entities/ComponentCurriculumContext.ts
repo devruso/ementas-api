@@ -1,10 +1,13 @@
 import {
+    Check,
     Column,
     CreateDateColumn,
     Entity,
+    Index,
     JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn,
+    Unique,
     UpdateDateColumn,
 } from 'typeorm';
 
@@ -12,6 +15,10 @@ import { AcademicLevel } from '../interfaces/AcademicLevel';
 import { Component } from './Component';
 
 @Entity('component_curriculum_contexts')
+@Index('IDX_component_curriculum_contexts_component_id', [ 'componentId' ])
+@Index('IDX_component_curriculum_contexts_curriculum_code', [ 'curriculumCode' ])
+@Unique('UQ_component_curriculum_contexts_source', [ 'componentId', 'sourceKey' ])
+@Check('CHK_component_curriculum_contexts_academic_level', '"academic_level" IN (\'graduacao\', \'mestrado\', \'doutorado\')')
 class ComponentCurriculumContext {
 
     @PrimaryGeneratedColumn('uuid')

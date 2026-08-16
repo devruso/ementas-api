@@ -5,6 +5,7 @@ import { UserController } from '../controllers/UserController';
 import { UserInviteService } from '../services/UserInviteService';
 import { CrawlerService, ImportComponentsSummary } from '../services/CrawlerService';
 import { UserRepository } from '../repositories/UserRepository';
+import { ApiErrorCode } from '../errors/ApiErrorCode';
 import connection from './connection';
 
 /* eslint-disable */
@@ -91,9 +92,10 @@ describe('Component import governance', () => {
                 academicLevel: 'graduacao',
             });
 
-        expect(response.statusCode).toBe(401);
+        expect(response.statusCode).toBe(403);
         expect(response.body).toMatchObject({
-            message: 'User is not an admin.',
+            code: ApiErrorCode.AUTH_FORBIDDEN,
+            message: 'Você não tem permissão para esta operação.',
         });
     });
 

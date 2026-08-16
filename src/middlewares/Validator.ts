@@ -1,6 +1,7 @@
 import { transformAndValidate } from 'class-transformer-validator';
 import { ValidationError } from 'class-validator';
 import { Request, Response, NextFunction } from 'express';
+import { API_ERROR_CATALOG, ApiErrorCode } from '../errors/ApiErrorCode';
 
 export const makeValidateBody = <T>(
     c: T,
@@ -27,8 +28,12 @@ export const makeValidateBody = <T>(
                         reasons: Object.values(e.constraints ?? {}),
                     }));
 
-                res.status(400).json({
-                    message: 'Validation failed',
+                const definition = API_ERROR_CATALOG[ApiErrorCode.VALIDATION_FAILED];
+                res.status(definition.statusCode).json({
+                    code: ApiErrorCode.VALIDATION_FAILED,
+                    message: definition.message,
+                    reason: definition.reason,
+                    recovery: definition.recovery,
                     error,
                 });
             }

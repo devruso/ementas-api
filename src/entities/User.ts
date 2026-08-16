@@ -1,10 +1,11 @@
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 import { Component } from './Component';
 import { ComponentDraft } from './ComponentDraft';
 import { UserRole } from '../interfaces/UserRole';
 
 @Entity('users')
+@Index('UQ_users_email_not_deleted', [ 'email' ], { unique: true, where: '"is_deleted" = false' })
 class User {
     @PrimaryGeneratedColumn('uuid')
     readonly id: string;
@@ -12,7 +13,7 @@ class User {
     @Column()
         name: string;
 
-    @Column({ unique: true })
+    @Column()
         email: string;
 
     @Column({ select: false })

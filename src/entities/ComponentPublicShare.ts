@@ -33,11 +33,11 @@ class ComponentPublicShare {
     @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
         createdAt: Date;
 
-    @ManyToOne(() => Component)
+    @ManyToOne(() => Component, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'component_id' })
         component: Component;
 
-    @ManyToOne(() => User)
+    @ManyToOne(() => User, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'created_by' })
         user: User;
 }

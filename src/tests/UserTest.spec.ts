@@ -221,6 +221,44 @@ describe('Create teacher by admin', () => {
         expect(result.temporaryPassword).toBeTruthy();
     });
 
+    it('should reactivate soft-deleted teacher instead of creating another duplicate account', async () => {
+        const userService = new UserService();
+        const userRepository = getCustomRepository(UserRepository);
+        const adminUser = await userRepository.save(userRepository.create({
+            name: 'Admin User',
+            email: 'admin@ufba.br',
+            password: crypto.createHmac('sha256', 'Admin123!').digest('hex'),
+            role: UserRole.ADMIN,
+        }));
+        const deletedTeacher = await userRepository.save(userRepository.create({
+            name: 'Professor Antigo',
+            email: 'reativar@ufba.br',
+            password: crypto.createHmac('sha256', 'Old123!').digest('hex'),
+            role: UserRole.TEACHER,
+            isDeleted: true,
+            isUserActive: false,
+        }));
+
+        const result = await userService.createTeacherByAdmin(
+            adminUser.id,
+            'Professor Reativado',
+            'reativar@ufba.br',
+            false
+        );
+
+        const usersWithEmail = await userRepository.find({ where: { email: 'reativar@ufba.br' } });
+        const reactivatedTeacher = await userRepository.findOne({ where: { id: deletedTeacher.id } });
+
+        expect(result.id).toBe(deletedTeacher.id);
+        expect(usersWithEmail).toHaveLength(1);
+        expect(reactivatedTeacher).toMatchObject({
+            name: 'Professor Reativado',
+            email: 'reativar@ufba.br',
+            isDeleted: false,
+            isUserActive: true,
+        });
+    });
+
     it('should generate invite link and report mocked email delivery', async () => {
         const userService = new UserService();
         const userRepository = getCustomRepository(UserRepository);

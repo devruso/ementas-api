@@ -9,6 +9,7 @@ import Mailer from '../middlewares/Mailer';
 import { assertUfbaInstitutionalEmail, normalizeEmail } from '../helpers/institutionalEmail';
 import { buildResetPasswordEmailTemplate } from '../helpers/emailTemplates';
 import { buildPasswordResetLink, generatePasswordResetToken, resolvePasswordResetEmailFromToken } from '../helpers/passwordReset';
+import { ApiErrorCode } from '../errors/ApiErrorCode';
 
 type CurrentUserResponse = Pick<
     User,
@@ -81,22 +82,25 @@ class AuthService {
         const normalizedEmail = typeof email === 'string' ? normalizeEmail(email) : '';
 
         if (!normalizedEmail || password == undefined) {
-            throw new AppError('Username or password missing. Please try again!', 400);
+            throw AppError.fromCode(ApiErrorCode.AUTH_CREDENTIALS_REQUIRED);
         }
 
         if (!assertUfbaInstitutionalEmail(normalizedEmail)) {
-            throw new AppError('Only UFBA institutional email addresses are allowed.', 400);
+            throw AppError.fromCode(ApiErrorCode.AUTH_INSTITUTIONAL_EMAIL_REQUIRED);
         }
 
+        const passwordHash = crypto.createHmac('sha256', password).digest('hex');
         const user = await this.userRepository.findOne({
             where: {
                 email: normalizedEmail,
-                password: crypto.createHmac('sha256', password).digest('hex')
+                password: passwordHash,
+                isDeleted: false,
+                isUserActive: true,
             },
         });
 
         if (!user) {
-            throw new AppError('Incorrect username and/or password. Please try again!', 400);
+            throw AppError.fromCode(ApiErrorCode.AUTH_INVALID_CREDENTIALS);
         }
 
         const { id, name } = user;
@@ -106,7 +110,7 @@ class AuthService {
 
     async refreshSession(refreshToken: string) {
         if (!refreshToken) {
-            throw new AppError('Refresh token missing.', 401);
+            throw AppError.fromCode(ApiErrorCode.AUTH_SESSION_EXPIRED);
         }
 
         let payload: JwtPayload;
@@ -120,30 +124,34 @@ class AuthService {
                 payload = verify(refreshToken, String(process.env.JWT_SECRET)) as JwtPayload;
                 tokenType = typeof payload.tokenType === 'string' ? payload.tokenType : 'access';
             } catch {
-                throw new AppError('Refresh token invalid or expired.', 401);
+                throw AppError.fromCode(ApiErrorCode.AUTH_SESSION_EXPIRED);
             }
         }
 
         const isAcceptedTokenType = tokenType === 'refresh' || tokenType === 'access' || tokenType === undefined;
 
         if (!isAcceptedTokenType || typeof payload.id !== 'string') {
-            throw new AppError('Refresh token invalid or expired.', 401);
+            throw AppError.fromCode(ApiErrorCode.AUTH_SESSION_EXPIRED);
         }
 
-        const user = await this.userRepository.findOne({ id: payload.id });
+        const user = await this.userRepository.findOne({
+            where: { id: payload.id, isDeleted: false, isUserActive: true },
+        });
 
         if (!user) {
-            throw new AppError('User not found.', 401);
+            throw AppError.fromCode(ApiErrorCode.AUTH_USER_UNAVAILABLE);
         }
 
         return this.buildAuthResponse({ id: user.id, name: user.name, email: user.email });
     }
 
     async getCurrentUser(userId: string): Promise<CurrentUserResponse> {
-        const user = await this.userRepository.findOne({ id: userId });
+        const user = await this.userRepository.findOne({
+            where: { id: userId, isDeleted: false, isUserActive: true },
+        });
 
         if (!user) {
-            throw new AppError('User not found.', 401);
+            throw AppError.fromCode(ApiErrorCode.AUTH_USER_UNAVAILABLE);
         }
 
         return {
@@ -173,10 +181,12 @@ class AuthService {
         const normalizedEmail = typeof email === 'string' ? normalizeEmail(email) : '';
 
         if (!assertUfbaInstitutionalEmail(normalizedEmail)) {
-            throw new AppError('Only UFBA institutional email addresses are allowed.', 400);
+            throw AppError.fromCode(ApiErrorCode.AUTH_INSTITUTIONAL_EMAIL_REQUIRED);
         }
 
-        const user = await this.userRepository.findOne({ email: normalizedEmail });
+        const user = await this.userRepository.findOne({
+            where: { email: normalizedEmail, isDeleted: false, isUserActive: true },
+        });
 
         if (!user) {
             return;
@@ -191,7 +201,7 @@ class AuthService {
         }
         catch (err) {
             console.log(err);
-            throw new AppError('Nao foi possivel enviar o e-mail de recuperacao de senha.', 400);
+            throw AppError.fromCode(ApiErrorCode.AUTH_PASSWORD_RESET_DELIVERY_FAILED);
         }
     }
 
@@ -200,21 +210,21 @@ class AuthService {
         const normalizedPassword = typeof password === 'string' ? password.trim() : '';
 
         if (!normalizedToken || !normalizedPassword) {
-            throw new AppError('Token and password are required.', 400);
+            throw AppError.fromCode(ApiErrorCode.AUTH_PASSWORD_RESET_INPUT_REQUIRED);
         }
 
         const email = resolvePasswordResetEmailFromToken(normalizedToken);
 
         if (!assertUfbaInstitutionalEmail(email)) {
-            throw new AppError('Only UFBA institutional email addresses are allowed.', 400);
+            throw AppError.fromCode(ApiErrorCode.AUTH_INSTITUTIONAL_EMAIL_REQUIRED);
         }
 
         const user = await this.userRepository.findOne({
-            where: { email, isDeleted: false },
+            where: { email, isDeleted: false, isUserActive: true },
         });
 
         if (!user) {
-            throw new AppError('This password reset link is invalid or expired.', 401);
+            throw AppError.fromCode(ApiErrorCode.AUTH_PASSWORD_RESET_LINK_INVALID);
         }
 
         const passwordHash = crypto.createHmac('sha256', normalizedPassword).digest('hex');
@@ -222,7 +232,7 @@ class AuthService {
         await this.userRepository.createQueryBuilder()
             .update(User)
             .set({ password: passwordHash })
-            .where('email = :email', { email })
+            .where('id = :id', { id: user.id })
             .execute();
 
         return { email };

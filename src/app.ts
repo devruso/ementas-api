@@ -8,8 +8,19 @@ import swaggerJsDoc from 'swagger-jsdoc';
 
 import { router } from './routes';
 import { AppError } from './errors/AppError';
+import { API_ERROR_CATALOG, ApiErrorCode } from './errors/ApiErrorCode';
 import { SwaggerOptions } from './configs/swagger.config';
 import { logHandler } from './middlewares/logHandler';
+
+const errorPayload = (code: ApiErrorCode) => {
+    const definition = API_ERROR_CATALOG[code];
+    return {
+        code,
+        message: definition.message,
+        reason: definition.reason,
+        recovery: definition.recovery,
+    };
+};
 
 export const app = express();
 
@@ -20,7 +31,13 @@ app.use(router);
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerJsDoc(SwaggerOptions)));
 app.use((err: Error, request: Request, response: Response, _next: NextFunction) => {
     if(err instanceof AppError){
-        return response.status(err.statusCode).json({ message: err.message });
+        return response.status(err.statusCode).json({
+            code: err.code,
+            message: err.message,
+            reason: err.reason,
+            recovery: err.recovery,
+            details: err.details,
+        });
     }
 
     if (err instanceof multer.MulterError) {
@@ -35,14 +52,11 @@ app.use((err: Error, request: Request, response: Response, _next: NextFunction) 
 
     console.log(err);
     return response.status(500).json({
-        type: 'Generic Error',
-        message: 'Internal Server Error',
-        stack: err.stack,
+        ...errorPayload(ApiErrorCode.INTERNAL_ERROR),
     });
 });
 app.get('*', (req, res) => {
     res.status(404).send({
-        type: 'NotFound',
-        message: 'Route not found.'
+        ...errorPayload(ApiErrorCode.ROUTE_NOT_FOUND),
     });
 });
