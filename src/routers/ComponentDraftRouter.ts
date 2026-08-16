@@ -309,10 +309,16 @@ const componentDraftController = new ComponentDraftController();
 componentDraftRouter.get('/', ensureAuthenticated, componentDraftController.getDrafts);
 
 componentDraftRouter.post(
-	'/import-preview',
-	ensureAuthenticated,
-	uploadDraftImport.single('file'),
-	componentDraftController.importPreview
+    '/import-preview',
+    ensureAuthenticated,
+    uploadDraftImport.single('file'),
+    componentDraftController.importPreview
+);
+
+componentDraftRouter.get(
+    '/:id/publication-context',
+    ensureAuthenticated,
+    componentDraftController.getPublicationContext
 );
 
 /**

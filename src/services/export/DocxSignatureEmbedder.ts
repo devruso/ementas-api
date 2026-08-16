@@ -1,6 +1,8 @@
 const PNG_CONTENT_TYPE = 'image/png';
 const IMAGE_RELATIONSHIP_TYPE = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image';
 const EMU_PER_PIXEL = 9525;
+const MAX_SIGNATURE_WIDTH_PX = 210;
+const MAX_SIGNATURE_HEIGHT_PX = 58;
 
 const DRAWING_MAIN_NAMESPACE = 'http://schemas.openxmlformats.org/drawingml/2006/main';
 const DRAWING_PICTURE_NAMESPACE = 'http://schemas.openxmlformats.org/drawingml/2006/picture';
@@ -42,8 +44,13 @@ export class DocxSignatureEmbedder {
     }
 
     private buildDrawingXml(relationshipId: string, asset: SignatureAsset, docPrId: number) {
-        const widthEmu = Math.round(asset.widthPx * EMU_PER_PIXEL);
-        const heightEmu = Math.round(asset.heightPx * EMU_PER_PIXEL);
+        const scale = Math.min(
+            1,
+            MAX_SIGNATURE_WIDTH_PX / Math.max(asset.widthPx, 1),
+            MAX_SIGNATURE_HEIGHT_PX / Math.max(asset.heightPx, 1)
+        );
+        const widthEmu = Math.round(asset.widthPx * scale * EMU_PER_PIXEL);
+        const heightEmu = Math.round(asset.heightPx * scale * EMU_PER_PIXEL);
         const wp14AnchorId = this.buildWp14Id(docPrId + 17);
         const wp14EditId = this.buildWp14Id(docPrId + 53);
 
@@ -95,6 +102,36 @@ export class DocxSignatureEmbedder {
         return paragraphProperties.replace('</w:pPr>', `<w:jc w:val="${justification}"/></w:pPr>`);
     }
 
+    private withSignatureParagraphControls(paragraphProperties: string, keepNext: boolean) {
+        let updatedProperties = paragraphProperties || '<w:pPr></w:pPr>';
+        const spacingNode = '<w:spacing w:before="0" w:after="0" w:line="120" w:lineRule="atLeast"/>';
+
+        if (/<w:spacing\b[^>]*\/>/.test(updatedProperties)) {
+            updatedProperties = updatedProperties.replace(/<w:spacing\b[^>]*\/>/, spacingNode);
+        } else {
+            updatedProperties = updatedProperties.replace('</w:pPr>', `${spacingNode}</w:pPr>`);
+        }
+
+        if (keepNext && !/<w:keepNext\b[^>]*\/>/.test(updatedProperties)) {
+            updatedProperties = updatedProperties.replace('</w:pPr>', '<w:keepNext/></w:pPr>');
+        }
+
+        if (!/<w:keepLines\b[^>]*\/>/.test(updatedProperties)) {
+            updatedProperties = updatedProperties.replace('</w:pPr>', '<w:keepLines/></w:pPr>');
+        }
+
+        return updatedProperties;
+    }
+
+    private encodeXmlText(value: string) {
+        return value
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&apos;');
+    }
+
     embedSignature(zip: any, paragraphXml: string, approvedBy: string, asset: SignatureAsset) {
         const contentTypesXml = zip.readAsText('[Content_Types].xml');
         const documentRelsPath = 'word/_rels/document.xml.rels';
@@ -104,15 +141,20 @@ export class DocxSignatureEmbedder {
         const paragraphStartTag = paragraphXml.match(/^<w:p\b[^>]*>/)?.[0] || '<w:p>';
         const paragraphProperties = paragraphXml.match(/<w:pPr[\s\S]*?<\/w:pPr>|<w:pPr\s*\/>/)?.[0] || '';
         const drawingXml = this.buildDrawingXml(relationshipId, asset, Number(relationshipId.replace('rId', '')) + 1000);
-        const imageParagraphProperties = this.withJustification(paragraphProperties, 'right');
+        const imageParagraphProperties = this.withSignatureParagraphControls(
+            this.withJustification(paragraphProperties, 'right'),
+            true
+        );
+        const signatureLineParagraphProperties = this.withSignatureParagraphControls(paragraphProperties, true);
+        const encodedApprovedBy = this.encodeXmlText(approvedBy);
         const updatedParagraphXml = [
             paragraphStartTag,
             imageParagraphProperties,
-            `<w:r>${drawingXml}</w:r>`,
+            `<w:r><w:rPr><w:noProof/></w:rPr>${drawingXml}</w:r>`,
             '</w:p>',
             paragraphStartTag,
-            paragraphProperties,
-            `<w:r><w:rPr><w:noProof/></w:rPr><w:t xml:space="preserve">Nome: ${approvedBy} Assinatura: ____________________________________</w:t></w:r>`,
+            signatureLineParagraphProperties,
+            `<w:r><w:rPr><w:noProof/></w:rPr><w:t xml:space="preserve">Nome: ${encodedApprovedBy} Assinatura: ____________________________________</w:t></w:r>`,
             '</w:p>',
         ].join('');
 

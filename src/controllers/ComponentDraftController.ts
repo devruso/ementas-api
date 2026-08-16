@@ -69,6 +69,17 @@ class ComponentDraftController {
         return response.status(200).json(component);
     }
 
+    async getPublicationContext(request: Request, response: Response) {
+        const authenticatedUserId = request.headers.authenticatedUserId as string;
+        const draftService = new ComponentDraftService();
+        const context = await draftService.getPublicationContext(
+            request.params.id,
+            authenticatedUserId
+        );
+
+        return response.status(200).json(context);
+    }
+
     async importPreview(request: Request, response: Response) {
         const documentImportService = new DocumentImportService();
         const preview = await documentImportService.generatePreview(

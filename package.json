@@ -31,7 +31,8 @@
     "docx:generate-validation-samples": "node -r ts-node/register src/scripts/generate-docx-validation-samples.ts",
     "docx:preflight": "node -r ts-node/register src/scripts/docx-preflight.ts",
     "test": "jest --detectOpenHandles --forceExit",
-    "test:coverage": "jest --detectOpenHandles --forceExit --coverage"
+    "test:coverage": "jest --detectOpenHandles --forceExit --coverage",
+    "test:e2e:critical": "jest --detectOpenHandles --forceExit --runInBand --runTestsByPath src/tests/ComponentDocumentFlow.spec.ts src/tests/UserSignatureUpload.spec.ts src/tests/DocxSignatureEmbedder.spec.ts"
   },
   "repository": {
     "type": "git",

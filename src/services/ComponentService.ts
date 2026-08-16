@@ -1,7 +1,7 @@
 import { Brackets, getCustomRepository, Raw, Repository } from 'typeorm';
 import fs from 'fs';
 import path from 'path';
-const AdmZip = require('adm-zip');
+import AdmZip from 'adm-zip';
 import type { GenerateHtmlData } from '../helpers/templates/component';
 import { Component } from '../entities/Component';
 import { ComponentRepository } from '../repositories/ComponentRepository';
@@ -181,13 +181,14 @@ export class ComponentService {
             .replace(/&lt;/g, '<')
             .replace(/&gt;/g, '>')
             .replace(/&quot;/g, '"')
-            .replace(/&apos;/g, "'")
+            .replace(/&apos;/g, '\'')
             .replace(/&amp;/g, '&');
     }
 
     private encodeXmlText(value: string) {
         const sanitized = String(value)
             // Remove caracteres de controle inválidos em XML 1.0.
+            // eslint-disable-next-line no-control-regex
             .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '')
             // Remove pares substitutos inválidos para evitar XML corrompido.
             .replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])/g, '')
@@ -390,6 +391,179 @@ export class ComponentService {
             after: 0,
             line: 200,
             lineRule: 'auto',
+        });
+    }
+
+    private ensureWorkloadTableFixedLayout(tableXml: string) {
+        const layoutNode = '<w:tblLayout w:type="fixed"/>';
+
+        if (/<w:tblLayout\b[^>]*\/>/.test(tableXml)) {
+            return tableXml.replace(/<w:tblLayout\b[^>]*\/>/, layoutNode);
+        }
+
+        if (/<w:tblPr\s*\/>/.test(tableXml)) {
+            return tableXml.replace(/<w:tblPr\s*\/>/, `<w:tblPr>${layoutNode}</w:tblPr>`);
+        }
+
+        if (/<w:tblPr\b[^>]*>/.test(tableXml)) {
+            return tableXml.replace(/<w:tblPr\b[^>]*>/, (node) => `${node}${layoutNode}`);
+        }
+
+        return tableXml.replace(/<w:tbl\b([^>]*)>/, `<w:tbl$1><w:tblPr>${layoutNode}</w:tblPr>`);
+    }
+
+    private ensureWorkloadRowDoesNotSplit(rowXml: string) {
+        if (/<w:cantSplit\b[^>]*\/>/.test(rowXml)) {
+            return rowXml;
+        }
+
+        if (/<w:trPr\s*\/>/.test(rowXml)) {
+            return rowXml.replace(/<w:trPr\s*\/>/, '<w:trPr><w:cantSplit/></w:trPr>');
+        }
+
+        if (/<w:trPr\b[^>]*>/.test(rowXml)) {
+            return rowXml.replace(/<w:trPr\b[^>]*>/, (node) => `${node}<w:cantSplit/>`);
+        }
+
+        return rowXml.replace(/<w:tr\b([^>]*)>/, '<w:tr$1><w:trPr><w:cantSplit/></w:trPr>');
+    }
+
+    private ensureWorkloadCellDoesNotWrap(cellXml: string) {
+        const compactCellProperties = [
+            '<w:noWrap/>',
+            '<w:tcMar>',
+            '<w:top w:w="0" w:type="dxa"/>',
+            '<w:left w:w="0" w:type="dxa"/>',
+            '<w:bottom w:w="0" w:type="dxa"/>',
+            '<w:right w:w="0" w:type="dxa"/>',
+            '</w:tcMar>',
+        ].join('');
+        const updatedCell = cellXml
+            .replace(/<w:noWrap\b[^>]*\/>/g, '')
+            .replace(/<w:tcMar\b[\s\S]*?<\/w:tcMar>/g, '');
+
+        if (/<w:tcPr\s*\/>/.test(updatedCell)) {
+            return updatedCell.replace(/<w:tcPr\s*\/>/, `<w:tcPr>${compactCellProperties}</w:tcPr>`);
+        }
+
+        if (/<\/w:tcBorders>/.test(updatedCell)) {
+            return updatedCell.replace(/<\/w:tcBorders>/, `</w:tcBorders>${compactCellProperties}`);
+        }
+
+        if (/<w:tcW\b[^>]*\/>/.test(updatedCell)) {
+            return updatedCell.replace(/<w:tcW\b[^>]*\/>/, (node) => `${node}${compactCellProperties}`);
+        }
+
+        if (/<w:tcPr\b[^>]*>/.test(updatedCell)) {
+            return updatedCell.replace(/<w:tcPr\b[^>]*>/, (node) => `${node}${compactCellProperties}`);
+        }
+
+        return updatedCell.replace(/<w:tc\b([^>]*)>/, `<w:tc$1><w:tcPr>${compactCellProperties}</w:tcPr>`);
+    }
+
+    private replaceWorkloadCellValue(cellXml: string, value: string) {
+        const paragraph = cellXml.match(/<w:p\b[\s\S]*?<\/w:p>/)?.[0];
+
+        if (!paragraph) {
+            return this.ensureWorkloadCellDoesNotWrap(cellXml);
+        }
+
+        const updatedParagraph = this.normalizeWorkloadCellParagraph(
+            this.replaceParagraphText(paragraph, value)
+        );
+
+        return this.ensureWorkloadCellDoesNotWrap(cellXml.replace(paragraph, updatedParagraph));
+    }
+
+    private updateWorkloadRow(
+        rowXml: string,
+        values: Map<number, string>,
+        noWrapIndexes: Set<number>
+    ) {
+        let cellIndex = 0;
+        const updatedRow = rowXml.replace(/<w:tc\b[\s\S]*?<\/w:tc>/g, (cellXml) => {
+            const currentIndex = cellIndex;
+            cellIndex += 1;
+
+            if (values.has(currentIndex)) {
+                return this.replaceWorkloadCellValue(cellXml, values.get(currentIndex) as string);
+            }
+
+            if (noWrapIndexes.has(currentIndex)) {
+                return this.ensureWorkloadCellDoesNotWrap(cellXml);
+            }
+
+            return cellXml;
+        });
+
+        return this.ensureWorkloadRowDoesNotSplit(updatedRow);
+    }
+
+    private replaceWorkloadTableValues(
+        documentXml: string,
+        studentValues: string[],
+        teacherValues: string[],
+        moduleValues: string[]
+    ) {
+        const innermostTablePattern = /<w:tbl\b(?:(?!<w:tbl\b)[\s\S])*?<\/w:tbl>/g;
+
+        return documentXml.replace(innermostTablePattern, (tableXml) => {
+            const tableText = Array.from(tableXml.matchAll(/<w:t(?=[\s>])[^>]*>([\s\S]*?)<\/w:t>/g))
+                .map((match) => this.decodeXmlText(match[1]))
+                .join(' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+            const isStudentTable = tableText.includes('CARGA HORÁRIA (estudante)');
+            const isTeacherTable = tableText.includes('CARGA HORÁRIA (docente/turma)');
+
+            if (!isStudentTable && !isTeacherTable) {
+                return tableXml;
+            }
+
+            const rows = Array.from(tableXml.matchAll(/<w:tr\b[\s\S]*?<\/w:tr>/g)).map((match) => match[0]);
+
+            if (rows.length < 3) {
+                throw new AppError('Estrutura de carga horária inválida no template DOCX.', 500);
+            }
+
+            if (isStudentTable) {
+                const workloadColumns = new Set([ 0, 1, 2, 3, 4, 5, 6 ]);
+                rows[1] = this.updateWorkloadRow(rows[1], new Map(), workloadColumns);
+                rows[2] = this.updateWorkloadRow(
+                    rows[2],
+                    new Map(studentValues.map((value, index) => [ index, value ])),
+                    workloadColumns
+                );
+                rows[2] = this.updateWorkloadRow(rows[2], new Map([ [ 7, '' ] ]), new Set([ 7 ]));
+            } else {
+                const teacherColumns = new Set([ 0, 1, 2, 3, 4, 5, 6 ]);
+                const moduleColumns = new Set([ 8, 9, 10, 11, 12, 13 ]);
+                const allWorkloadColumns = new Set([ ...teacherColumns, ...moduleColumns ]);
+                rows[1] = this.updateWorkloadRow(
+                    rows[1],
+                    new Map([ [ 14, '' ], [ 15, '' ] ]),
+                    new Set([ ...allWorkloadColumns, 14, 15 ])
+                );
+                rows[2] = this.updateWorkloadRow(
+                    rows[2],
+                    new Map([
+                        ...teacherValues.map((value, index) => [ index, value ] as [number, string]),
+                        ...moduleValues.map((value, index) => [ index + 8, value ] as [number, string]),
+                        [ 7, '' ],
+                        [ 14, '' ],
+                    ]),
+                    new Set([ ...allWorkloadColumns, 7, 14 ])
+                );
+            }
+
+            let rowCursor = 0;
+            const updatedTable = tableXml.replace(/<w:tr\b[\s\S]*?<\/w:tr>/g, () => {
+                const row = rows[rowCursor];
+                rowCursor += 1;
+                return row;
+            });
+
+            return this.ensureWorkloadTableFixedLayout(updatedTable);
         });
     }
 
@@ -753,7 +927,9 @@ export class ComponentService {
 
             const prereqValueIndex = findPrereqTarget(
                 prereqHeaderIndex,
-                teacherWorkloadStart > prereqHeaderIndex ? teacherWorkloadStart : (disciplinaIndex > 0 ? disciplinaIndex : workloadEnd)
+                teacherWorkloadStart > prereqHeaderIndex
+                    ? teacherWorkloadStart
+                    : (disciplinaIndex > 0 ? disciplinaIndex : workloadEnd)
             );
 
             if (modalityValueIndex >= 0) {
@@ -836,91 +1012,6 @@ export class ComponentService {
             return values;
         };
 
-        if (studentWorkloadStart >= 0) {
-            const teacherWorkloadStart = indexOfExact('CARGA HORÁRIA (docente/turma)');
-            const textualSectionStart = indexOfExact('EMENTA');
-            const workloadVisualEnd = textualSectionStart > studentWorkloadStart ? textualSectionStart : texts.length;
-            for (let index = studentWorkloadStart; index < workloadVisualEnd; index += 1) {
-                updatedParagraphs[index] = this.stripParagraphNumbering(updatedParagraphs[index]);
-            }
-
-            const isWorkloadCellCandidate = (text: string) => text === '' || /^\d+$/.test(text);
-
-            const findNumericRunStart = (startIndex: number, endExclusive: number, size: number) => {
-                for (let index = startIndex + 1; index <= endExclusive - size; index += 1) {
-                    let matches = true;
-
-                    for (let offset = 0; offset < size; offset += 1) {
-                        if (!isWorkloadCellCandidate(texts[index + offset])) {
-                            matches = false;
-                            break;
-                        }
-                    }
-
-                    if (matches) {
-                        return index;
-                    }
-                }
-
-                return -1;
-            };
-
-            const totalHeaderIndexes = texts
-                .map((text, index) => ({ text, index }))
-                .filter((item) => normalizeHeading(item.text) === 'TOTAL')
-                .map((item) => item.index);
-
-            const studentTotalHeaderIndex = totalHeaderIndexes[0] ?? -1;
-            const teacherTotalHeaderIndex = totalHeaderIndexes[1] ?? -1;
-
-            const firstStudentNumericIndex = findNumericRunStart(
-                studentTotalHeaderIndex > 0 ? studentTotalHeaderIndex : studentWorkloadStart,
-                teacherWorkloadStart > 0 ? teacherWorkloadStart : workloadVisualEnd,
-                7
-            );
-
-            if (firstStudentNumericIndex > 0) {
-                const studentValues = buildWorkloadVector(data.workload?.student);
-                studentValues.forEach((value, offset) => {
-                    const targetIndex = firstStudentNumericIndex + offset;
-                    replaceIndex(targetIndex, value);
-                    updatedParagraphs[targetIndex] = this.normalizeWorkloadCellParagraph(updatedParagraphs[targetIndex]);
-                });
-
-                const teacherNumericStart = findNumericRunStart(
-                    teacherTotalHeaderIndex > 0 ? teacherTotalHeaderIndex : firstStudentNumericIndex + 6,
-                    workloadVisualEnd,
-                    7
-                );
-
-                const teacherValues = buildWorkloadVector(data.workload?.professor);
-                teacherValues.forEach((value, offset) => {
-                    const targetIndex = teacherNumericStart > 0 ? teacherNumericStart + offset : firstStudentNumericIndex + 34 + offset;
-                    replaceIndex(targetIndex, value);
-                    updatedParagraphs[targetIndex] = this.normalizeWorkloadCellParagraph(updatedParagraphs[targetIndex]);
-                });
-
-                const moduleNumericStart = findNumericRunStart(
-                    teacherNumericStart > 0 ? teacherNumericStart + 7 : firstStudentNumericIndex + 41,
-                    workloadVisualEnd,
-                    6
-                );
-
-                const moduleValues = buildWorkloadVector(data.workload?.module, { includeTotal: false });
-                moduleValues.forEach((value, offset) => {
-                    const targetIndex = moduleNumericStart > 0 ? moduleNumericStart + offset : firstStudentNumericIndex + 41 + offset;
-                    replaceIndex(targetIndex, value);
-                    updatedParagraphs[targetIndex] = this.normalizeWorkloadCellParagraph(updatedParagraphs[targetIndex]);
-                });
-
-                // O bloco de módulo no template vigente tem 6 colunas (sem TOTAL).
-                const moduleTrailingIndex = (moduleNumericStart > 0 ? moduleNumericStart : firstStudentNumericIndex + 41) + 6;
-                if (moduleTrailingIndex < workloadVisualEnd) {
-                    clearIndex(moduleTrailingIndex);
-                }
-            }
-        }
-
         // Assinatura docente no mesmo local do template oficial.
         const approvedBy = this.normalizeSectionText(data.approval?.approvedBy, 'Não informado');
         const signatureLineIndex = texts.findIndex(
@@ -986,7 +1077,14 @@ export class ComponentService {
             return nextParagraph;
         });
 
-        zip.updateFile('word/document.xml', Buffer.from(nextDocumentXml, 'utf-8'));
+        const workloadDocumentXml = this.replaceWorkloadTableValues(
+            nextDocumentXml,
+            buildWorkloadVector(data.workload?.student),
+            buildWorkloadVector(data.workload?.professor),
+            buildWorkloadVector(data.workload?.module, { includeTotal: false })
+        );
+
+        zip.updateFile('word/document.xml', Buffer.from(workloadDocumentXml, 'utf-8'));
 
         return zip.toBuffer();
     }
@@ -1079,8 +1177,8 @@ export class ComponentService {
 
         if (normalizedDepartment) {
             const normalizedDepartmentColumn = this.accentInsensitiveSql('components.department');
-            const normalizedDepartmentRefNameColumn = this.accentInsensitiveSql("COALESCE(departmentRef.name, '')");
-            const normalizedDepartmentRefCodeColumn = this.accentInsensitiveSql("COALESCE(departmentRef.code, '')");
+            const normalizedDepartmentRefNameColumn = this.accentInsensitiveSql('COALESCE(departmentRef.name, \'\')');
+            const normalizedDepartmentRefCodeColumn = this.accentInsensitiveSql('COALESCE(departmentRef.code, \'\')');
 
             if (this.isUuid(normalizedDepartment)) {
                 query.andWhere('components.departmentId = :departmentId', {
@@ -1434,7 +1532,18 @@ export class ComponentService {
             exportMode: format === 'pdf' ? 'pdf' : 'docx',
         };
 
-        const signatureAsset = await this.signatureAssetService.loadForDocument(latestApprovalLog?.user);
+        let signatureAsset: ProcessedSignatureImage | null = null;
+
+        try {
+            signatureAsset = await this.signatureAssetService.loadForDocument(latestApprovalLog?.user);
+        } catch (error) {
+            console.warn('[component-export] visual signature unavailable; exporting without image', {
+                componentId: component.id,
+                approverId: latestApprovalLog?.user?.id,
+                reason: error instanceof Error ? error.message : String(error),
+            });
+        }
+
         const templateDocx = this.fillDocxTemplateFromBase(data, signatureAsset);
 
         if (format === 'doc' || format === 'docx') {

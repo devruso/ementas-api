@@ -1,4 +1,4 @@
-const AdmZip = require('adm-zip');
+import AdmZip from 'adm-zip';
 
 import { DocxSignatureEmbedder } from '../services/export/DocxSignatureEmbedder';
 
@@ -19,7 +19,12 @@ describe('DocxSignatureEmbedder', () => {
         expect(updatedParagraph.indexOf('<w:drawing>')).toBeLessThan(updatedParagraph.indexOf('Nome: Prof. Teste Assinatura:'));
         expect(updatedParagraph).toContain('Nome: Prof. Teste Assinatura: ____________________________________');
         expect(updatedParagraph).toContain('<w:jc w:val="right"/>');
+        expect(updatedParagraph).toContain('<w:keepNext/>');
+        expect(updatedParagraph).toContain('<w:keepLines/>');
         expect(updatedParagraph).toContain('<w:drawing>');
+        const extent = updatedParagraph.match(/<wp:extent cx="(\d+)" cy="(\d+)"\/>/);
+        expect(Number(extent?.[1])).toBeLessThanOrEqual(210 * 9525);
+        expect(Number(extent?.[2])).toBeLessThanOrEqual(58 * 9525);
         expect(zip.readAsText('[Content_Types].xml')).toContain('Extension="png"');
         expect(zip.readAsText('word/_rels/document.xml.rels')).toContain('relationships/image');
         expect(zip.getEntry('word/media/signature-rId1.png')).toBeTruthy();
@@ -46,7 +51,7 @@ describe('DocxSignatureEmbedder', () => {
         });
 
         expect(updatedParagraph).toContain('<w:p w14:paraId="AAAA1111" w14:textId="BBBB2222" w:rsidR="00000001">');
-        expect(updatedParagraph).toContain('<w:pPr><w:jc w:val="both"/></w:pPr>');
+        expect(updatedParagraph).toContain('<w:jc w:val="both"/>');
         expect(updatedParagraph).toContain('wp14:anchorId="');
         expect(updatedParagraph).toContain('wp14:editId="');
         expect(updatedParagraph).toContain('xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"');

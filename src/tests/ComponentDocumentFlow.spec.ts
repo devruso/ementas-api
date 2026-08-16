@@ -2,8 +2,9 @@ import path from 'path';
 import zlib from 'zlib';
 import supertest from 'supertest';
 import mammoth from 'mammoth';
+import { getConnection } from 'typeorm';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
-const AdmZip = require('adm-zip');
+import AdmZip from 'adm-zip';
 import { UserController } from '../controllers/UserController';
 import { UserInviteService } from '../services/UserInviteService';
 import connection from './connection';
@@ -74,13 +75,13 @@ const pngChunk = (chunkType: string, chunkData: Buffer) => {
     size.writeUInt32BE(chunkData.length, 0);
 
     const crc = Buffer.alloc(4);
-    crc.writeUInt32BE(crc32(Buffer.concat([typeBuffer, chunkData])), 0);
+    crc.writeUInt32BE(crc32(Buffer.concat([ typeBuffer, chunkData ])), 0);
 
-    return Buffer.concat([size, typeBuffer, chunkData, crc]);
+    return Buffer.concat([ size, typeBuffer, chunkData, crc ]);
 };
 
 const createValidSignaturePng = (width: number, height: number): Buffer => {
-    const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    const pngSignature = Buffer.from([ 0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a ]);
 
     const ihdr = Buffer.alloc(13);
     ihdr.writeUInt32BE(width, 0);
@@ -154,10 +155,16 @@ describe('Component document flow', () => {
 
     beforeEach(async () => {
         token = await createUserAndLogin();
-        await supertest(app)
-            .put('/api/users/update/signature')
+        const signatureResponse = await supertest(app)
+            .put('/api/users/update/signature/file')
             .set('Authorization', `Bearer ${token}`)
-            .send({ signature: 'Assina123!' });
+            .field('signature', 'Assina123!')
+            .attach('signatureFile', createValidSignaturePng(420, 120), {
+                filename: 'assinatura-e2e.png',
+                contentType: 'image/png',
+            });
+
+        expect(signatureResponse.statusCode).toBe(200);
     });
 
     afterEach(async () => {
@@ -171,6 +178,118 @@ describe('Component document flow', () => {
 
         expect(response.statusCode).toBe(400);
         expect(response.body.message).toBe('Nenhum arquivo foi enviado para importação.');
+    });
+
+    it('should publish without a visual signature and require the login password', async () => {
+        const createResponse = await supertest(app)
+            .post('/api/components')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                code: 'NS01',
+                name: 'Disciplina sem assinatura visual',
+                department: 'Departamento Teste',
+                program: 'Programa de teste',
+                semester: '2026.1',
+                prerequeriments: 'Nenhum',
+                methodology: 'Aulas expositivas',
+                objective: 'Validar bloqueio sem assinatura visual',
+                syllabus: 'Ementa de teste',
+                bibliography: 'SILVA, Joao. Referencia de teste. 2020.',
+                modality: 'Presencial',
+                learningAssessment: 'Provas e trabalhos',
+            });
+
+        expect(createResponse.statusCode).toBe(201);
+
+        const componentResponse = await supertest(app)
+            .get('/api/components/NS01')
+            .set('Authorization', `Bearer ${token}`);
+
+        await getConnection().query(`
+            UPDATE users
+            SET signature_file_key = NULL,
+                signature_file_provider = NULL,
+                signature_file_content_type = NULL,
+                signature_file_size = NULL,
+                signature_file_hash = NULL
+            WHERE email = $1
+        `, [ 'test@ufba.br' ]);
+
+        const publicationContextResponse = await supertest(app)
+            .get(`/api/component-drafts/${componentResponse.body.draft.id}/publication-context`)
+            .set('Authorization', `Bearer ${token}`);
+
+        expect(publicationContextResponse.statusCode).toBe(200);
+        expect(publicationContextResponse.body.approverName).toBe('Test User');
+        expect(publicationContextResponse.body.hasVisualSignature).toBe(false);
+        expect(publicationContextResponse.body.agreementNumber).toMatch(/^ATA-\d{4}-\d{3}$/);
+
+        const wrongPasswordResponse = await supertest(app)
+            .post(`/api/component-drafts/${componentResponse.body.draft.id}/approve`)
+            .set('Authorization', `Bearer ${token}`)
+            .send({ password: 'senha-incorreta' });
+
+        expect(wrongPasswordResponse.statusCode).toBe(401);
+        expect(wrongPasswordResponse.body.code).toBe('PUBLICATION_PASSWORD_INVALID');
+
+        const approveResponse = await supertest(app)
+            .post(`/api/component-drafts/${componentResponse.body.draft.id}/approve`)
+            .set('Authorization', `Bearer ${token}`)
+            .send({ password: 'test123' });
+
+        expect(approveResponse.statusCode).toBe(200);
+    });
+
+    it('should publish and export without an image when the persisted signature object is unavailable', async () => {
+        const createResponse = await supertest(app)
+            .post('/api/components')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                code: 'MS01',
+                name: 'Disciplina com objeto de assinatura ausente',
+                department: 'Departamento Teste',
+                program: 'Programa de teste',
+                semester: '2026.1',
+                prerequeriments: 'Nenhum',
+                methodology: 'Aulas expositivas',
+                objective: 'Validar bloqueio com objeto ausente',
+                syllabus: 'Ementa de teste',
+                bibliography: 'SILVA, Joao. Referencia de teste. 2020.',
+                modality: 'Presencial',
+                learningAssessment: 'Provas e trabalhos',
+            });
+
+        expect(createResponse.statusCode).toBe(201);
+
+        const componentResponse = await supertest(app)
+            .get('/api/components/MS01')
+            .set('Authorization', `Bearer ${token}`);
+
+        await getConnection().query(`
+            UPDATE users
+            SET signature_file_key = $1
+            WHERE email = $2
+        `, [ 'signatures/missing-object.png', 'test@ufba.br' ]);
+
+        const approveResponse = await supertest(app)
+            .post(`/api/component-drafts/${componentResponse.body.draft.id}/approve`)
+            .set('Authorization', `Bearer ${token}`)
+            .send({ password: 'test123' });
+
+        expect(approveResponse.statusCode).toBe(200);
+
+        const docExportResponse = await supertest(app)
+            .get(`/api/components/${componentResponse.body.id}/export?format=docx`)
+            .buffer(true)
+            .parse(binaryParser as never)
+            .set('Authorization', `Bearer ${token}`);
+
+        expect(docExportResponse.statusCode).toBe(200);
+        const exportedDocZip = new AdmZip(docExportResponse.body as Buffer);
+        const hasEmbeddedTeacherSignatureAsset = exportedDocZip
+            .getEntries()
+            .some((entry: { entryName: string }) => /^word\/media\/signature-rId\d+\.png$/.test(entry.entryName));
+        expect(hasEmbeddedTeacherSignatureAsset).toBe(false);
     });
 
     it('should not be able to preview a draft import with unsupported file type', async () => {
@@ -465,14 +584,19 @@ describe('Component document flow', () => {
 
         expect(updateDraftResponse.statusCode).toBe(200);
 
+        const publicationContextResponse = await supertest(app)
+            .get(`/api/component-drafts/${componentResponse.body.draft.id}/publication-context`)
+            .set('Authorization', `Bearer ${token}`);
+
+        expect(publicationContextResponse.statusCode).toBe(200);
+        const expectedAgreementNumber = publicationContextResponse.body.agreementNumber as string;
+        const expectedAgreementDate = new Date(publicationContextResponse.body.agreementDate as string);
+        const expectedVersionCode = `${String(expectedAgreementDate.getUTCDate()).padStart(2, '0')}${String(expectedAgreementDate.getUTCMonth() + 1).padStart(2, '0')}${expectedAgreementDate.getUTCFullYear()}${expectedAgreementNumber}`;
+
         const approveResponse = await supertest(app)
             .post(`/api/component-drafts/${componentResponse.body.draft.id}/approve`)
             .set('Authorization', `Bearer ${token}`)
-            .send({
-                agreementNumber: '12345',
-                agreementDate: '2026-05-01T12:00:00.000Z',
-                signature: 'Assina123!',
-            });
+            .send({ password: 'test123' });
 
         expect(approveResponse.statusCode).toBe(200);
 
@@ -491,8 +615,8 @@ describe('Component document flow', () => {
                     description?: string;
                 }) =>
                     log.type === 'approval'
-                    && log.agreementNumber === '12345'
-                    && log.versionCode === '0105202612345'
+                    && log.agreementNumber === expectedAgreementNumber
+                    && log.versionCode === expectedVersionCode
                     && log.officialProgram === 'Programa Teste Atualizado'
             )
         ).toBe(true);
@@ -552,6 +676,7 @@ describe('Component document flow', () => {
 
         const exportedDocZip = new AdmZip(docExportResponse.body as Buffer);
         const documentXml = exportedDocZip.readAsText('word/document.xml');
+        // eslint-disable-next-line no-control-regex
         const invalidXmlControlChars = documentXml.match(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g) ?? [];
         const invalidTabsTextPayload = /<w:tabs>[^<]/.test(documentXml);
 
@@ -589,7 +714,7 @@ describe('Component document flow', () => {
             .replace(/&lt;/g, '<')
             .replace(/&gt;/g, '>')
             .replace(/&quot;/g, '"')
-            .replace(/&apos;/g, "'")
+            .replace(/&apos;/g, '\'')
             .replace(/&amp;/g, '&');
         const paragraphTexts = paragraphNodes.map((paragraph) => Array
             .from(paragraph.matchAll(/<w:t(?=[\s>])[^>]*>([\s\S]*?)<\/w:t>/g) as IterableIterator<RegExpMatchArray>)
@@ -620,7 +745,7 @@ describe('Component document flow', () => {
                 return normalized.includes('DISCIPLINA')
                     && (normalized.includes('TEORIC') || normalized.includes('PRAT'));
             });
-        expect(['Presencial', 'Disciplina Teórico /Prática']).toContain(modalityValue);
+        expect([ 'Presencial', 'Disciplina Teórico /Prática' ]).toContain(modalityValue);
 
         const modalityArtifacts = paragraphTexts
             .slice(modalityHeaderIndex + 1, modalitySearchEndIndex)
@@ -631,34 +756,47 @@ describe('Component document flow', () => {
             });
         expect(modalityArtifacts).toHaveLength(1);
 
-        const isNumericOrEmpty = (value: string) => value === '' || /^\d+$/.test(value);
-        const findNumericRun = (start: number, end: number, size: number) => {
-            for (let index = start + 1; index <= end - size; index += 1) {
-                const window = paragraphTexts.slice(index, index + size);
-                if (window.every((item) => isNumericOrEmpty(item))) {
-                    return { index, values: window };
-                }
-            }
-            return { index: -1, values: [] as string[] };
-        };
+        const workloadTables = Array.from(
+            documentXml.matchAll(/<w:tbl\b(?:(?!<w:tbl\b)[\s\S])*?<\/w:tbl>/g) as IterableIterator<RegExpMatchArray>
+        ).map((match) => match[0]);
+        const getNodeText = (nodeXml: string) => Array
+            .from(nodeXml.matchAll(/<w:t(?=[\s>])[^>]*>([\s\S]*?)<\/w:t>/g) as IterableIterator<RegExpMatchArray>)
+            .map((token) => decodeXml(token[1]))
+            .join('')
+            .replace(/\s+/g, ' ')
+            .trim();
+        const getRows = (tableXml: string) => Array
+            .from(tableXml.matchAll(/<w:tr\b[\s\S]*?<\/w:tr>/g) as IterableIterator<RegExpMatchArray>)
+            .map((match) => match[0]);
+        const getCells = (rowXml: string) => Array
+            .from(rowXml.matchAll(/<w:tc\b[\s\S]*?<\/w:tc>/g) as IterableIterator<RegExpMatchArray>)
+            .map((match) => match[0]);
+        const findWorkloadTable = (heading: string) => workloadTables.find((table) => getNodeText(table).includes(heading));
 
-        const studentHeaderIndex = findExactIndex('CARGA HORÁRIA (estudante)');
-        const teacherHeaderIndex = findExactIndex('CARGA HORÁRIA (docente/turma)');
-        const ementaHeaderIndex = findExactIndex('EMENTA');
+        const studentTable = findWorkloadTable('CARGA HORÁRIA (estudante)');
+        const teacherTable = findWorkloadTable('CARGA HORÁRIA (docente/turma)');
+        expect(studentTable).toBeDefined();
+        expect(teacherTable).toBeDefined();
+        expect(studentTable).toContain('<w:tblLayout w:type="fixed"/>');
+        expect(teacherTable).toContain('<w:tblLayout w:type="fixed"/>');
 
-        const studentRun = findNumericRun(studentHeaderIndex, teacherHeaderIndex, 7);
-        expect(studentRun.index).toBeGreaterThan(-1);
-        expect(studentRun.values).toEqual(['0', '0', '0', '0', '0', '60', '60']);
+        const studentRows = getRows(studentTable as string);
+        const teacherRows = getRows(teacherTable as string);
+        const studentHeaderCells = getCells(studentRows[1]);
+        const studentValueCells = getCells(studentRows[2]);
+        const teacherHeaderCells = getCells(teacherRows[1]);
+        const teacherValueCells = getCells(teacherRows[2]);
 
-        const teacherRun = findNumericRun(teacherHeaderIndex, ementaHeaderIndex, 7);
-        expect(teacherRun.index).toBeGreaterThan(-1);
-        expect(teacherRun.values).toEqual(['0', '0', '0', '0', '0', '0', '0']);
-
-        const moduleRun = findNumericRun(teacherRun.index + 6, ementaHeaderIndex, 6);
-        expect(moduleRun.index).toBeGreaterThan(-1);
-        expect(moduleRun.values).toHaveLength(6);
-        expect(moduleRun.values[0] === '' || moduleRun.values[0] === '0').toBe(true);
-        expect(moduleRun.values.slice(1)).toEqual(['0', '0', '0', '0', '0']);
+        expect(studentHeaderCells.slice(0, 7).every((cell) => cell.includes('<w:noWrap/>'))).toBe(true);
+        expect(teacherHeaderCells.slice(0, 7).every((cell) => cell.includes('<w:noWrap/>'))).toBe(true);
+        expect(teacherHeaderCells.slice(8, 14).every((cell) => cell.includes('<w:noWrap/>'))).toBe(true);
+        expect(getNodeText(teacherHeaderCells[14] || '')).toBe('');
+        expect(getNodeText(teacherHeaderCells[15] || '')).toBe('');
+        expect(studentValueCells.slice(0, 7).map(getNodeText)).toEqual([ '0', '0', '0', '0', '0', '60', '60' ]);
+        expect(teacherValueCells.slice(0, 7).map(getNodeText)).toEqual([ '0', '0', '0', '0', '0', '0', '0' ]);
+        expect(teacherValueCells[7] && getNodeText(teacherValueCells[7])).toBe('');
+        expect(teacherValueCells.slice(8, 14).map(getNodeText)).toEqual([ '0', '0', '0', '0', '0', '0' ]);
+        expect(teacherValueCells[14] && getNodeText(teacherValueCells[14])).toBe('');
 
         const mammothExtract = await mammoth.extractRawText({ buffer: docExportResponse.body as Buffer });
 
@@ -698,11 +836,7 @@ describe('Component document flow', () => {
         const approveResponse = await supertest(app)
             .post(`/api/component-drafts/${componentResponse.body.draft.id}/approve`)
             .set('Authorization', `Bearer ${token}`)
-            .send({
-                agreementNumber: '67890',
-                agreementDate: '2026-05-10T12:00:00.000Z',
-                signature: 'Assina123!',
-            });
+            .send({ password: 'test123' });
 
         expect(approveResponse.statusCode).toBe(200);
 
@@ -741,7 +875,7 @@ describe('Component document flow', () => {
         expect(hasEmbeddedTeacherSignatureAsset).toBe(true);
     });
 
-    it('should not allow publishing two different components with the same agreement number', async () => {
+    it('should generate unique sequential agreement numbers for consecutive publications', async () => {
         const createFirstResponse = await supertest(app)
             .post('/api/components')
             .set('Content-Type', 'application/json')
@@ -797,24 +931,28 @@ describe('Component document flow', () => {
         const firstApproveResponse = await supertest(app)
             .post(`/api/component-drafts/${firstComponentResponse.body.draft.id}/approve`)
             .set('Authorization', `Bearer ${token}`)
-            .send({
-                agreementNumber: 'ATA-999',
-                agreementDate: '2026-05-01T12:00:00.000Z',
-                signature: 'Assina123!',
-            });
+            .send({ password: 'test123' });
 
         expect(firstApproveResponse.statusCode).toBe(200);
 
         const secondApproveResponse = await supertest(app)
             .post(`/api/component-drafts/${secondComponentResponse.body.draft.id}/approve`)
             .set('Authorization', `Bearer ${token}`)
-            .send({
-                agreementNumber: 'ATA-999',
-                agreementDate: '2026-05-02T12:00:00.000Z',
-                signature: 'Assina123!',
-            });
+            .send({ password: 'test123' });
 
-        expect(secondApproveResponse.statusCode).toBe(409);
-        expect(secondApproveResponse.body.message).toBe('Número de ATA já utilizado em outra publicação oficial. Informe uma ATA/referência diferente.');
+        expect(secondApproveResponse.statusCode).toBe(200);
+
+        const [ firstPublished, secondPublished ] = await Promise.all([
+            supertest(app).get('/api/components/ATA001').set('Authorization', `Bearer ${token}`),
+            supertest(app).get('/api/components/ATA002').set('Authorization', `Bearer ${token}`),
+        ]);
+        const firstAgreement = firstPublished.body.logs.find((log: { type: string }) => log.type === 'approval').agreementNumber as string;
+        const secondAgreement = secondPublished.body.logs.find((log: { type: string }) => log.type === 'approval').agreementNumber as string;
+        const firstSequence = Number(firstAgreement.split('-').at(-1));
+        const secondSequence = Number(secondAgreement.split('-').at(-1));
+
+        expect(firstAgreement).toMatch(/^ATA-\d{4}-\d{3}$/);
+        expect(secondAgreement).toMatch(/^ATA-\d{4}-\d{3}$/);
+        expect(secondSequence).toBe(firstSequence + 1);
     });
 });

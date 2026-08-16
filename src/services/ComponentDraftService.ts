@@ -24,6 +24,7 @@ import {
     splitBibliographySections,
 } from '../helpers/referenceSections';
 import { DepartmentResolutionService } from './DepartmentResolutionService';
+import { ApiErrorCode } from '../errors/ApiErrorCode';
 
 export class ComponentDraftService {
 
@@ -63,6 +64,78 @@ export class ComponentDraftService {
         this.userRepository = getCustomRepository(UserRepository);
         this.workloadService = new WorkloadService();
         this.departmentResolutionService = new DepartmentResolutionService();
+    }
+
+    private getAutomaticAgreementDate(now = new Date()) {
+        const timeZone = String(process.env.APP_TIME_ZONE || 'America/Bahia').trim() || 'America/Bahia';
+        const parts = new Intl.DateTimeFormat('en-US', {
+            timeZone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+        }).formatToParts(now);
+        const readPart = (type: Intl.DateTimeFormatPartTypes) => Number(
+            parts.find((part) => part.type === type)?.value
+        );
+
+        return new Date(Date.UTC(readPart('year'), readPart('month') - 1, readPart('day'), 12, 0, 0));
+    }
+
+    private async getNextAgreementNumber(
+        agreementDate: Date,
+        repository: Repository<ComponentLog> = this.componentLogRepository
+    ) {
+        const year = String(agreementDate.getUTCFullYear());
+        const prefix = `ATA-${year}-`;
+        const pattern = new RegExp(`^${prefix}(\\d+)$`, 'i');
+        const approvalLogs = await repository.find({
+            where: {
+                type: ComponentLogType.APPROVAL,
+                agreementNumber: Raw(
+                    (alias) => `UPPER(BTRIM(${alias})) LIKE :agreementPrefix`,
+                    { agreementPrefix: `${prefix}%` }
+                ),
+            },
+        });
+        const maxSequence = approvalLogs
+            .map((log) => String(log.agreementNumber || '').trim().match(pattern)?.[1])
+            .filter((value): value is string => Boolean(value))
+            .map(Number)
+            .filter((value) => Number.isInteger(value) && value > 0)
+            .reduce((maximum, current) => Math.max(maximum, current), 0);
+
+        return `${prefix}${String(maxSequence + 1).padStart(3, '0')}`;
+    }
+
+    async getPublicationContext(draftId: string, userId: string) {
+        const [ draft, approver ] = await Promise.all([
+            this.componentDraftRepository.findOne({ where: { id: draftId } }),
+            this.userRepository.findOne({
+                where: { id: userId, isDeleted: false, isUserActive: true },
+            }),
+        ]);
+
+        if (!draft) {
+            throw AppError.fromCode(ApiErrorCode.DRAFT_NOT_FOUND);
+        }
+
+        if (!approver) {
+            throw AppError.fromCode(ApiErrorCode.AUTH_USER_UNAVAILABLE);
+        }
+
+        const agreementDate = this.getAutomaticAgreementDate();
+
+        return {
+            agreementDate: agreementDate.toISOString(),
+            agreementNumber: await this.getNextAgreementNumber(agreementDate),
+            approverName: approver.name,
+            hasVisualSignature: Boolean(
+                approver.signatureFileKey
+                && approver.signatureFileProvider
+                && approver.signatureFileContentType?.startsWith('image/')
+            ),
+            agreementRule: 'ATA-{ANO}-{SEQUENCIA_GLOBAL_ANUAL_COM_3_DIGITOS}',
+        };
     }
 
     private buildApprovalVersionCode(agreementDate: Date | string, agreementNumber: string) {
@@ -158,7 +231,7 @@ export class ComponentDraftService {
         if (workloadPatch) {
             const currentWorkload = draft.workload ?? {};
 
-            Object.entries(workloadPatch).forEach(([key, nextValue]) => {
+            Object.entries(workloadPatch).forEach(([ key, nextValue ]) => {
                 if (nextValue === undefined) {
                     return;
                 }
@@ -241,38 +314,28 @@ export class ComponentDraftService {
             .map(({ label }) => label);
 
         if (missing.length > 0) {
-            throw new AppError(`Publicação oficial bloqueada. Campos obrigatórios ausentes: ${missing.join(', ')}.`, 400);
+            throw AppError.fromCode(ApiErrorCode.PUBLICATION_REQUIRED_FIELDS, {
+                details: { fields: missing },
+            });
         }
 
         const referencesBasic = formatAbntReferenceBlock(draft.referencesBasic || '').trim();
         const referencesComplementary = formatAbntReferenceBlock(draft.referencesComplementary || '').trim();
 
         if (!referencesBasic) {
-            throw new AppError('Publicação oficial bloqueada. Informe ao menos as referências básicas em formato ABNT.', 400);
+            throw AppError.fromCode(ApiErrorCode.PUBLICATION_REFERENCES_REQUIRED);
         }
 
         if (hasNonWebReferenceWithoutYear(referencesBasic)) {
-            throw new AppError('Publicação oficial bloqueada. Referências básicas não web devem conter ano de publicação (ex.: SILVA, J. Título. Salvador: Editora X, 2020).', 400);
+            throw AppError.fromCode(ApiErrorCode.PUBLICATION_REFERENCE_YEAR_REQUIRED, {
+                details: { section: 'referencesBasic' },
+            });
         }
 
         if (referencesComplementary && hasNonWebReferenceWithoutYear(referencesComplementary)) {
-            throw new AppError('Publicação oficial bloqueada. Referências complementares não web devem conter ano de publicação (ex.: SOUZA, M. Título. São Paulo: Editora Y, 2021).', 400);
-        }
-    }
-
-    private async ensureAgreementNumberIsAvailable(agreementNumber: string) {
-        const existingApproval = await this.componentLogRepository.findOne({
-            where: {
-                type: ComponentLogType.APPROVAL,
-                agreementNumber: Raw(
-                    (alias) => `LOWER(BTRIM(${alias})) = LOWER(BTRIM(:agreementNumber))`,
-                    { agreementNumber }
-                ),
-            },
-        });
-
-        if (existingApproval) {
-            throw new AppError('Número de ATA já utilizado em outra publicação oficial. Informe uma ATA/referência diferente.', 409);
+            throw AppError.fromCode(ApiErrorCode.PUBLICATION_REFERENCE_YEAR_REQUIRED, {
+                details: { section: 'referencesComplementary' },
+            });
         }
     }
 
@@ -413,7 +476,7 @@ export class ComponentDraftService {
             relations: [ 'workload' ],
         });
         if(!draftExists){
-            throw new AppError('Draft not found.', 404);
+            throw AppError.fromCode(ApiErrorCode.DRAFT_NOT_FOUND);
         }
 
         const nextCode = sanitizedRequestDto.code?.trim().toUpperCase();
@@ -421,7 +484,7 @@ export class ComponentDraftService {
             ? await this.componentDraftRepository.findOne({ where: { code: nextCode } })
             : null;
         if(codeDraft) {
-            throw new AppError('Invalid code', 400);
+            throw AppError.fromCode(ApiErrorCode.DRAFT_CODE_CONFLICT);
         }
 
         try {
@@ -502,7 +565,7 @@ export class ComponentDraftService {
                 throw err;
             }
 
-            throw new AppError('An error has been occurred.', 400);
+            throw AppError.fromCode(ApiErrorCode.DRAFT_SAVE_FAILED);
         }
     }
 
@@ -527,28 +590,28 @@ export class ComponentDraftService {
         userId: string
     ) {
         try {
-            const normalizedAgreementNumber = approvalDto.agreementNumber.trim();
-
-            if (!normalizedAgreementNumber) {
-                throw new AppError('Informe a ATA ou referência de aprovação.', 400);
+            if (!approvalDto.password) {
+                throw AppError.fromCode(ApiErrorCode.PUBLICATION_PASSWORD_REQUIRED);
             }
 
-            const approver = await this.userRepository.findOne({ where: { id: userId, isDeleted: false } });
+            const approver = await this.userRepository
+                .createQueryBuilder('user')
+                .addSelect('user.password')
+                .where('user.id = :userId', { userId })
+                .andWhere('user.isDeleted = false')
+                .andWhere('user.isUserActive = true')
+                .getOne();
 
             if (!approver) {
-                throw new AppError('User not found.', 404);
+                throw AppError.fromCode(ApiErrorCode.AUTH_USER_UNAVAILABLE);
             }
 
-            if (!approver.signatureHash) {
-                throw new AppError('Assinatura digital não configurada. Atualize sua assinatura no perfil antes de publicar.', 400);
-            }
-
-            const informedSignatureHash = crypto
-                .createHmac('sha256', approvalDto.signature.trim())
+            const informedPasswordHash = crypto
+                .createHmac('sha256', approvalDto.password)
                 .digest('hex');
 
-            if (informedSignatureHash !== approver.signatureHash) {
-                throw new AppError('Assinatura inválida para publicação oficial.', 401);
+            if (informedPasswordHash !== approver.password) {
+                throw AppError.fromCode(ApiErrorCode.PUBLICATION_PASSWORD_INVALID);
             }
 
             const draftExists = await this.componentDraftRepository.findOne({
@@ -556,11 +619,10 @@ export class ComponentDraftService {
             });
 
             if(!draftExists){
-                throw new AppError('Draft not found.', 404);
+                throw AppError.fromCode(ApiErrorCode.DRAFT_NOT_FOUND);
             }
 
             this.validateRequiredFieldsForOfficialPublication(draftExists);
-            await this.ensureAgreementNumberIsAvailable(normalizedAgreementNumber);
 
             const [ currentPublishedComponent, draftWorkload ] = await Promise.all([
                 this.componentRepository.findOne({
@@ -569,29 +631,32 @@ export class ComponentDraftService {
                 this.workloadService.getWorkloadById(draftExists.workloadId as string)
             ]) as [ Component, ComponentWorkload ];
 
-            const component = currentPublishedComponent.publishDraft(draftExists);
-            const versionCode = this.buildApprovalVersionCode(
-                approvalDto.agreementDate,
-                normalizedAgreementNumber
-            );
-
-            const approvalLog = component.generateLog(
-                userId,
-                ComponentLogType.APPROVAL,
-                `Versao oficial ${versionCode} publicada por aprovacao formal com assinatura validada.`,
-                normalizedAgreementNumber,
-                approvalDto.agreementDate,
-                versionCode,
-                component.program,
-                component.syllabus,
-            );
-
             const connection = getConnection();
             const queryRunner = connection.createQueryRunner();
             await queryRunner.connect();
 
             try {
                 await queryRunner.startTransaction();
+
+                const agreementDate = this.getAutomaticAgreementDate();
+                const agreementYear = agreementDate.getUTCFullYear();
+                await queryRunner.query('SELECT pg_advisory_xact_lock($1)', [ 700000 + agreementYear ]);
+                const agreementNumber = await this.getNextAgreementNumber(
+                    agreementDate,
+                    queryRunner.manager.getRepository(ComponentLog)
+                );
+                const component = currentPublishedComponent.publishDraft(draftExists);
+                const versionCode = this.buildApprovalVersionCode(agreementDate, agreementNumber);
+                const approvalLog = component.generateLog(
+                    userId,
+                    ComponentLogType.APPROVAL,
+                    `Versão oficial ${versionCode} publicada por ${approver.name} após confirmação de senha.`,
+                    agreementNumber,
+                    agreementDate,
+                    versionCode,
+                    component.program,
+                    component.syllabus,
+                );
 
                 const [ updatedComponent ] = await Promise.all([
                     queryRunner.manager.save(Component, component),
@@ -618,14 +683,14 @@ export class ComponentDraftService {
             }
         } catch (err) {
             if (this.isAgreementNumberUniqueViolation(err)) {
-                throw new AppError('Número de ATA já utilizado em outra publicação oficial. Informe uma ATA/referência diferente.', 409);
+                throw AppError.fromCode(ApiErrorCode.PUBLICATION_AGREEMENT_CONFLICT);
             }
 
             if (err instanceof AppError) {
                 throw err;
             }
 
-            throw new AppError('Não foi possível concluir a publicação oficial da disciplina.', 400);
+            throw AppError.fromCode(ApiErrorCode.PUBLICATION_FAILED);
         }
     }
 
