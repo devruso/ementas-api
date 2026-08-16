@@ -25,6 +25,9 @@ const buildProbeFileName = () => {
 async function main() {
     const folder = readFlag('folder') || 'signatures-probe';
     const fileName = readFlag('fileName') || buildProbeFileName();
+    const readKey = readFlag('readKey');
+    const keep = readFlag('keep') === 'true';
+    const deleteAfterRead = readFlag('deleteAfterRead') === 'true';
     const width = Number(readFlag('width') || 420);
     const height = Number(readFlag('height') || 120);
     const provider = createStorageProvider();
@@ -42,6 +45,25 @@ async function main() {
         width,
         height,
     });
+
+    if (readKey) {
+        const loaded = await provider.read(readKey);
+
+        if (!loaded.equals(content)) {
+            throw new Error('Storage persistence smoke test read mismatch.');
+        }
+
+        if (deleteAfterRead) {
+            await provider.delete(readKey);
+        }
+
+        console.log('[storage-smoke-test] persisted-object-success', {
+            provider: provider.kind,
+            key: readKey,
+            deleted: deleteAfterRead,
+        });
+        return;
+    }
 
     const saved = await provider.save({
         folder,
@@ -63,11 +85,14 @@ async function main() {
         throw new Error('Storage smoke test read/write mismatch.');
     }
 
-    await provider.delete(saved.key);
+    if (!keep) {
+        await provider.delete(saved.key);
+    }
 
     console.log('[storage-smoke-test] success', {
         provider: saved.provider,
         key: saved.key,
+        kept: keep,
     });
 }
 

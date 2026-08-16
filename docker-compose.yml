@@ -11,8 +11,20 @@
         environment:
             DB_HOST: postgres
             DB_PORT: 5432
+            STORAGE_PROVIDER: s3
+            STORAGE_S3_ENABLED: "true"
+            STORAGE_S3_ENDPOINT: http://minio:9000
+            STORAGE_S3_REGION: us-east-1
+            STORAGE_S3_BUCKET: ementas-signatures
+            STORAGE_S3_ACCESS_KEY_ID: ementas-local
+            STORAGE_S3_SECRET_ACCESS_KEY: ementas-local-secret
+            STORAGE_S3_FORCE_PATH_STYLE: "true"
+            STORAGE_S3_AUTO_CREATE_BUCKET: "false"
         depends_on:
-            - postgres
+            postgres:
+                condition: service_started
+            minio-init:
+                condition: service_completed_successfully
     app:
         image: ementas-app
         restart: unless-stopped
@@ -35,9 +47,32 @@
             POSTGRES_DB: ementas
         volumes:
             - postgres_data:/var/lib/postgresql/data
+    minio:
+        image: minio/minio:latest
+        restart: unless-stopped
+        command: server /data --console-address ":9001"
+        ports:
+            - 19000:9000
+            - 19001:9001
+        environment:
+            MINIO_ROOT_USER: ementas-local
+            MINIO_ROOT_PASSWORD: ementas-local-secret
+        volumes:
+            - minio_data:/data
+    minio-init:
+        image: minio/mc:latest
+        depends_on:
+            - minio
+        entrypoint: >
+            /bin/sh -c "
+            until mc alias set ementas http://minio:9000 ementas-local ementas-local-secret; do sleep 1; done;
+            mc mb --ignore-existing ementas/ementas-signatures;
+            mc anonymous set none ementas/ementas-signatures;
+            "
 
 volumes:
     postgres_data:
     api_storage:
+    minio_data:
 
 
