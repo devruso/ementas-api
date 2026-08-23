@@ -61,6 +61,13 @@ const courseAliases: Record<string, string[]> = {
     ],
 };
 
+export const getCourseCatalogOptions = () => Object.entries(COURSE_CATALOG).map(([ key, value ]) => ({
+    key,
+    value,
+    label: value,
+    aliases: Array.from(new Set(courseAliases[value] || [ value ])),
+}));
+
 const normalizedAliasToCourse = new Map<string, string>(
     Object.entries(courseAliases)
         .flatMap(([ courseName, aliases ]) => aliases.map(

@@ -295,6 +295,18 @@ componentRouter.get('/', ensureAuthenticated, componentController.getComponents)
 componentRouter.get('/shared/:token', componentController.getSharedPublicComponent);
 
 /**
+* @swagger
+* /api/components/metadata:
+*   get:
+*     summary: Get canonical options used by component forms and filters
+*     tags: [Component]
+*     responses:
+*       200:
+*         description: Component domain metadata
+*/
+componentRouter.get('/metadata', componentController.getMetadata);
+
+/**
  * @swagger
  * /api/components/{code}:
  *   get:

@@ -9,6 +9,8 @@ import { ComponentService } from '../services/ComponentService';
 import { CrawlerService } from '../services/CrawlerService';
 import { AcademicLevel } from '../interfaces/AcademicLevel';
 import { SigaaImportJobService } from '../services/SigaaImportJobService';
+import { getComponentMetadata } from '../helpers/componentMetadata';
+import { readSigaaSourceId } from '../helpers/sigaaSourceConfig';
 
 const isUserAuthenticated = (authorization?: string) => {
     try {
@@ -24,37 +26,16 @@ const isUserAuthenticated = (authorization?: string) => {
     }
 };
 
-const readSigaaSourceIdFromEnv = (level?: AcademicLevel) => {
-    const globalSourceId = String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID || '').trim();
-    const defaultSourceIds: Record<AcademicLevel, string> = {
-        [AcademicLevel.GRADUATION]: '1114',
-        [AcademicLevel.MASTERS]: '1820',
-        [AcademicLevel.DOCTORATE]: '43753',
-    };
-
-    if (!level) {
-        return globalSourceId;
-    }
-
-    const levelMap: Record<AcademicLevel, string> = {
-        [AcademicLevel.GRADUATION]: String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID_GRADUACAO || '').trim(),
-        [AcademicLevel.MASTERS]: String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID_MESTRADO || '').trim(),
-        [AcademicLevel.DOCTORATE]: String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID_DOUTORADO || '').trim(),
-    };
-
-    return levelMap[level] || globalSourceId || defaultSourceIds[level];
-};
-
 const buildSigaaLevelSources = (
     sourceId: string | undefined,
     academicLevel: AcademicLevel | 'all',
     sourceIdsByLevel?: Partial<Record<AcademicLevel, string>>
 ) => {
-    const globalSourceId = String(sourceId || '').trim() || readSigaaSourceIdFromEnv();
+    const globalSourceId = String(sourceId || '').trim() || readSigaaSourceId();
     const scopedSourceIds: Partial<Record<AcademicLevel, string>> = {
-        [AcademicLevel.GRADUATION]: String(sourceIdsByLevel?.graduacao || '').trim() || readSigaaSourceIdFromEnv(AcademicLevel.GRADUATION),
-        [AcademicLevel.MASTERS]: String(sourceIdsByLevel?.mestrado || '').trim() || readSigaaSourceIdFromEnv(AcademicLevel.MASTERS),
-        [AcademicLevel.DOCTORATE]: String(sourceIdsByLevel?.doutorado || '').trim() || readSigaaSourceIdFromEnv(AcademicLevel.DOCTORATE),
+        [AcademicLevel.GRADUATION]: String(sourceIdsByLevel?.graduacao || '').trim() || readSigaaSourceId(AcademicLevel.GRADUATION),
+        [AcademicLevel.MASTERS]: String(sourceIdsByLevel?.mestrado || '').trim() || readSigaaSourceId(AcademicLevel.MASTERS),
+        [AcademicLevel.DOCTORATE]: String(sourceIdsByLevel?.doutorado || '').trim() || readSigaaSourceId(AcademicLevel.DOCTORATE),
     };
 
     if (academicLevel !== 'all') {
@@ -85,6 +66,10 @@ const buildSigaaLevelSources = (
 };
 
 class ComponentController {
+    async getMetadata(_request: Request, response: Response) {
+        return response.status(200).json(getComponentMetadata());
+    }
+
     async importComponentsFromSiac(request: Request, response: Response) {
         const { cdCurso, nuPerCursoInicial } = request.body;
         const authenticatedUserId = request.headers
