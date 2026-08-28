@@ -97,6 +97,8 @@ describe('Component public shares endpoints', () => {
             .send({ expiresInHours: 24 });
 
         expect(createShareResponse.statusCode).toBe(201);
+        expect(createShareResponse.body.token).toMatch(/^[A-Za-z0-9_-]{12}$/);
+        expect(createShareResponse.body.publicLink.endsWith(createShareResponse.body.token)).toBe(true);
 
         const listSharesResponse = await supertest(app)
             .get(`/api/components/${createComponentResponse.body.id}/public-shares`)

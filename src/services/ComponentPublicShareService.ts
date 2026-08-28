@@ -44,7 +44,8 @@ class ComponentPublicShareService {
             ? Math.min(Math.max(Math.trunc(expiresInHours), 1), 168)
             : 24;
 
-        const token = crypto.randomBytes(24).toString('hex');
+        // 72 bits keep the URL compact while retaining ample entropy for public links.
+        const token = crypto.randomBytes(9).toString('base64url');
         const expiresAt = new Date(Date.now() + normalizedExpires * 60 * 60 * 1000);
 
         const share = this.shareRepository.create({
