@@ -691,6 +691,7 @@ describe('Component document flow', () => {
         expect(documentXml).not.toContain('IC045');
         expect(documentXml).not.toContain('Tópicos em Sistemas de Informação e Web I');
         expect(documentXml).toContain('Assinatura do docente');
+        expect(documentXml).not.toContain('<w:br w:type="page"/>');
 
         const facultySignatureParagraphMatch = documentXml.match(/<w:p[\s\S]*?Docente\(s\) Responsável\(is\)[\s\S]*?<\/w:p>/);
         const teacherSignatureParagraphMatch = documentXml.match(/<w:p[\s\S]*?Nome:\s+[^_][\s\S]*?Assinatura:[\s\S]*?<\/w:p>/);
@@ -700,6 +701,58 @@ describe('Component document flow', () => {
         expect(teacherSignatureParagraphMatch).not.toBeNull();
         expect(chiefSignatureLineMatch).not.toBeNull();
         expect(teacherSignatureParagraphMatch?.[0]).toMatch(/<w:drawing|<w:pict/);
+
+        const approvalMarkerIndex = documentXml.indexOf('Docente(s) Responsável(is)');
+        const tableStack: number[] = [];
+        const tableTokens = documentXml.matchAll(/<w:tbl(?=[\s>])|<\/w:tbl>/g);
+
+        for (const token of tableTokens) {
+            if ((token.index ?? -1) >= approvalMarkerIndex) {
+                break;
+            }
+
+            if (token[0] === '</w:tbl>') {
+                tableStack.pop();
+            } else {
+                tableStack.push(token.index ?? -1);
+            }
+        }
+
+        const findTableEnd = (tableStart: number) => {
+            let depth = 0;
+
+            for (const token of documentXml.slice(tableStart).matchAll(/<w:tbl(?=[\s>])|<\/w:tbl>/g)) {
+                depth += token[0] === '</w:tbl>' ? -1 : 1;
+
+                if (depth === 0) {
+                    return tableStart + (token.index ?? 0) + token[0].length;
+                }
+            }
+
+            return -1;
+        };
+        const approvalTableStart = tableStack.at(-1) ?? -1;
+        const approvalTableEnd = findTableEnd(approvalTableStart);
+        const approvalTable = documentXml.slice(approvalTableStart, approvalTableEnd);
+        const approvalWrapperStart = tableStack.at(-2) ?? -1;
+        const approvalWrapperEnd = findTableEnd(approvalWrapperStart);
+        const approvalWrapper = documentXml.slice(approvalWrapperStart, approvalWrapperEnd);
+        const approvalRows = approvalTable
+            ? Array.from(approvalTable.matchAll(/<w:tr\b[\s\S]*?<\/w:tr>/g)).map((match) => match[0])
+            : [];
+
+        expect(approvalMarkerIndex).toBeGreaterThan(-1);
+        expect(approvalTable).not.toContain('<w:tblBorders>');
+        expect(approvalWrapper).not.toContain('<w:tblBorders>');
+        expect(approvalWrapper.slice(0, approvalWrapper.indexOf('Docente(s) Responsável(is)')))
+            .not.toContain('<w:top w:val="single"');
+        const approvalOuterTableStart = tableStack[0];
+        const precedingTableEnd = documentXml.lastIndexOf('</w:tbl>', approvalOuterTableStart) + '</w:tbl>'.length;
+        const approvalLeadIn = documentXml.slice(Math.max(0, precedingTableEnd - 5000), approvalMarkerIndex);
+        expect(approvalLeadIn.match(/<w:top w:val="single"/g) ?? []).toHaveLength(1);
+        expect(approvalRows[0]).toMatch(/<w:bottom\b/);
+        expect(approvalRows.every((row) => /<w:cantSplit\s*\/>/.test(row))).toBe(true);
+        expect(approvalRows[1]).not.toMatch(/<w:top\b/);
 
         const hasEmbeddedTeacherSignatureAsset = exportedDocZip
             .getEntries()

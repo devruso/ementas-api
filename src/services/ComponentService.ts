@@ -584,6 +584,168 @@ export class ComponentService {
         return paragraphXml.replace(/<w:p([^>]*)>/, `<w:p$1>${paragraphPropertiesXml}`);
     }
 
+    private simplifyApprovalTableBorders(documentXml: string) {
+        const markerIndex = documentXml.indexOf('Docente(s) Respons');
+
+        if (markerIndex < 0) {
+            return documentXml;
+        }
+
+        const findEnclosingTableStarts = (xml: string, offset: number) => {
+            const stack: number[] = [];
+            const tableTokens = xml.matchAll(/<w:tbl(?=[\s>])|<\/w:tbl>/g);
+
+            for (const token of tableTokens) {
+                const tokenIndex = token.index ?? -1;
+
+                if (tokenIndex < 0 || tokenIndex >= offset) {
+                    break;
+                }
+
+                if (token[0] === '</w:tbl>') {
+                    stack.pop();
+                } else {
+                    stack.push(tokenIndex);
+                }
+            }
+
+            return stack;
+        };
+        const findTableEnd = (xml: string, tableStart: number) => {
+            const tableTokens = xml.slice(tableStart).matchAll(/<w:tbl(?=[\s>])|<\/w:tbl>/g);
+            let depth = 0;
+
+            for (const token of tableTokens) {
+                if (token[0] === '</w:tbl>') {
+                    depth -= 1;
+
+                    if (depth === 0) {
+                        return tableStart + (token.index ?? 0) + token[0].length;
+                    }
+                } else {
+                    depth += 1;
+                }
+            }
+
+            return -1;
+        };
+        const removeCellEdges = (cellBordersXml: string) => {
+            const remainingBorders = cellBordersXml
+                .replace(/<w:top\b[^>]*\/>/g, '')
+                .replace(/<w:bottom\b[^>]*\/>/g, '');
+
+            return remainingBorders.trim() ? `<w:tcBorders>${remainingBorders}</w:tcBorders>` : '';
+        };
+        const enclosingTables = findEnclosingTableStarts(documentXml, markerIndex);
+        const signatureTableStart = enclosingTables.at(-1) ?? -1;
+        const wrapperTableStart = enclosingTables.at(-2) ?? -1;
+        const wrapperTableEnd = findTableEnd(documentXml, wrapperTableStart);
+        const approvalOuterTableStart = enclosingTables[0] ?? -1;
+        const approvalOuterTableEnd = findTableEnd(documentXml, approvalOuterTableStart);
+
+        if (
+            signatureTableStart < 0
+            || wrapperTableStart < 0
+            || wrapperTableEnd < 0
+            || approvalOuterTableStart < 0
+            || approvalOuterTableEnd < 0
+        ) {
+            return documentXml;
+        }
+
+        let documentPrefix = documentXml.slice(0, wrapperTableStart);
+        const previousTableEnd = documentXml.lastIndexOf('</w:tbl>', approvalOuterTableStart) + '</w:tbl>'.length;
+
+        if (previousTableEnd > 0 && approvalOuterTableStart - previousTableEnd < 20000) {
+            const previousTableTailStart = Math.max(0, previousTableEnd - 5000);
+            const previousTableTail = documentPrefix.slice(previousTableTailStart, previousTableEnd);
+            const borderBlocks = Array.from(
+                previousTableTail.matchAll(/<w:tcBorders>([\s\S]*?)<\/w:tcBorders>/g),
+            );
+            const trailingBorders = borderBlocks.at(-1);
+
+            if (trailingBorders?.index != null) {
+                const borderStart = previousTableTailStart + trailingBorders.index;
+                const borderEnd = borderStart + trailingBorders[0].length;
+                documentPrefix = `${documentPrefix.slice(0, borderStart)}`
+                    + `${removeCellEdges(trailingBorders[1])}${documentPrefix.slice(borderEnd)}`;
+            }
+        }
+
+        let approvalRegion = documentXml.slice(wrapperTableStart, wrapperTableEnd)
+            .replace(/<w:tblBorders>[\s\S]*?<\/w:tblBorders>/g, '');
+        const localMarkerIndex = approvalRegion.indexOf('Docente(s) Respons');
+        const approvalPrefix = approvalRegion.slice(0, localMarkerIndex)
+            .replace(/<w:tcBorders>([\s\S]*?)<\/w:tcBorders>/g, (_match, borders: string) => {
+                const remainingBorders = borders.replace(/<w:top\b[^>]*\/>/g, '');
+                return remainingBorders.trim() ? `<w:tcBorders>${remainingBorders}</w:tcBorders>` : '';
+            });
+        approvalRegion = `${approvalPrefix}${approvalRegion.slice(localMarkerIndex)}`;
+
+        const localEnclosingTables = findEnclosingTableStarts(approvalRegion, approvalPrefix.length);
+        const localSignatureStart = localEnclosingTables.at(-1) ?? -1;
+        const localSignatureEnd = findTableEnd(approvalRegion, localSignatureStart);
+
+        if (localSignatureStart < 0 || localSignatureEnd < 0) {
+            return documentXml;
+        }
+
+        const signatureTable = approvalRegion.slice(localSignatureStart, localSignatureEnd);
+        const rows = Array.from(signatureTable.matchAll(/<w:tr\b[\s\S]*?<\/w:tr>/g)).map((match) => match[0]);
+        const preventRowSplit = (rowXml: string) => {
+            if (/<w:cantSplit\s*\/>/.test(rowXml)) {
+                return rowXml;
+            }
+
+            if (/<w:trPr>/.test(rowXml)) {
+                return rowXml.replace('<w:trPr>', '<w:trPr><w:cantSplit/>');
+            }
+
+            return rowXml.replace(/<w:tr([^>]*)>/, '<w:tr$1><w:trPr><w:cantSplit/></w:trPr>');
+        };
+
+        if (rows[0]) {
+            const protectedTeacherRow = preventRowSplit(rows[0]);
+            approvalRegion = approvalRegion.replace(rows[0], protectedTeacherRow);
+        }
+
+        if (rows[1]) {
+            const cleanedApprovalRow = preventRowSplit(rows[1])
+                .replace(/<w:top\b[^>]*\/>/, '')
+                .replace(/<w:tcBorders>\s*<\/w:tcBorders>/g, '');
+            approvalRegion = approvalRegion.replace(rows[1], cleanedApprovalRow);
+        }
+
+        const removeEmptyParagraphs = (xml: string) => xml.replace(
+            /<w:p(?=[\s>])[\s\S]*?<\/w:p>/g,
+            (paragraph) => {
+                const hasVisibleText = Array.from(
+                    paragraph.matchAll(/<w:t(?=[\s>])[^>]*>([\s\S]*?)<\/w:t>/g),
+                ).some((match) => match[1].trim().length > 0);
+                const hasRenderableContent = /<w:(?:drawing|pict|object|tbl|footnoteReference)(?=[\s>])/.test(paragraph);
+
+                return hasVisibleText || hasRenderableContent ? paragraph : '';
+            },
+        );
+        let approvalOuterTail = removeEmptyParagraphs(
+            documentXml.slice(wrapperTableEnd, approvalOuterTableEnd),
+        );
+
+        if (!/<w:p(?=[\s>])/.test(approvalOuterTail)) {
+            approvalOuterTail = `<w:p/>${approvalOuterTail}`;
+        }
+
+        const sectionPropertiesIndex = documentXml.lastIndexOf('<w:sectPr');
+        const bodyTail = sectionPropertiesIndex > approvalOuterTableEnd
+            ? removeEmptyParagraphs(documentXml.slice(approvalOuterTableEnd, sectionPropertiesIndex))
+            : documentXml.slice(approvalOuterTableEnd);
+        const documentEnd = sectionPropertiesIndex > approvalOuterTableEnd
+            ? documentXml.slice(sectionPropertiesIndex)
+            : '';
+
+        return `${documentPrefix}${approvalRegion}${approvalOuterTail}${bodyTail}${documentEnd}`;
+    }
+
     private fillDocxTemplateFromBase(data: GenerateHtmlData, signatureAsset?: ProcessedSignatureImage | null) {
         const templatePath = path.resolve(process.cwd(), 'UFBA_TEMPLATE.docx');
 
@@ -1084,7 +1246,9 @@ export class ComponentService {
             buildWorkloadVector(data.workload?.module, { includeTotal: false })
         );
 
-        zip.updateFile('word/document.xml', Buffer.from(workloadDocumentXml, 'utf-8'));
+        const finalizedDocumentXml = this.simplifyApprovalTableBorders(workloadDocumentXml);
+
+        zip.updateFile('word/document.xml', Buffer.from(finalizedDocumentXml, 'utf-8'));
 
         return zip.toBuffer();
     }
