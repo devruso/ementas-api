@@ -14,7 +14,7 @@ import { ComponentLog } from '../entities/ComponentLog';
 import { ComponentLogRepository } from '../repositories/ComponentLogRepository';
 import { ComponentStatus } from '../interfaces/ComponentStatus';
 import { ComponentLogType } from '../interfaces/ComponentLogType';
-import { AcademicLevel } from '../interfaces/AcademicLevel';
+import { AcademicLevel, POST_GRADUATION_ACADEMIC_LEVEL } from '../interfaces/AcademicLevel';
 import { IComponentCurriculumContextCrawler, IComponentInfoCrawler } from '../interfaces/IComponentInfoCrawler';
 import { ComponentDraft } from '../entities/ComponentDraft';
 import { ComponentDraftRepository } from '../repositories/ComponentDraftRepository';
@@ -25,7 +25,7 @@ import { ComponentCurriculumContext } from '../entities/ComponentCurriculumConte
 import { ComponentCurriculumContextRepository } from '../repositories/ComponentCurriculumContextRepository';
 import { getTextCorruptionScore, repairLikelyUtf8Mojibake } from '../helpers/repairMojibake';
 import { composeBibliographySections, normalizeReferenceSections, splitBibliographySections } from '../helpers/referenceSections';
-import { DepartmentResolutionService } from './DepartmentResolutionService';
+import { CourseResolutionService } from './CourseResolutionService';
 import { normalizeCourseNameFromSource, normalizeProgrammaticSemester } from '../helpers/courseCatalog';
 
 export interface ImportComponentsSummary {
@@ -140,7 +140,7 @@ export class CrawlerService {
     private componentLogRepository: Repository<ComponentLog>;
     private componentRelationRepository: Repository<ComponentRelation>;
     private componentCurriculumContextRepository: Repository<ComponentCurriculumContext>;
-    private departmentResolutionService: DepartmentResolutionService;
+    private courseResolutionService: CourseResolutionService;
     private workloadService: WorkloadService;
     private sigaaDetailCache = new Map<string, SigaaComponentDetail | null>();
     private sigaaDetailInFlight = new Map<string, Promise<SigaaComponentDetail | null>>();
@@ -153,7 +153,7 @@ export class CrawlerService {
         this.componentLogRepository = getCustomRepository(ComponentLogRepository);
         this.componentRelationRepository = getCustomRepository(ComponentRelationRepository);
         this.componentCurriculumContextRepository = getCustomRepository(ComponentCurriculumContextRepository);
-        this.departmentResolutionService = new DepartmentResolutionService();
+        this.courseResolutionService = new CourseResolutionService();
         this.workloadService = new WorkloadService();
         this.requestTimeoutMs = Number(process.env.CRAWLER_HTTP_TIMEOUT_MS || 45000);
         const configuredFamily = Number(process.env.CRAWLER_HTTP_FAMILY || 0);
@@ -339,29 +339,29 @@ export class CrawlerService {
         }
 
         let changed = false;
-        const resolvedDepartment = await this.departmentResolutionService.resolveDepartment(
+        const resolvedCourse = await this.courseResolutionService.resolveCourse(
             normalizeCourseNameFromSource(data.department)
         );
 
-        if (resolvedDepartment) {
+        if (resolvedCourse) {
             if (
-                existingComponent.departmentId !== resolvedDepartment.id
-                || existingComponent.department !== resolvedDepartment.name
+                existingComponent.courseId !== resolvedCourse.id
+                || existingComponent.department !== resolvedCourse.name
             ) {
-                existingComponent.departmentId = resolvedDepartment.id;
-                existingComponent.department = resolvedDepartment.name;
+                existingComponent.courseId = resolvedCourse.id;
+                existingComponent.department = resolvedCourse.name;
                 changed = true;
             }
 
             if (
                 existingComponent.draft
                 && (
-                    existingComponent.draft.departmentId !== resolvedDepartment.id
-                    || existingComponent.draft.department !== resolvedDepartment.name
+                    existingComponent.draft.courseId !== resolvedCourse.id
+                    || existingComponent.draft.department !== resolvedCourse.name
                 )
             ) {
-                existingComponent.draft.departmentId = resolvedDepartment.id;
-                existingComponent.draft.department = resolvedDepartment.name;
+                existingComponent.draft.courseId = resolvedCourse.id;
+                existingComponent.draft.department = resolvedCourse.name;
                 changed = true;
             }
         }
@@ -453,7 +453,11 @@ export class CrawlerService {
         const hasNewCurriculumContexts = await this.syncComponentCurriculumContexts(
             existingComponent.id,
             data.curriculumContexts,
-            data.academicLevel || existingComponent.academicLevel
+            data.academicLevel || (
+                existingComponent.academicLevel === POST_GRADUATION_ACADEMIC_LEVEL
+                    ? AcademicLevel.MASTERS
+                    : existingComponent.academicLevel
+            )
         );
 
         if (hasNewCurriculumContexts) {
@@ -2416,7 +2420,7 @@ export class CrawlerService {
 
         try {
             const courseName = normalizeCourseNameFromSource(data.department);
-            const department = await this.departmentResolutionService.resolveDepartment(courseName);
+            const course = await this.courseResolutionService.resolveCourse(courseName);
             const [ componentWorkload, draftWorkload ] = await Promise.all(
                 new Array(2)
                     .fill(null)
@@ -2433,8 +2437,8 @@ export class CrawlerService {
                 workloadId: componentWorkload.id,
                 code: data.code,
                 name: data.name,
-                department: department?.name || courseName || data.department,
-                departmentId: department?.id || null,
+                department: course?.name || courseName || data.department,
+                courseId: course?.id || null,
                 semester: normalizeProgrammaticSemester(data.semester),
                 program: data.description,
                 objective: data.objective,
