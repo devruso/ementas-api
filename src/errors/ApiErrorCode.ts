@@ -135,7 +135,7 @@ export const API_ERROR_CATALOG: Record<ApiErrorCode, ApiErrorDefinition> = {
         recovery: 'Digite a mesma senha usada para entrar no sistema.',
     },
     [ApiErrorCode.PUBLICATION_PASSWORD_INVALID]: {
-        statusCode: 401,
+        statusCode: 403,
         message: 'Senha incorreta. A publicação não foi realizada.',
         reason: 'A senha de confirmação não corresponde à conta autenticada.',
         recovery: 'Digite novamente sua senha de login ou redefina-a antes de publicar.',
