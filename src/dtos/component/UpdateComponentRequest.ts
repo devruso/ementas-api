@@ -3,7 +3,7 @@ import { Type } from 'class-transformer';
 import { Component } from '../../entities/Component';
 import { ComponentWorkloadDto } from './ComponentWorkload';
 import { CustomIsString, CustomMatches } from '../../decorators/validation';
-import { AcademicLevel } from '../../interfaces/AcademicLevel';
+import { ComponentAcademicLevel } from '../../interfaces/AcademicLevel';
 
 export class UpdateComponentRequestDto
 implements Partial<Omit<Component, 'id' | 'userId' | 'status' | 'logs' | 'relations' | 'user' | 'workload' | 'generateLog' | 'createdAt' | 'updatedAt'>> {
@@ -20,6 +20,10 @@ implements Partial<Omit<Component, 'id' | 'userId' | 'status' | 'logs' | 'relati
     @IsOptional()
     @CustomIsString()
     public department?: string;
+
+    @IsOptional()
+    @CustomIsString()
+    public courseId?: string;
 
     @IsOptional()
     @CustomIsString()
@@ -67,8 +71,8 @@ implements Partial<Omit<Component, 'id' | 'userId' | 'status' | 'logs' | 'relati
 
     @IsOptional()
     @CustomIsString()
-    @CustomMatches(/^(graduacao|mestrado|doutorado)$/)
-    public academicLevel?: AcademicLevel;
+    @CustomMatches(/^(graduacao|pos_graduacao|mestrado|doutorado)$/)
+    public academicLevel?: ComponentAcademicLevel;
     
     public workloadId?: string;
 
