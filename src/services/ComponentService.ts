@@ -17,7 +17,11 @@ import {
 } from '../dtos/component';
 import { ComponentDraft } from '../entities/ComponentDraft';
 import { ComponentDraftRepository } from '../repositories/ComponentDraftRepository';
-import { AcademicLevel } from '../interfaces/AcademicLevel';
+import {
+    AcademicLevel,
+    ComponentAcademicLevel,
+    POST_GRADUATION_ACADEMIC_LEVEL,
+} from '../interfaces/AcademicLevel';
 import {
     composeBibliographySections,
     formatAbntReferenceBlock,
@@ -29,7 +33,7 @@ import { LibreOfficeDocxToPdfConverter } from './export/LibreOfficeDocxToPdfConv
 import { DocxSignatureEmbedder } from './export/DocxSignatureEmbedder';
 import { ProcessedSignatureImage } from './export/SignatureImageProcessor';
 import { UserSignatureAssetService } from './export/UserSignatureAssetService';
-import { DepartmentResolutionService } from './DepartmentResolutionService';
+import { CourseResolutionService } from './CourseResolutionService';
 import { getCourseFilterAliases, normalizeCourseNameFromSource, normalizeProgrammaticSemester } from '../helpers/courseCatalog';
 
 export class ComponentService {
@@ -40,12 +44,13 @@ export class ComponentService {
     private readonly pdfConverter: DocxToPdfConverter;
     private readonly signatureAssetService: UserSignatureAssetService;
     private readonly docxSignatureEmbedder: DocxSignatureEmbedder;
-    private readonly departmentResolutionService: DepartmentResolutionService;
+    private readonly courseResolutionService: CourseResolutionService;
 
     private readonly mutableComponentFields: Array<keyof UpdateComponentRequestDto> = [
         'code',
         'name',
         'department',
+        'courseId',
         'program',
         'semester',
         'prerequeriments',
@@ -74,7 +79,7 @@ export class ComponentService {
         this.pdfConverter = pdfConverter;
         this.signatureAssetService = new UserSignatureAssetService();
         this.docxSignatureEmbedder = new DocxSignatureEmbedder();
-        this.departmentResolutionService = new DepartmentResolutionService();
+        this.courseResolutionService = new CourseResolutionService();
     }
 
     private normalizeTemplateText(value: string | undefined, emptyText = 'Não se aplica') {
@@ -104,13 +109,19 @@ export class ComponentService {
     }
 
     private normalizeComponentCourseForDisplay<T extends Component | ComponentDraft>(component: T) {
-        const normalizedCourse = normalizeCourseNameFromSource(component.departmentRef?.name || component.department);
+        const normalizedCourse = normalizeCourseNameFromSource(
+            component.courseRef?.name || component.departmentRef?.name || component.department
+        );
 
         if (normalizedCourse) {
             component.department = normalizedCourse;
 
             if (component.departmentRef) {
                 component.departmentRef.name = normalizedCourse;
+            }
+
+            if (component.courseRef) {
+                component.courseRef.name = normalizedCourse;
             }
         }
 
@@ -865,12 +876,10 @@ export class ComponentService {
                     clearIndex(trailingIndex);
                     updatedParagraphs[trailingIndex] = this.stripParagraphNumbering(updatedParagraphs[trailingIndex]);
 
-                    if (options?.trailingSpacing) {
-                        updatedParagraphs[trailingIndex] = this.applyParagraphSpacing(
-                            updatedParagraphs[trailingIndex],
-                            options.trailingSpacing
-                        );
-                    }
+                    updatedParagraphs[trailingIndex] = this.applyParagraphSpacing(
+                        updatedParagraphs[trailingIndex],
+                        options?.trailingSpacing || { before: 0, after: 0, line: 20, lineRule: 'exact' }
+                    );
                 }
             }
         };
@@ -1211,10 +1220,10 @@ export class ComponentService {
             indentParagraphs: true,
         });
         replaceSectionContent('OBJETIVO GERAL', normalizedObjectives, {
-            spacing: { before: 0, after: 20, line: 252, lineRule: 'auto' },
+            spacing: { before: 0, after: 0, line: 240, lineRule: 'auto' },
         });
         replaceSectionContent('OBJETIVOS ESPECÍFICOS', normalizedObjectives, {
-            spacing: { before: 0, after: 20, line: 252, lineRule: 'auto' },
+            spacing: { before: 0, after: 0, line: 240, lineRule: 'auto' },
         });
         replaceSectionContent(
             'CONTEÚDO PROGRAMÁTICO',
@@ -1224,12 +1233,12 @@ export class ComponentService {
         replaceSectionContent('METODOLOGIA DE ENSINO-APRENDIZAGEM', this.normalizeSectionText(data.methodology));
         replaceSectionContent('AVALIAÇÃO DA APRENDIZAGEM', this.normalizeSectionText(data.learningAssessment));
         replaceSectionContent('REFERÊNCIAS BÁSICAS', referencesBasic, {
-            spacing: { before: 60, after: 90, line: 276, lineRule: 'auto' },
-            trailingSpacing: { before: 0, after: 20, line: 228, lineRule: 'auto' },
+            spacing: { before: 0, after: 0, line: 240, lineRule: 'auto' },
+            trailingSpacing: { before: 0, after: 0, line: 20, lineRule: 'exact' },
         });
         replaceSectionContent('REFERÊNCIAS COMPLEMENTARES', referencesComplementary, {
-            spacing: { before: 40, after: 50, line: 228, lineRule: 'auto' },
-            trailingSpacing: { before: 0, after: 20, line: 228, lineRule: 'auto' },
+            spacing: { before: 0, after: 0, line: 240, lineRule: 'auto' },
+            trailingSpacing: { before: 0, after: 0, line: 20, lineRule: 'exact' },
         });
 
         let cursor = 0;
@@ -1291,15 +1300,17 @@ export class ComponentService {
         showDraft?: boolean;
         sortBy?: string;
         sortOrder?: 'ASC' | 'DESC';
-        academicLevel?: AcademicLevel;
+        academicLevel?: ComponentAcademicLevel;
+        course?: string;
         department?: string;
     }) {
         const search = this.normalizeSearch(options?.search);
-        const normalizedDepartment = options?.department?.trim().toLowerCase();
+        const normalizedCourse = (options?.course || options?.department)?.trim().toLowerCase();
         const sortMap: Record<string, string> = {
             code: 'components.code',
             name: 'components.name',
-            department: 'COALESCE(departmentRef.name, components.department)',
+            department: 'COALESCE(courseRef.name, components.department)',
+            course: 'COALESCE(courseRef.name, components.department)',
             academicLevel: 'components.academicLevel',
             semester: 'components.semester',
             createdAt: 'components.createdAt',
@@ -1315,8 +1326,10 @@ export class ComponentService {
 
         const query = this.componentRepository
             .createQueryBuilder('components')
+            .leftJoinAndSelect('components.courseRef', 'courseRef')
             .leftJoinAndSelect('components.departmentRef', 'departmentRef')
             .leftJoinAndSelect('components.draft', 'draft')
+            .leftJoinAndSelect('draft.courseRef', 'draft_courseRef')
             .leftJoinAndSelect('draft.departmentRef', 'draft_departmentRef')
             .leftJoinAndSelect('components.logs', 'logs')
             .leftJoinAndSelect('components.workload', 'workload')
@@ -1333,22 +1346,26 @@ export class ComponentService {
             }));
         }
 
-        if (options?.academicLevel) {
-            query.andWhere('components.academicLevel = :academicLevel', {
-                academicLevel: options.academicLevel,
+        if (options?.academicLevel === POST_GRADUATION_ACADEMIC_LEVEL) {
+            query.andWhere('components.academicLevel IN (:...postgraduateLevels)', {
+                postgraduateLevels: [ POST_GRADUATION_ACADEMIC_LEVEL, AcademicLevel.MASTERS, AcademicLevel.DOCTORATE ],
             });
+        } else if (options?.academicLevel) {
+            query.andWhere('components.academicLevel = :academicLevel', { academicLevel: options.academicLevel });
         }
 
-        if (normalizedDepartment) {
+        if (normalizedCourse) {
             const normalizedDepartmentColumn = this.accentInsensitiveSql('components.department');
+            const normalizedCourseRefNameColumn = this.accentInsensitiveSql('COALESCE(courseRef.name, \'\')');
+            const normalizedCourseRefCodeColumn = this.accentInsensitiveSql('COALESCE(courseRef.code, \'\')');
             const normalizedDepartmentRefNameColumn = this.accentInsensitiveSql('COALESCE(departmentRef.name, \'\')');
             const normalizedDepartmentRefCodeColumn = this.accentInsensitiveSql('COALESCE(departmentRef.code, \'\')');
 
-            if (this.isUuid(normalizedDepartment)) {
-                query.andWhere('components.departmentId = :departmentId', {
-                    departmentId: normalizedDepartment,
+            if (this.isUuid(normalizedCourse)) {
+                query.andWhere('components.courseId = :courseId', {
+                    courseId: normalizedCourse,
                 });
-            } else if (normalizedDepartment === '__dcc__') {
+            } else if (normalizedCourse === '__dcc__') {
                 query.andWhere(new Brackets((subQuery) => {
                     subQuery
                         .where(`${normalizedDepartmentColumn} LIKE :dccByName`, {
@@ -1364,7 +1381,7 @@ export class ComponentService {
                             dccByAcronym: '%dcc%',
                         });
                 }));
-            } else if (normalizedDepartment === '__dci__') {
+            } else if (normalizedCourse === '__dci__') {
                 query.andWhere(new Brackets((subQuery) => {
                     subQuery
                         .where(`${normalizedDepartmentColumn} LIKE :dciByName`, {
@@ -1381,19 +1398,23 @@ export class ComponentService {
                         });
                 }));
             } else {
-                const courseAliases = getCourseFilterAliases(options?.department);
+                const courseAliases = getCourseFilterAliases(options?.course || options?.department);
 
                 query.andWhere(new Brackets((subQuery) => {
                     if (courseAliases.length > 0) {
                         subQuery
                             .where(`${normalizedDepartmentColumn} IN (:...courseAliases)`, { courseAliases })
+                            .orWhere(`${normalizedCourseRefNameColumn} IN (:...courseAliases)`, { courseAliases })
+                            .orWhere(`${normalizedCourseRefCodeColumn} IN (:...courseAliases)`, { courseAliases })
                             .orWhere(`${normalizedDepartmentRefNameColumn} IN (:...courseAliases)`, { courseAliases })
                             .orWhere(`${normalizedDepartmentRefCodeColumn} IN (:...courseAliases)`, { courseAliases });
                     } else {
                         subQuery
-                            .where(`${normalizedDepartmentColumn} = :department`, { department: normalizedDepartment })
-                            .orWhere(`${normalizedDepartmentRefNameColumn} = :department`, { department: normalizedDepartment })
-                            .orWhere(`${normalizedDepartmentRefCodeColumn} = :department`, { department: normalizedDepartment });
+                            .where(`${normalizedDepartmentColumn} = :course`, { course: normalizedCourse })
+                            .orWhere(`${normalizedCourseRefNameColumn} = :course`, { course: normalizedCourse })
+                            .orWhere(`${normalizedCourseRefCodeColumn} = :course`, { course: normalizedCourse })
+                            .orWhere(`${normalizedDepartmentRefNameColumn} = :course`, { course: normalizedCourse })
+                            .orWhere(`${normalizedDepartmentRefCodeColumn} = :course`, { course: normalizedCourse });
                     }
                 }));
             }
@@ -1412,8 +1433,10 @@ export class ComponentService {
 
         const component = await this.componentRepository
             .createQueryBuilder('components')
+            .leftJoinAndSelect('components.courseRef', 'courseRef')
             .leftJoinAndSelect('components.departmentRef', 'departmentRef')
             .leftJoinAndSelect('components.draft', 'draft')
+            .leftJoinAndSelect('draft.courseRef', 'draft_courseRef')
             .leftJoinAndSelect('draft.departmentRef', 'draft_departmentRef')
             .leftJoinAndSelect('components.logs', 'logs')
             .leftJoinAndSelect('components.workload', 'workload')
@@ -1454,9 +1477,9 @@ export class ComponentService {
                     normalizedCode
                 ),
                 userId: userId,
-            } as CreateComponentRequestDto & { userId: string; departmentId?: string | null; workloadId?: string };
+            } as CreateComponentRequestDto & { userId: string; courseId?: string | null; workloadId?: string };
             this.syncReferenceFields(componentDto);
-            await this.departmentResolutionService.applyDepartment(componentDto);
+            await this.courseResolutionService.applyCourse(componentDto);
 
             const [ componentWorkload, draftWorkload ] = await Promise.all(
                 new Array(2)
@@ -1547,7 +1570,7 @@ export class ComponentService {
             }
 
             this.syncReferenceFields(sanitizedComponentDto);
-            await this.departmentResolutionService.applyDepartment(sanitizedComponentDto);
+            await this.courseResolutionService.applyCourse(sanitizedComponentDto);
 
             if (sanitizedComponentDto.workload != null) {
                 const workloadData = {
