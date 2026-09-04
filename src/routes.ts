@@ -7,6 +7,7 @@ import { statusRouter } from './routers/HealthCheck';
 import { componentDraftRouter } from './routers/ComponentDraftRouter';
 import { userInviteRouter } from './routers/UserInviteRouter';
 import { departmentRouter } from './routers/DepartmentRouter';
+import { courseRouter } from './routers/CourseRouter';
 
 const router = Router();
 
@@ -17,6 +18,7 @@ router.use('/api/invite', userInviteRouter);
 router.use('/api/components', componentRouter);
 router.use('/api/component-drafts', componentDraftRouter);
 router.use('/api/departments', departmentRouter);
+router.use('/api/courses', courseRouter);
 
 router.use('/status', statusRouter);
 router.use('/auth', authRouter);
@@ -25,6 +27,7 @@ router.use('/invite', userInviteRouter);
 router.use('/components', componentRouter);
 router.use('/component-drafts', componentDraftRouter);
 router.use('/departments', departmentRouter);
+router.use('/courses', courseRouter);
 
 router.use('/', authRouter);
 router.use('/', componentRouter);
