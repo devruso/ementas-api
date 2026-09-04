@@ -23,7 +23,7 @@ import {
     normalizeReferenceSections,
     splitBibliographySections,
 } from '../helpers/referenceSections';
-import { DepartmentResolutionService } from './DepartmentResolutionService';
+import { CourseResolutionService } from './CourseResolutionService';
 import { ApiErrorCode } from '../errors/ApiErrorCode';
 
 export class ComponentDraftService {
@@ -35,12 +35,13 @@ export class ComponentDraftService {
     private componentLogRepository: Repository<ComponentLog>;
     private userRepository: Repository<User>;
     private workloadService: WorkloadService;
-    private departmentResolutionService: DepartmentResolutionService;
+    private courseResolutionService: CourseResolutionService;
 
     private readonly mutableDraftFields: Array<keyof UpdateComponentRequestDto> = [
         'code',
         'name',
         'department',
+        'courseId',
         'program',
         'semester',
         'prerequeriments',
@@ -63,7 +64,7 @@ export class ComponentDraftService {
         this.componentLogRepository = getCustomRepository(ComponentLogRepository);
         this.userRepository = getCustomRepository(UserRepository);
         this.workloadService = new WorkloadService();
-        this.departmentResolutionService = new DepartmentResolutionService();
+        this.courseResolutionService = new CourseResolutionService();
     }
 
     private getAutomaticAgreementDate(now = new Date()) {
@@ -302,6 +303,7 @@ export class ComponentDraftService {
 
     private validateRequiredFieldsForOfficialPublication(draft: ComponentDraft) {
         const requiredTextFields: Array<{ key: keyof ComponentDraft; label: string }> = [
+            { key: 'department', label: 'Curso' },
             { key: 'syllabus', label: 'Ementa' },
             { key: 'objective', label: 'Objetivos' },
             { key: 'program', label: 'Conteúdo programático' },
@@ -320,7 +322,6 @@ export class ComponentDraftService {
         }
 
         const referencesBasic = formatAbntReferenceBlock(draft.referencesBasic || '').trim();
-        const referencesComplementary = formatAbntReferenceBlock(draft.referencesComplementary || '').trim();
 
         if (!referencesBasic) {
             throw AppError.fromCode(ApiErrorCode.PUBLICATION_REFERENCES_REQUIRED);
@@ -332,11 +333,6 @@ export class ComponentDraftService {
             });
         }
 
-        if (referencesComplementary && hasNonWebReferenceWithoutYear(referencesComplementary)) {
-            throw AppError.fromCode(ApiErrorCode.PUBLICATION_REFERENCE_YEAR_REQUIRED, {
-                details: { section: 'referencesComplementary' },
-            });
-        }
     }
 
     private isAgreementNumberUniqueViolation(error: unknown) {
@@ -366,7 +362,8 @@ export class ComponentDraftService {
         const sortMap: Record<string, string> = {
             code: 'drafts.code',
             name: 'drafts.name',
-            department: 'COALESCE(departmentRef.name, drafts.department)',
+            department: 'COALESCE(courseRef.name, drafts.department)',
+            course: 'COALESCE(courseRef.name, drafts.department)',
             semester: 'drafts.semester',
             createdAt: 'drafts.createdAt',
             updatedAt: 'drafts.updatedAt',
@@ -376,6 +373,7 @@ export class ComponentDraftService {
 
         const query = this.componentDraftRepository
             .createQueryBuilder('drafts')
+            .leftJoinAndSelect('drafts.courseRef', 'courseRef')
             .leftJoinAndSelect('drafts.departmentRef', 'departmentRef')
             .leftJoinAndSelect('drafts.workload', 'workload');
 
@@ -399,7 +397,7 @@ export class ComponentDraftService {
             where: {
                 code: Raw((alias) => `LOWER(${alias}) = :code`, { code: normalizedCode })
             },
-            relations: [ 'workload', 'logs' ],
+            relations: [ 'workload', 'logs', 'courseRef' ],
         });
 
         if (!draft) return null;
@@ -429,9 +427,9 @@ export class ComponentDraftService {
                     normalizedCode
                 ),
                 userId: userId,
-            } as CreateDraftRequestDto & { userId: string; departmentId?: string | null; workloadId?: string };
+            } as CreateDraftRequestDto & { userId: string; courseId?: string | null; workloadId?: string };
             this.syncReferenceFields(draftDto);
-            await this.departmentResolutionService.applyDepartment(draftDto);
+            await this.courseResolutionService.applyCourse(draftDto);
 
             const [ draftWorkload, componentWorkload ] = await Promise.all([
                 this.workloadService.create(draftDto.workload ?? {}),
@@ -491,6 +489,7 @@ export class ComponentDraftService {
             const workloadPatch = sanitizedRequestDto.workload == null
                 ? undefined
                 : { ...sanitizedRequestDto.workload };
+            let savedWorkload = draftExists.workload;
 
             if (nextCode) {
                 sanitizedRequestDto.code = nextCode;
@@ -504,7 +503,7 @@ export class ComponentDraftService {
             }
 
             this.syncReferenceFields(sanitizedRequestDto);
-            await this.departmentResolutionService.applyDepartment(sanitizedRequestDto);
+            await this.courseResolutionService.applyCourse(sanitizedRequestDto);
 
             if(sanitizedRequestDto.workload != null) {
                 const workloadData = {
@@ -512,6 +511,7 @@ export class ComponentDraftService {
                     id: sanitizedRequestDto.workloadId ?? draftExists.workloadId as string,
                 };
                 const workload = await this.workloadService.upsert(workloadData);
+                savedWorkload = workload || savedWorkload;
                 sanitizedRequestDto.workloadId = workload?.id;
                 delete sanitizedRequestDto.workload;
             }
@@ -548,6 +548,8 @@ export class ComponentDraftService {
                 ]); 
 
                 await queryRunner.commitTransaction();
+
+                updatedDraft.workload = savedWorkload;
 
                 return updatedDraft;
             } catch (err) {
