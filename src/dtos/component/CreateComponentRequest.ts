@@ -2,8 +2,8 @@ import { IsOptional, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { Component } from '../../entities/Component';
 import { ComponentWorkloadDto } from './ComponentWorkload';
-import { CustomIsDefined, CustomIsString, CustomMatches } from '../../decorators/validation';
-import { AcademicLevel } from '../../interfaces/AcademicLevel';
+import { CustomIsDefined, CustomIsNotEmpty, CustomIsString, CustomMatches } from '../../decorators/validation';
+import { ComponentAcademicLevel } from '../../interfaces/AcademicLevel';
 
 
 export class CreateComponentRequestDto
@@ -18,8 +18,13 @@ implements Omit<Component, 'id' | 'userId' | 'status' | 'logs' | 'relations' | '
     public name: string;
 
     @CustomIsDefined()
+    @CustomIsNotEmpty()
     @CustomIsString()
     public department: string;
+
+    @IsOptional()
+    @CustomIsString()
+    public courseId?: string;
 
     @CustomIsDefined()
     @CustomIsString()
@@ -67,8 +72,8 @@ implements Omit<Component, 'id' | 'userId' | 'status' | 'logs' | 'relations' | '
 
     @IsOptional()
     @CustomIsString()
-    @CustomMatches(/^(graduacao|mestrado|doutorado)$/)
-    public academicLevel?: AcademicLevel;
+    @CustomMatches(/^(graduacao|pos_graduacao|mestrado|doutorado)$/)
+    public academicLevel?: ComponentAcademicLevel;
     
     public workloadId?: string;
 
