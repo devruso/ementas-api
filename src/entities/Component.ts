@@ -16,13 +16,19 @@ import { ComponentLog } from './ComponentLog';
 import { ComponentLogType } from '../interfaces/ComponentLogType';
 import { ComponentStatus } from '../interfaces/ComponentStatus';
 import { ComponentDraft } from './ComponentDraft';
-import { AcademicLevel } from '../interfaces/AcademicLevel';
+import {
+    AcademicLevel,
+    COMPONENT_ACADEMIC_LEVELS,
+    ComponentAcademicLevel,
+} from '../interfaces/AcademicLevel';
 import { ComponentRelation } from './ComponentRelation';
 import { Department } from './Department';
 import { ComponentCurriculumContext } from './ComponentCurriculumContext';
+import { Course } from './Course';
 
 @Entity('components')
 @Index('IDX_components_department_id', [ 'departmentId' ])
+@Index('IDX_components_course_id', [ 'courseId' ])
 class Component {
 
     @PrimaryGeneratedColumn('uuid')
@@ -52,6 +58,9 @@ class Component {
     @Column({ name: 'department_id', nullable: true })
         departmentId?: string | null;
 
+    @Column({ name: 'course_id', nullable: true })
+        courseId?: string | null;
+
     @Column({ default: '' })
         modality: string;
 
@@ -61,8 +70,8 @@ class Component {
     @Column({ default: '' })
         semester: string;
 
-    @Column({ name: 'academic_level', enum: AcademicLevel, default: AcademicLevel.GRADUATION })
-        academicLevel: AcademicLevel;
+    @Column({ name: 'academic_level', enum: COMPONENT_ACADEMIC_LEVELS, default: AcademicLevel.GRADUATION })
+        academicLevel: ComponentAcademicLevel;
 
     @Column({ default: '' })
         prerequeriments: string;
@@ -101,6 +110,10 @@ class Component {
     @ManyToOne(() => Department, (department) => department.components, { nullable: true, onDelete: 'SET NULL' })
     @JoinColumn({ name: 'department_id' })
         departmentRef?: Department;
+
+    @ManyToOne(() => Course, (course) => course.components, { nullable: true, onDelete: 'SET NULL' })
+    @JoinColumn({ name: 'course_id' })
+        courseRef?: Course;
 
     @OneToOne(() => ComponentWorkload, (componentWorkload) => componentWorkload.component)
     @JoinColumn({ name: 'workload_id' })
@@ -152,6 +165,8 @@ class Component {
             this.department = draft.department;
         if (draft.departmentId !== undefined)
             this.departmentId = draft.departmentId;
+        if (draft.courseId !== undefined)
+            this.courseId = draft.courseId;
         if (draft.program != null)
             this.program = draft.program;
         if (draft.semester != null)
