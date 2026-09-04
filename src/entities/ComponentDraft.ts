@@ -15,11 +15,17 @@ import { ComponentWorkload } from './ComponentWorkload';
 import { ComponentLog } from './ComponentLog';
 import { ComponentLogType } from '../interfaces/ComponentLogType';
 import { Component } from './Component';
-import { AcademicLevel } from '../interfaces/AcademicLevel';
+import {
+    AcademicLevel,
+    COMPONENT_ACADEMIC_LEVELS,
+    ComponentAcademicLevel,
+} from '../interfaces/AcademicLevel';
 import { Department } from './Department';
+import { Course } from './Course';
 
 @Entity('component_drafts')
 @Index('IDX_component_drafts_department_id', [ 'departmentId' ])
+@Index('IDX_component_drafts_course_id', [ 'courseId' ])
 class ComponentDraft {
 
     @PrimaryGeneratedColumn('uuid')
@@ -46,6 +52,9 @@ class ComponentDraft {
     @Column({ name: 'department_id', nullable: true })
         departmentId?: string | null;
 
+    @Column({ name: 'course_id', nullable: true })
+        courseId?: string | null;
+
     @Column({ default: '' })
         modality: string;
 
@@ -55,8 +64,8 @@ class ComponentDraft {
     @Column({ default: '' })
         semester?: string;
 
-    @Column({ name: 'academic_level', enum: AcademicLevel, default: AcademicLevel.GRADUATION })
-        academicLevel: AcademicLevel;
+    @Column({ name: 'academic_level', enum: COMPONENT_ACADEMIC_LEVELS, default: AcademicLevel.GRADUATION })
+        academicLevel: ComponentAcademicLevel;
 
     @Column({ default: '' })
         prerequeriments?: string;
@@ -95,6 +104,10 @@ class ComponentDraft {
     @ManyToOne(() => Department, (department) => department.componentDrafts, { nullable: true, onDelete: 'SET NULL' })
     @JoinColumn({ name: 'department_id' })
         departmentRef?: Department;
+
+    @ManyToOne(() => Course, (course) => course.componentDrafts, { nullable: true, onDelete: 'SET NULL' })
+    @JoinColumn({ name: 'course_id' })
+        courseRef?: Course;
     
     @OneToOne(() => ComponentWorkload, (componentWorkload) => componentWorkload.componentDraft)
     @JoinColumn({ name: 'workload_id' })
