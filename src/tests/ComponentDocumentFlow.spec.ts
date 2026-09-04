@@ -229,9 +229,46 @@ describe('Component document flow', () => {
             .set('Authorization', `Bearer ${token}`)
             .send({ password: 'senha-incorreta' });
 
-        expect(wrongPasswordResponse.statusCode).toBe(401);
+        expect(wrongPasswordResponse.statusCode).toBe(403);
         expect(wrongPasswordResponse.body.code).toBe('PUBLICATION_PASSWORD_INVALID');
 
+        const approveResponse = await supertest(app)
+            .post(`/api/component-drafts/${componentResponse.body.draft.id}/approve`)
+            .set('Authorization', `Bearer ${token}`)
+            .send({ password: 'test123' });
+
+        expect(approveResponse.statusCode).toBe(200);
+    });
+
+    it('should validate publication from basic references without blocking on optional complementary references', async () => {
+        const createResponse = await supertest(app)
+            .post('/api/components')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                code: 'REF301',
+                name: 'Referencias Basicas Suficientes',
+                department: 'Bacharelado em Ciencia da Computacao',
+                program: 'Conteudo programatico',
+                semester: '2026.1',
+                prerequeriments: 'NAO_SE_APLICA',
+                methodology: 'Aulas expositivas',
+                objective: 'Validar referencias basicas',
+                syllabus: 'Ementa de teste',
+                bibliography: '',
+                referencesBasic: [
+                    'AUTOR, A. Livro um. 2020.',
+                    'AUTOR, B. Livro dois. 2021.',
+                    'AUTOR, C. Livro tres. 2022.',
+                ].join('\n'),
+                referencesComplementary: 'Material complementar ainda sem ano',
+                modality: 'DISCIPLINA',
+                learningAssessment: 'Provas e trabalhos',
+            });
+
+        expect(createResponse.statusCode).toBe(201);
+        const componentResponse = await supertest(app)
+            .get('/api/components/REF301')
+            .set('Authorization', `Bearer ${token}`);
         const approveResponse = await supertest(app)
             .post(`/api/component-drafts/${componentResponse.body.draft.id}/approve`)
             .set('Authorization', `Bearer ${token}`)
@@ -692,6 +729,7 @@ describe('Component document flow', () => {
         expect(documentXml).not.toContain('Tópicos em Sistemas de Informação e Web I');
         expect(documentXml).toContain('Assinatura do docente');
         expect(documentXml).not.toContain('<w:br w:type="page"/>');
+        expect(documentXml).toContain('<w:spacing w:before="0" w:after="0" w:line="20" w:lineRule="exact"/>');
 
         const facultySignatureParagraphMatch = documentXml.match(/<w:p[\s\S]*?Docente\(s\) Responsável\(is\)[\s\S]*?<\/w:p>/);
         const teacherSignatureParagraphMatch = documentXml.match(/<w:p[\s\S]*?Nome:\s+[^_][\s\S]*?Assinatura:[\s\S]*?<\/w:p>/);

@@ -19,6 +19,10 @@ describe('Component metadata contract', () => {
         ]);
         expect(response.body.academicLevels).toEqual([
             { value: 'graduacao', label: 'Graduação', sigaaSourceId: '1114' },
+            { value: 'pos_graduacao', label: 'Pós-Graduação', sigaaSourceId: '' },
+        ]);
+        expect(response.body.sigaaImportAcademicLevels).toEqual([
+            { value: 'graduacao', label: 'Graduação', sigaaSourceId: '1114' },
             { value: 'mestrado', label: 'Mestrado', sigaaSourceId: '1820' },
             { value: 'doutorado', label: 'Doutorado', sigaaSourceId: '43753' },
         ]);
