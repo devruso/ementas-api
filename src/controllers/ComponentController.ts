@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { getConnectionManager } from 'typeorm';
 import { getAuthToken } from '../helpers/getAuthToken';
 
 import { paginate } from '../helpers/paginate';
@@ -7,10 +8,15 @@ import { ComponentLogService } from '../services/ComponentLogService';
 import { ComponentPublicShareService } from '../services/ComponentPublicShareService';
 import { ComponentService } from '../services/ComponentService';
 import { CrawlerService } from '../services/CrawlerService';
-import { AcademicLevel } from '../interfaces/AcademicLevel';
+import {
+    AcademicLevel,
+    COMPONENT_ACADEMIC_LEVELS,
+    ComponentAcademicLevel,
+} from '../interfaces/AcademicLevel';
 import { SigaaImportJobService } from '../services/SigaaImportJobService';
 import { getComponentMetadata } from '../helpers/componentMetadata';
 import { readSigaaSourceId } from '../helpers/sigaaSourceConfig';
+import { CourseService } from '../services/CourseService';
 
 const isUserAuthenticated = (authorization?: string) => {
     try {
@@ -67,7 +73,24 @@ const buildSigaaLevelSources = (
 
 class ComponentController {
     async getMetadata(_request: Request, response: Response) {
-        return response.status(200).json(getComponentMetadata());
+        const metadata = getComponentMetadata();
+        const connectionManager = getConnectionManager();
+        const hasActiveConnection = connectionManager.has('default') && connectionManager.get('default').isConnected;
+        const courses = hasActiveConnection
+            ? await new CourseService().getCourses({ sortBy: 'name', sortOrder: 'ASC' })
+            : [];
+
+        return response.status(200).json({
+            ...metadata,
+            courses: hasActiveConnection
+                ? courses.map((course) => ({
+                    key: course.id,
+                    value: course.name,
+                    label: course.name,
+                    aliases: [course.name, course.code].filter(Boolean),
+                }))
+                : metadata.courses,
+        });
     }
 
     async importComponentsFromSiac(request: Request, response: Response) {
@@ -314,10 +337,10 @@ class ComponentController {
             ? 'DESC'
             : 'ASC';
         const academicLevelQuery = String(request.query.academicLevel ?? '').trim();
-        const academicLevel = Object.values(AcademicLevel).includes(academicLevelQuery as AcademicLevel)
-            ? (academicLevelQuery as AcademicLevel)
+        const academicLevel = COMPONENT_ACADEMIC_LEVELS.includes(academicLevelQuery as ComponentAcademicLevel)
+            ? (academicLevelQuery as ComponentAcademicLevel)
             : undefined;
-        const department = String(request.query.department ?? '').trim() || undefined;
+        const course = String(request.query.course ?? request.query.department ?? '').trim() || undefined;
         const page = parseInt(String(request.query.page)) || 0;
         const limit = parseInt(String(request.query.limit)) || 10;
 
@@ -331,12 +354,12 @@ class ComponentController {
             sortBy,
             sortOrder,
             academicLevel,
-            department,
+            course,
         });
 
         return response
             .status(200)
-            .json(paginate(components, { page, limit, search, sortBy, sortOrder, filters: { academicLevel, department } }));
+            .json(paginate(components, { page, limit, search, sortBy, sortOrder, filters: { academicLevel, course } }));
     }
 
     async getComponentByCode(request: Request, response: Response) {
