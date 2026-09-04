@@ -20,6 +20,10 @@ export class CreateDraftRequestDto extends CreateComponentRequestDto {
 
     @IsOptional()
     @CustomIsString()
+    declare public courseId?: string;
+
+    @IsOptional()
+    @CustomIsString()
     declare public program: string;
 
     @IsOptional()
