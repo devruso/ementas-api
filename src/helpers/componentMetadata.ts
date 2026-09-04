@@ -12,6 +12,11 @@ export const DEFAULT_COMPONENT_MODALITY = 'DISCIPLINA';
 
 export const ACADEMIC_LEVEL_OPTIONS = [
     { value: AcademicLevel.GRADUATION, label: 'Graduação' },
+    { value: 'pos_graduacao', label: 'Pós-Graduação' },
+] as const;
+
+export const SIGAA_IMPORT_ACADEMIC_LEVEL_OPTIONS = [
+    { value: AcademicLevel.GRADUATION, label: 'Graduação' },
     { value: AcademicLevel.MASTERS, label: 'Mestrado' },
     { value: AcademicLevel.DOCTORATE, label: 'Doutorado' },
 ] as const;
@@ -28,6 +33,10 @@ export const getComponentMetadata = () => ({
     },
     modalities: COMPONENT_MODALITY_OPTIONS.map((option) => ({ ...option })),
     academicLevels: ACADEMIC_LEVEL_OPTIONS.map((option) => ({
+        ...option,
+        sigaaSourceId: option.value === 'pos_graduacao' ? '' : readSigaaSourceId(option.value),
+    })),
+    sigaaImportAcademicLevels: SIGAA_IMPORT_ACADEMIC_LEVEL_OPTIONS.map((option) => ({
         ...option,
         sigaaSourceId: readSigaaSourceId(option.value),
     })),
