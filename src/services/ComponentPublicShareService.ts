@@ -223,6 +223,7 @@ class ComponentPublicShareService {
         const share = await this.shareRepository
             .createQueryBuilder('share')
             .leftJoinAndSelect('share.component', 'component')
+            .leftJoinAndSelect('component.courseRef', 'courseRef')
             .leftJoinAndSelect('component.workload', 'workload')
             .leftJoinAndSelect('component.logs', 'logs')
             .leftJoinAndSelect('logs.user', 'logs_user')
