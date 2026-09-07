@@ -8,6 +8,7 @@ import AdmZip from 'adm-zip';
 import { UserController } from '../controllers/UserController';
 import { UserInviteService } from '../services/UserInviteService';
 import connection from './connection';
+import { ComponentDraft } from '../entities/ComponentDraft';
 
 /* eslint-disable */
 const app = require('../app').app;
@@ -169,6 +170,68 @@ describe('Component document flow', () => {
 
     afterEach(async () => {
         await connection.clear();
+    });
+
+    it('exports saved changes without publication and rolls back a failed save completely', async () => {
+        const created = await supertest(app).post('/api/components')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                code: 'SAVE123', name: 'Saved export', department: 'Departamento Teste',
+                program: 'Original program', semester: '2026.1', prerequeriments: 'Nenhum',
+                methodology: 'Original methodology', objective: 'Original objective',
+                syllabus: 'Original syllabus', bibliography: 'SILVA, Joao. Livro. 2020.',
+                modality: 'DISCIPLINA', learningAssessment: 'Provas',
+            });
+        expect(created.statusCode).toBe(201);
+        const detail = await supertest(app).get('/api/components/SAVE123').set('Authorization', `Bearer ${token}`);
+        const draftId = detail.body.draft.id;
+        const saved = await supertest(app).put(`/api/component-drafts/${draftId}`)
+            .set('Authorization', `Bearer ${token}`)
+            .send({ syllabus: 'Latest saved syllabus', objective: '', workload: { studentTheory: 77 } });
+        expect(saved.statusCode).toBe(200);
+        const pdf = await supertest(app).get(`/api/components/${detail.body.id}/export?version=draft`)
+            .set('Authorization', `Bearer ${token}`).buffer(true).parse(binaryParser as never);
+        expect(pdf.statusCode).toBe(200);
+        const importedPdf = await supertest(app).post('/api/component-drafts/import-preview')
+            .set('Authorization', `Bearer ${token}`)
+            .attach('file', pdf.body as Buffer, { filename: 'saved.pdf', contentType: 'application/pdf' });
+        expect(importedPdf.statusCode).toBe(200);
+        expect(importedPdf.body.rawText).toContain('Latest saved syllabus');
+        expect(importedPdf.body.rawText).not.toContain('Original syllabus');
+        for (const version of [ 'draft', 'published' ]) {
+            const exported = await supertest(app)
+                .get(`/api/components/${detail.body.id}/export?format=docx&version=${version}`)
+                .set('Authorization', `Bearer ${token}`).buffer(true).parse(binaryParser as never);
+            expect(exported.statusCode).toBe(200);
+            expect(exported.headers['cache-control']).toBe('no-store');
+            const xml = new AdmZip(exported.body as Buffer).readAsText('word/document.xml');
+            expect(xml).toContain(version === 'draft' ? 'Latest saved syllabus' : 'Original syllabus');
+            expect(xml).not.toContain(version === 'draft' ? 'Original syllabus' : 'Latest saved syllabus');
+        }
+        const generateLog = jest.spyOn(ComponentDraft.prototype, 'generateDraftLog').mockImplementationOnce(() => {
+            throw new Error('Simulated log persistence failure');
+        });
+        try {
+            const failed = await supertest(app).put(`/api/component-drafts/${draftId}`)
+                .set('Authorization', `Bearer ${token}`)
+                .send({ syllabus: 'Must roll back', workload: { studentTheory: 99 } });
+            expect(failed.statusCode).toBeGreaterThanOrEqual(400);
+        } finally {
+            generateLog.mockRestore();
+        }
+        const persisted = await supertest(app).get('/api/component-drafts/SAVE123')
+            .set('Authorization', `Bearer ${token}`);
+        expect(persisted.body).toMatchObject({ syllabus: 'Latest saved syllabus', objective: '', workload: { studentTheory: 77 } });
+        const concurrent = await Promise.all([
+            supertest(app).put(`/api/component-drafts/${draftId}`).set('Authorization', `Bearer ${token}`)
+                .send({ objective: 'Concurrent objective' }),
+            supertest(app).put(`/api/component-drafts/${draftId}`).set('Authorization', `Bearer ${token}`)
+                .send({ workload: { studentTheory: 88 } }),
+        ]);
+        expect(concurrent.map((result) => result.statusCode)).toEqual([ 200, 200 ]);
+        const finalDraft = await supertest(app).get('/api/component-drafts/SAVE123')
+            .set('Authorization', `Bearer ${token}`);
+        expect(finalDraft.body).toMatchObject({ objective: 'Concurrent objective', workload: { studentTheory: 88 } });
     });
 
     it('should not be able to preview a draft import without file', async () => {

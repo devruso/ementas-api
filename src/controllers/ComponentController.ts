@@ -449,10 +449,12 @@ class ComponentController {
             ? requestFormat
             : 'pdf';
         const componentService = new ComponentService();
-        const exportedFile = await componentService.export(id, format as 'pdf' | 'doc' | 'docx');
+        const version = request.query.version === 'draft' ? 'draft' : 'published';
+        const exportedFile = await componentService.export(id, format as 'pdf' | 'doc' | 'docx', version);
         response.set({
             'Content-Type': exportedFile.contentType,
             'Content-Disposition': `attachment; filename="${exportedFile.fileName}"`,
+            'Cache-Control': 'no-store',
         });
         return response.status(200).send(exportedFile.buffer);
     }

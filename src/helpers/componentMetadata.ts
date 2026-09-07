@@ -5,7 +5,6 @@ import { readSigaaSourceId } from './sigaaSourceConfig';
 export const COMPONENT_MODALITY_OPTIONS = [
     { value: 'DISCIPLINA', label: 'Disciplina' },
     { value: 'ATIVIDADE', label: 'Atividade' },
-    { value: 'MODULO', label: 'Módulo' },
 ] as const;
 
 export const DEFAULT_COMPONENT_MODALITY = 'DISCIPLINA';

@@ -1659,12 +1659,14 @@ export class ComponentService {
         }
     }
 
-    async export(id: string, format: 'pdf' | 'doc' | 'docx' = 'pdf') {
+    async export(id: string, format: 'pdf' | 'doc' | 'docx' = 'pdf', version: 'published' | 'draft' = 'published') {
         const component = await this.componentRepository
             .createQueryBuilder('components')
             .leftJoinAndSelect('components.workload', 'workload')
             .leftJoinAndSelect('components.logs', 'logs')
             .leftJoinAndSelect('logs.user', 'logs_user')
+            .leftJoinAndSelect('components.draft', 'export_draft')
+            .leftJoinAndSelect('export_draft.workload', 'export_draft_workload')
             .where({ id })
             .getOne();
 
@@ -1672,13 +1674,31 @@ export class ComponentService {
             throw new AppError('Component not found.', 404);
         }
 
-        const { workload, logs } = component;
+        const source = version === 'draft' ? component.draft : component;
+        if (!source) {
+            throw new AppError('Rascunho não encontrado.', 404);
+        }
+        const { workload } = source;
+        const logs = version === 'published' ? component.logs : [];
         const latestApprovalLog = logs
             ?.filter((log) => log.type === ComponentLogType.APPROVAL)
             .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime())[0];
 
         const data: GenerateHtmlData = {
-            ...component,
+            ...source,
+            name: source.name || '',
+            department: source.department || '',
+            modality: source.modality || '',
+            program: source.program || '',
+            semester: source.semester || '',
+            prerequeriments: source.prerequeriments || '',
+            methodology: source.methodology || '',
+            objective: source.objective || '',
+            syllabus: source.syllabus || '',
+            learningAssessment: source.learningAssessment || '',
+            bibliography: source.bibliography || '',
+            code: source.code || component.code,
+            status: version === 'draft' ? ComponentStatus.DRAFT : component.status,
             approval: latestApprovalLog
                 ? {
                     agreementNumber: latestApprovalLog.agreementNumber,

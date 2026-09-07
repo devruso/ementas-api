@@ -15,7 +15,6 @@ describe('Component metadata contract', () => {
         expect(response.body.modalities).toEqual([
             { value: 'DISCIPLINA', label: 'Disciplina' },
             { value: 'ATIVIDADE', label: 'Atividade' },
-            { value: 'MODULO', label: 'Módulo' },
         ]);
         expect(response.body.academicLevels).toEqual([
             { value: 'graduacao', label: 'Graduação', sigaaSourceId: '1114' },

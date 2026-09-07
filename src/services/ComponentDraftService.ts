@@ -469,7 +469,7 @@ export class ComponentDraftService {
         requestDto: UpdateComponentRequestDto,
     ) {
         const sanitizedRequestDto = this.sanitizeDraftUpdateDto(requestDto);
-        const draftExists = await this.componentDraftRepository.findOne({
+        let draftExists = await this.componentDraftRepository.findOne({
             where: { id: draftId },
             relations: [ 'workload' ],
         });
@@ -505,47 +505,40 @@ export class ComponentDraftService {
             this.syncReferenceFields(sanitizedRequestDto);
             await this.courseResolutionService.applyCourse(sanitizedRequestDto);
 
-            if(sanitizedRequestDto.workload != null) {
-                const workloadData = {
-                    ...workloadPatch,
-                    id: sanitizedRequestDto.workloadId ?? draftExists.workloadId as string,
-                };
-                const workload = await this.workloadService.upsert(workloadData);
-                savedWorkload = workload || savedWorkload;
-                sanitizedRequestDto.workloadId = workload?.id;
-                delete sanitizedRequestDto.workload;
-            }
-
             const connection = getConnection();
             const queryRunner = connection.createQueryRunner();
             await queryRunner.connect();
 
             try {
                 await queryRunner.startTransaction();
+                const lockedDraft = await queryRunner.manager.findOne(ComponentDraft, draftId, {
+                    lock: { mode: 'pessimistic_write' },
+                });
+                if (!lockedDraft) throw AppError.fromCode(ApiErrorCode.DRAFT_NOT_FOUND);
+                draftExists = lockedDraft;
+                savedWorkload = lockedDraft.workloadId
+                    ? await queryRunner.manager.findOne(ComponentWorkload, lockedDraft.workloadId)
+                    : undefined;
+                draftExists.workload = savedWorkload;
+                if (workloadPatch) {
+                    savedWorkload = await queryRunner.manager.save(ComponentWorkload, {
+                        ...savedWorkload,
+                        ...workloadPatch,
+                        id: lockedDraft.workloadId || undefined,
+                    });
+                    sanitizedRequestDto.workloadId = savedWorkload.id;
+                    delete sanitizedRequestDto.workload;
+                }
 
-                const [ updatedDraft ] = await Promise.all([
-                    queryRunner.manager.save(
-                        ComponentDraft,
-                        {
-                            ...draftExists,
-                            ...sanitizedRequestDto
-                        }
-                    ),
-                    queryRunner.manager.save(
-                        ComponentLog,
-                        {
-                            ...draftExists.generateDraftLog(
-                                ComponentLogType.DRAFT_UPDATE,
-                                userId
-                            ),
-                            description: this.buildDraftUpdateDescription(
-                                draftExists,
-                                sanitizedRequestDto,
-                                workloadPatch
-                            ),
-                        }
-                    ),
-                ]); 
+                const logData = {
+                    ...draftExists.generateDraftLog(ComponentLogType.DRAFT_UPDATE, userId),
+                    description: this.buildDraftUpdateDescription(draftExists, sanitizedRequestDto, workloadPatch),
+                };
+                const updatedDraft = await queryRunner.manager.save(ComponentDraft, {
+                    ...draftExists,
+                    ...sanitizedRequestDto,
+                });
+                await queryRunner.manager.save(ComponentLog, logData);
 
                 await queryRunner.commitTransaction();
 

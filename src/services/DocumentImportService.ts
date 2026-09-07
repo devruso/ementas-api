@@ -1,5 +1,6 @@
 import mammoth from 'mammoth';
 import * as cheerio from 'cheerio';
+import { createRequire } from 'module';
 
 import { AppError } from '../errors/AppError';
 import {
@@ -54,6 +55,8 @@ const normalizeParagraphText = (value: string) =>
         .join(' ')
         .replace(/\s{2,}/g, ' ')
         .trim();
+
+const nodeRequire = createRequire(__filename);
 
 const parseSemesterValue = (value: string) => {
     const semesterMatch = value.match(/SEMESTRE\s*(\d{4})\s*\.?\s*(\d)/i);
@@ -163,12 +166,8 @@ export class DocumentImportService {
 
     private async parseDocument(file: Express.Multer.File): Promise<ParsedDocument> {
         if (file.mimetype === 'application/pdf') {
-            const pdfParseModule = await import('pdf-parse');
-            const pdfParse = (pdfParseModule.default ?? pdfParseModule) as unknown as (
-                input: Buffer
-            ) => Promise<{ text: string }>;
+            const pdfParse = nodeRequire('pdf-parse') as (data: Buffer) => Promise<{ text: string }>;
             const pdf = await pdfParse(file.buffer);
-
             return { rawText: cleanText(pdf.text) };
         }
 
