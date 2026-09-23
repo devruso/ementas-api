@@ -633,13 +633,17 @@ export class ComponentDraftService {
             try {
                 await queryRunner.startTransaction();
 
-                const agreementDate = this.getAutomaticAgreementDate();
+                const agreementDate = approvalDto.agreementDate
+                    ? new Date(`${approvalDto.agreementDate}T12:00:00.000Z`)
+                    : this.getAutomaticAgreementDate();
                 const agreementYear = agreementDate.getUTCFullYear();
                 await queryRunner.query('SELECT pg_advisory_xact_lock($1)', [ 700000 + agreementYear ]);
-                const agreementNumber = await this.getNextAgreementNumber(
-                    agreementDate,
-                    queryRunner.manager.getRepository(ComponentLog)
-                );
+                const agreementNumber = approvalDto.agreementNumber
+                    ? `ATA-${agreementYear}-${String(approvalDto.agreementNumber).padStart(3, '0')}`
+                    : await this.getNextAgreementNumber(
+                        agreementDate,
+                        queryRunner.manager.getRepository(ComponentLog)
+                    );
                 const component = currentPublishedComponent.publishDraft(draftExists);
                 const versionCode = this.buildApprovalVersionCode(agreementDate, agreementNumber);
                 const approvalLog = component.generateLog(
