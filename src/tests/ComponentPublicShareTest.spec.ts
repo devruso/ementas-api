@@ -100,6 +100,18 @@ describe('Component public shares endpoints', () => {
         expect(createShareResponse.body.token).toMatch(/^[A-Za-z0-9_-]{12}$/);
         expect(createShareResponse.body.publicLink.endsWith(createShareResponse.body.token)).toBe(true);
 
+        const publicComponentResponse = await supertest(app)
+            .get(`/api/components/shared/${createShareResponse.body.token}`);
+
+        expect(publicComponentResponse.statusCode).toBe(200);
+        expect(publicComponentResponse.body).toEqual(expect.objectContaining({
+            id: createComponentResponse.body.id,
+            code: 'SHR101',
+            name: 'Disciplina Share',
+            objective: 'Validar listagem de shares',
+            syllabus: 'Ementa',
+        }));
+
         const listSharesResponse = await supertest(app)
             .get(`/api/components/${createComponentResponse.body.id}/public-shares`)
             .set('Authorization', `Bearer ${admin.token}`);

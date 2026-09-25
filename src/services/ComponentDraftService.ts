@@ -124,6 +124,10 @@ export class ComponentDraftService {
             throw AppError.fromCode(ApiErrorCode.AUTH_USER_UNAVAILABLE);
         }
 
+        // Fail before asking for the approver's password. The same validation is
+        // repeated in approve() to protect against changes after this preflight.
+        this.validateRequiredFieldsForOfficialPublication(draft);
+
         const agreementDate = this.getAutomaticAgreementDate();
 
         return {

@@ -220,16 +220,7 @@ class ComponentPublicShareService {
     }
 
     async getPublishedComponentByToken(token: string) {
-        const share = await this.shareRepository
-            .createQueryBuilder('share')
-            .leftJoinAndSelect('share.component', 'component')
-            .leftJoinAndSelect('component.courseRef', 'courseRef')
-            .leftJoinAndSelect('component.workload', 'workload')
-            .leftJoinAndSelect('component.logs', 'logs')
-            .leftJoinAndSelect('logs.user', 'logs_user')
-            .where('share.token = :token', { token })
-            .orderBy('logs.createdAt', 'DESC')
-            .getOne();
+        const share = await this.shareRepository.findOne({ where: { token } });
 
         if (!share) {
             throw new AppError('Public share not found.', 404);
@@ -243,11 +234,20 @@ class ComponentPublicShareService {
             throw new AppError('Public share has expired.', 410);
         }
 
-        if (!share.component || share.component.status !== ComponentStatus.PUBLISHED) {
+        const component = await this.componentRepository.findOne({
+            where: { id: share.componentId },
+            relations: [ 'courseRef', 'workload', 'logs', 'logs.user' ],
+        });
+
+        if (!component || component.status !== ComponentStatus.PUBLISHED) {
             throw new AppError('Component is not available for public sharing.', 404);
         }
 
-        return share.component;
+        component.logs = [ ...(component.logs || []) ].sort(
+            (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()
+        );
+
+        return component;
     }
 }
 
