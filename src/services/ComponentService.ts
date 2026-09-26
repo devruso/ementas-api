@@ -1742,7 +1742,10 @@ export class ComponentService {
         let signatureAsset: ProcessedSignatureImage | null = null;
 
         try {
-            signatureAsset = await this.signatureAssetService.loadForDocument(latestApprovalLog?.user);
+            const persistedApprovalSignature = latestApprovalLog?.signatureFileKey
+                ? latestApprovalLog
+                : latestApprovalLog?.user;
+            signatureAsset = await this.signatureAssetService.loadForDocument(persistedApprovalSignature);
         } catch (error) {
             console.warn('[component-export] visual signature unavailable; exporting without image', {
                 componentId: component.id,

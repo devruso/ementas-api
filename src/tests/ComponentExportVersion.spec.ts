@@ -42,9 +42,16 @@ describe('Export version selection', () => {
     });
 
     it('preserves official export as the default', async () => {
-        const { service, template } = setup();
+        const approvalSignature = {
+            signatureFileKey: 'approval-signatures/frozen.png',
+            signatureFileProvider: 'local',
+            signatureFileContentType: 'image/png',
+        };
+        component.logs[0] = { ...component.logs[0], ...approvalSignature } as never;
+        const { service, template, signature } = setup();
         await service.export('component', 'docx');
         expect(template.mock.calls[0][0]).toMatchObject({ syllabus: 'Old syllabus', approval: { agreementNumber: 'ATA-1' }, workload: { student: { theory: 30 } } });
+        expect(signature).toHaveBeenCalledWith(expect.objectContaining(approvalSignature));
     });
 
     it('does not silently export official content when a draft is missing', async () => {

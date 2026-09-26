@@ -25,6 +25,10 @@ import {
 } from '../helpers/referenceSections';
 import { CourseResolutionService } from './CourseResolutionService';
 import { ApiErrorCode } from '../errors/ApiErrorCode';
+import {
+    SignatureAssetReference,
+    UserSignatureAssetService,
+} from './export/UserSignatureAssetService';
 
 export class ComponentDraftService {
 
@@ -36,6 +40,7 @@ export class ComponentDraftService {
     private userRepository: Repository<User>;
     private workloadService: WorkloadService;
     private courseResolutionService: CourseResolutionService;
+    private signatureAssetService: UserSignatureAssetService;
 
     private readonly mutableDraftFields: Array<keyof UpdateComponentRequestDto> = [
         'code',
@@ -65,6 +70,7 @@ export class ComponentDraftService {
         this.userRepository = getCustomRepository(UserRepository);
         this.workloadService = new WorkloadService();
         this.courseResolutionService = new CourseResolutionService();
+        this.signatureAssetService = new UserSignatureAssetService();
     }
 
     private getAutomaticAgreementDate(now = new Date()) {
@@ -633,8 +639,19 @@ export class ComponentDraftService {
             const connection = getConnection();
             const queryRunner = connection.createQueryRunner();
             await queryRunner.connect();
+            let signatureSnapshot: SignatureAssetReference | null = null;
 
             try {
+                try {
+                    signatureSnapshot = await this.signatureAssetService.archiveForApproval(approver);
+                } catch (error) {
+                    console.warn('[component-publication] visual signature could not be archived', {
+                        draftId,
+                        approverId: approver.id,
+                        reason: error instanceof Error ? error.message : String(error),
+                    });
+                }
+
                 await queryRunner.startTransaction();
 
                 const agreementDate = approvalDto.agreementDate
@@ -660,6 +677,7 @@ export class ComponentDraftService {
                     component.program,
                     component.syllabus,
                 );
+                Object.assign(approvalLog, signatureSnapshot || {});
 
                 const [ updatedComponent ] = await Promise.all([
                     queryRunner.manager.save(Component, component),
@@ -678,6 +696,10 @@ export class ComponentDraftService {
             } catch (err) {
                 if (queryRunner.isTransactionActive) {
                     await queryRunner.rollbackTransaction();
+                }
+
+                if (signatureSnapshot) {
+                    await this.signatureAssetService.deleteArchived(signatureSnapshot).catch(() => undefined);
                 }
 
                 throw err;

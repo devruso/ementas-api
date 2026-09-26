@@ -705,6 +705,13 @@ describe('Component document flow', () => {
             .set('Authorization', `Bearer ${token}`);
 
         expect(approvedComponentResponse.statusCode).toBe(200);
+        const approvalLog = approvedComponentResponse.body.logs.find(
+            (log: { type: string }) => log.type === 'approval'
+        );
+        expect(approvalLog.signatureFileKey).toContain('approval-signatures/');
+        expect(approvalLog.signatureFileProvider).toBe('local');
+        expect(approvalLog.signatureFileContentType).toBe('image/png');
+        expect(approvalLog.signatureFileHash).toMatch(/^[a-f0-9]{64}$/);
         expect(
             approvedComponentResponse.body.logs.some(
                 (log: {
