@@ -14,6 +14,7 @@ export enum ApiErrorCode {
     AUTH_PASSWORD_RESET_DELIVERY_FAILED = 'AUTH_PASSWORD_RESET_DELIVERY_FAILED',
     DRAFT_NOT_FOUND = 'DRAFT_NOT_FOUND',
     DRAFT_CODE_CONFLICT = 'DRAFT_CODE_CONFLICT',
+    DRAFT_REQUIRED_FIELDS = 'DRAFT_REQUIRED_FIELDS',
     DRAFT_SAVE_FAILED = 'DRAFT_SAVE_FAILED',
     PUBLICATION_PASSWORD_REQUIRED = 'PUBLICATION_PASSWORD_REQUIRED',
     PUBLICATION_PASSWORD_INVALID = 'PUBLICATION_PASSWORD_INVALID',
@@ -121,6 +122,12 @@ export const API_ERROR_CATALOG: Record<ApiErrorCode, ApiErrorDefinition> = {
         message: 'Já existe uma disciplina com esse código.',
         reason: 'Os códigos de disciplina são únicos.',
         recovery: 'Mantenha o código atual ou informe outro código institucional.',
+    },
+    [ApiErrorCode.DRAFT_REQUIRED_FIELDS]: {
+        statusCode: 400,
+        message: 'Não foi possível salvar: há campos obrigatórios pendentes.',
+        reason: 'A disciplina precisa estar completa antes de ser salva.',
+        recovery: 'Preencha os campos listados e tente salvar novamente.',
     },
     [ApiErrorCode.DRAFT_SAVE_FAILED]: {
         statusCode: 400,
