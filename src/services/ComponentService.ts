@@ -6,6 +6,7 @@ import type { GenerateHtmlData } from '../helpers/templates/component';
 import { Component } from '../entities/Component';
 import { ComponentRepository } from '../repositories/ComponentRepository';
 import { AppError } from '../errors/AppError';
+import { ApiErrorCode } from '../errors/ApiErrorCode';
 import { WorkloadService } from './WorkloadService';
 import { ComponentLog } from '../entities/ComponentLog';
 import { ComponentLogRepository } from '../repositories/ComponentLogRepository';
@@ -176,6 +177,31 @@ export class ComponentService {
         }
 
         return payload;
+    }
+
+    private validateRequiredFieldsForSaving(component: Component) {
+        const requiredTextFields: Array<{ key: keyof Component; label: string }> = [
+            { key: 'code', label: 'Código' },
+            { key: 'name', label: 'Nome' },
+            { key: 'department', label: 'Curso' },
+            { key: 'semester', label: 'Semestre vigente' },
+            { key: 'modality', label: 'Modalidade' },
+            { key: 'syllabus', label: 'Ementa' },
+            { key: 'objective', label: 'Objetivos' },
+            { key: 'program', label: 'Conteúdo programático' },
+            { key: 'methodology', label: 'Metodologia' },
+            { key: 'learningAssessment', label: 'Avaliação da aprendizagem' },
+            { key: 'referencesBasic', label: 'Referências básicas' },
+        ];
+        const missing = requiredTextFields
+            .filter(({ key }) => !String(component[key] || '').trim())
+            .map(({ label }) => label);
+
+        if (missing.length > 0) {
+            throw AppError.fromCode(ApiErrorCode.DRAFT_REQUIRED_FIELDS, {
+                details: { fields: missing },
+            });
+        }
     }
 
     private accentInsensitiveSql(column: string) {
@@ -1480,6 +1506,7 @@ export class ComponentService {
             } as CreateComponentRequestDto & { userId: string; courseId?: string | null; workloadId?: string };
             this.syncReferenceFields(componentDto);
             await this.courseResolutionService.applyCourse(componentDto);
+            this.validateRequiredFieldsForSaving(componentDto as Component);
 
             const [ componentWorkload, draftWorkload ] = await Promise.all(
                 new Array(2)
@@ -1527,6 +1554,9 @@ export class ComponentService {
 
             return createdComponent;
         } catch (err) {
+            if (err instanceof AppError) {
+                throw err;
+            }
             throw new AppError('An error has been occurred.', 400);
         }
     }
@@ -1562,15 +1592,19 @@ export class ComponentService {
                 sanitizedComponentDto.code = nextCode;
             }
 
-            if (sanitizedComponentDto.prerequeriments !== undefined) {
+            if (sanitizedComponentDto.prerequeriments !== undefined || nextCode) {
                 sanitizedComponentDto.prerequeriments = await this.normalizeAndValidatePrerequeriments(
-                    sanitizedComponentDto.prerequeriments,
+                    sanitizedComponentDto.prerequeriments ?? componentExists.prerequeriments,
                     nextCode ?? componentExists.code
                 );
             }
 
             this.syncReferenceFields(sanitizedComponentDto);
             await this.courseResolutionService.applyCourse(sanitizedComponentDto);
+            this.validateRequiredFieldsForSaving({
+                ...componentExists,
+                ...sanitizedComponentDto,
+            } as Component);
 
             if (sanitizedComponentDto.workload != null) {
                 const workloadData = {
@@ -1605,6 +1639,9 @@ export class ComponentService {
                 where: { id },
             });
         } catch (err) {
+            if (err instanceof AppError) {
+                throw err;
+            }
             throw new AppError('An error has been occurred.', 400);
         }
     }

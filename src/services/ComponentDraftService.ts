@@ -311,14 +311,19 @@ export class ComponentDraftService {
         return payload;
     }
 
-    private validateRequiredFieldsForOfficialPublication(draft: ComponentDraft) {
+    private validateRequiredFieldsForSaving(draft: ComponentDraft) {
         const requiredTextFields: Array<{ key: keyof ComponentDraft; label: string }> = [
+            { key: 'code', label: 'Código' },
+            { key: 'name', label: 'Nome' },
             { key: 'department', label: 'Curso' },
+            { key: 'semester', label: 'Semestre vigente' },
+            { key: 'modality', label: 'Modalidade' },
             { key: 'syllabus', label: 'Ementa' },
             { key: 'objective', label: 'Objetivos' },
             { key: 'program', label: 'Conteúdo programático' },
             { key: 'methodology', label: 'Metodologia' },
             { key: 'learningAssessment', label: 'Avaliação da aprendizagem' },
+            { key: 'referencesBasic', label: 'Referências básicas' },
         ];
 
         const missing = requiredTextFields
@@ -326,16 +331,16 @@ export class ComponentDraftService {
             .map(({ label }) => label);
 
         if (missing.length > 0) {
-            throw AppError.fromCode(ApiErrorCode.PUBLICATION_REQUIRED_FIELDS, {
+            throw AppError.fromCode(ApiErrorCode.DRAFT_REQUIRED_FIELDS, {
                 details: { fields: missing },
             });
         }
+    }
+
+    private validateRequiredFieldsForOfficialPublication(draft: ComponentDraft) {
+        this.validateRequiredFieldsForSaving(draft);
 
         const referencesBasic = formatAbntReferenceBlock(draft.referencesBasic || '').trim();
-
-        if (!referencesBasic) {
-            throw AppError.fromCode(ApiErrorCode.PUBLICATION_REFERENCES_REQUIRED);
-        }
 
         if (hasNonWebReferenceWithoutYear(referencesBasic)) {
             throw AppError.fromCode(ApiErrorCode.PUBLICATION_REFERENCE_YEAR_REQUIRED, {
@@ -440,6 +445,7 @@ export class ComponentDraftService {
             } as CreateDraftRequestDto & { userId: string; courseId?: string | null; workloadId?: string };
             this.syncReferenceFields(draftDto);
             await this.courseResolutionService.applyCourse(draftDto);
+            this.validateRequiredFieldsForSaving(draftDto as ComponentDraft);
 
             const [ draftWorkload, componentWorkload ] = await Promise.all([
                 this.workloadService.create(draftDto.workload ?? {}),
@@ -469,6 +475,9 @@ export class ComponentDraftService {
             return draft;
         }
         catch (err) {
+            if (err instanceof AppError) {
+                throw err;
+            }
             throw new AppError('An error has been occurred.', 400);
         }
     }
@@ -505,9 +514,9 @@ export class ComponentDraftService {
                 sanitizedRequestDto.code = nextCode;
             }
 
-            if (sanitizedRequestDto.prerequeriments !== undefined) {
+            if (sanitizedRequestDto.prerequeriments !== undefined || nextCode) {
                 sanitizedRequestDto.prerequeriments = await this.normalizeAndValidatePrerequeriments(
-                    sanitizedRequestDto.prerequeriments,
+                    sanitizedRequestDto.prerequeriments ?? draftExists.prerequeriments,
                     nextCode ?? draftExists.code
                 );
             }
@@ -539,6 +548,11 @@ export class ComponentDraftService {
                     sanitizedRequestDto.workloadId = savedWorkload.id;
                     delete sanitizedRequestDto.workload;
                 }
+
+                this.validateRequiredFieldsForSaving({
+                    ...draftExists,
+                    ...sanitizedRequestDto,
+                } as ComponentDraft);
 
                 const logData = {
                     ...draftExists.generateDraftLog(ComponentLogType.DRAFT_UPDATE, userId),
