@@ -154,6 +154,33 @@ describe('Create new Component', ()=>{
         expect(res.statusCode).toBe(400);
     });
 
+    it('should reject saving a component with required academic data missing', async ()=>{
+        const res = await supertest(app)
+            .post('/api/components')
+            .set('Content-Type', 'application/json')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                code: 'INC01',
+                name: 'Incomplete component',
+                department: 'test',
+                program: 'test',
+                semester: '2026.1',
+                prerequeriments: 'Nenhum',
+                methodology: 'test',
+                objective: '',
+                syllabus: 'test',
+                bibliography: 'SILVA, A. Livro. 2020.',
+                modality: 'test',
+                learningAssessment: 'test',
+            });
+
+        expect(res.statusCode).toBe(400);
+        expect(res.body).toMatchObject({
+            code: 'DRAFT_REQUIRED_FIELDS',
+            details: { fields: expect.arrayContaining([ 'Objetivos' ]) },
+        });
+    });
+
     it('should be able to create new Component with pending prerequeriment code', async ()=>{
         const res = await supertest(app)
             .post('/api/components')
@@ -200,5 +227,40 @@ describe('Create new Component', ()=>{
             });
 
         expect(res.statusCode).toBe(400);
+    });
+
+    it('should reject a code change that would make the draft its own prerequisite', async ()=>{
+        const created = await supertest(app)
+            .post('/api/components')
+            .set('Content-Type', 'application/json')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                code: 'PRE100',
+                name: 'Prerequisite update validation',
+                department: 'test',
+                program: 'test',
+                semester: '2026.1',
+                prerequeriments: 'PRE200',
+                methodology: 'test',
+                objective: 'test',
+                syllabus: 'test',
+                bibliography: 'test',
+                modality: 'test',
+                learningAssessment: 'test',
+            });
+
+        expect(created.statusCode).toBe(201);
+        const detail = await supertest(app)
+            .get('/api/components/PRE100')
+            .set('Authorization', `Bearer ${token}`);
+
+        const update = await supertest(app)
+            .put(`/api/component-drafts/${detail.body.draft.id}`)
+            .set('Content-Type', 'application/json')
+            .set('Authorization', `Bearer ${token}`)
+            .send({ code: 'PRE200' });
+
+        expect(update.statusCode).toBe(400);
+        expect(update.body.message).toBe('Uma disciplina não pode ter a si mesma como pré-requisito.');
     });
 });

@@ -187,8 +187,16 @@ describe('Component document flow', () => {
         const draftId = detail.body.draft.id;
         const saved = await supertest(app).put(`/api/component-drafts/${draftId}`)
             .set('Authorization', `Bearer ${token}`)
-            .send({ syllabus: 'Latest saved syllabus', objective: '', workload: { studentTheory: 77 } });
+            .send({ syllabus: 'Latest saved syllabus', workload: { studentTheory: 77 } });
         expect(saved.statusCode).toBe(200);
+        const incompleteSave = await supertest(app).put(`/api/component-drafts/${draftId}`)
+            .set('Authorization', `Bearer ${token}`)
+            .send({ objective: '' });
+        expect(incompleteSave.statusCode).toBe(400);
+        expect(incompleteSave.body).toMatchObject({
+            code: 'DRAFT_REQUIRED_FIELDS',
+            details: { fields: expect.arrayContaining([ 'Objetivos' ]) },
+        });
         const pdf = await supertest(app).get(`/api/components/${detail.body.id}/export?version=draft`)
             .set('Authorization', `Bearer ${token}`).buffer(true).parse(binaryParser as never);
         expect(pdf.statusCode).toBe(200);
@@ -221,7 +229,7 @@ describe('Component document flow', () => {
         }
         const persisted = await supertest(app).get('/api/component-drafts/SAVE123')
             .set('Authorization', `Bearer ${token}`);
-        expect(persisted.body).toMatchObject({ syllabus: 'Latest saved syllabus', objective: '', workload: { studentTheory: 77 } });
+        expect(persisted.body).toMatchObject({ syllabus: 'Latest saved syllabus', objective: 'Original objective', workload: { studentTheory: 77 } });
         const concurrent = await Promise.all([
             supertest(app).put(`/api/component-drafts/${draftId}`).set('Authorization', `Bearer ${token}`)
                 .send({ objective: 'Concurrent objective' }),
