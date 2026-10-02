@@ -16,9 +16,13 @@ describe('DocxSignatureEmbedder', () => {
             heightPx: 80,
         });
 
-        expect(updatedParagraph.indexOf('<w:drawing>')).toBeLessThan(updatedParagraph.indexOf('Nome: Prof. Teste Assinatura:'));
-        expect(updatedParagraph).toContain('Nome: Prof. Teste Assinatura: ____________________________________');
-        expect(updatedParagraph).toContain('<w:jc w:val="right"/>');
+        expect(updatedParagraph.indexOf('Prof. Teste')).toBeLessThan(updatedParagraph.indexOf('Nome: ____________________________________'));
+        expect(updatedParagraph.indexOf('<w:drawing>')).toBeLessThan(updatedParagraph.indexOf('Assinatura: ____________________________________'));
+        expect(updatedParagraph).toContain('Nome: ____________________________________');
+        expect(updatedParagraph).toContain('Assinatura: ____________________________________');
+        expect(updatedParagraph).not.toContain('Nome: Prof. Teste');
+        expect(updatedParagraph).toContain('<w:jc w:val="left"/>');
+        expect(updatedParagraph).toContain('<w:tab w:val="left" w:pos="5600"/>');
         expect(updatedParagraph).toContain('<w:keepNext/>');
         expect(updatedParagraph).toContain('<w:keepLines/>');
         expect(updatedParagraph).toContain('<w:drawing>');
@@ -51,21 +55,35 @@ describe('DocxSignatureEmbedder', () => {
         });
 
         expect(updatedParagraph).toContain('<w:p w14:paraId="AAAA1111" w14:textId="BBBB2222" w:rsidR="00000001">');
-        expect(updatedParagraph).toContain('<w:jc w:val="both"/>');
+        expect(updatedParagraph).toContain('<w:jc w:val="left"/>');
         expect(updatedParagraph).toContain('wp14:anchorId="');
         expect(updatedParagraph).toContain('wp14:editId="');
         expect(updatedParagraph).toContain('xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"');
         expect(updatedParagraph).toContain('xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"');
         expect(updatedParagraph).toContain('<a:srcRect/>');
         expect(updatedParagraph).toContain('<a:ln/>');
-        expect(updatedParagraph.indexOf('<w:drawing>')).toBeLessThan(updatedParagraph.indexOf('Nome: Jamilson Assinatura:'));
-        expect(updatedParagraph).toContain('Nome: Jamilson Assinatura: ____________________________________');
-        expect(updatedParagraph).toContain('<w:jc w:val="right"/>');
+        expect(updatedParagraph.indexOf('Jamilson')).toBeLessThan(updatedParagraph.indexOf('Nome: ____________________________________'));
+        expect(updatedParagraph.indexOf('<w:drawing>')).toBeLessThan(updatedParagraph.indexOf('Assinatura: ____________________________________'));
+        expect(updatedParagraph).not.toContain('Nome: Jamilson');
+        expect(updatedParagraph).toContain('<w:jc w:val="left"/>');
+        expect(updatedParagraph.match(/w14:paraId="AAAA1111"/g)).toHaveLength(1);
         expect(updatedParagraph).toContain('r:embed="rId9"');
 
         const relsXml = zip.readAsText('word/_rels/document.xml.rels');
         expect(relsXml).toContain('Id="rId9"');
         expect(relsXml).toContain('Target="media/signature-rId9.png"');
         expect(zip.getEntry('word/media/signature-rId9.png')).toBeTruthy();
+    });
+
+    it('should place the approver above the name line even without a visual signature', () => {
+        const zip = new AdmZip();
+        const embedder = new DocxSignatureEmbedder();
+        const paragraphXml = '<w:p><w:pPr><w:jc w:val="both"/></w:pPr><w:r><w:t>placeholder</w:t></w:r></w:p>';
+
+        const updatedParagraph = embedder.embedSignature(zip, paragraphXml, 'Docente Sem Imagem', null);
+
+        expect(updatedParagraph.indexOf('Docente Sem Imagem')).toBeLessThan(updatedParagraph.indexOf('Nome: ____________________________________'));
+        expect(updatedParagraph).toContain('Assinatura: ____________________________________');
+        expect(updatedParagraph).not.toContain('<w:drawing>');
     });
 });

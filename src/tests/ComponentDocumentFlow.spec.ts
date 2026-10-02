@@ -197,6 +197,17 @@ describe('Component document flow', () => {
             code: 'DRAFT_REQUIRED_FIELDS',
             details: { fields: expect.arrayContaining([ 'Objetivos' ]) },
         });
+        const referenceWithoutYearSave = await supertest(app).put(`/api/component-drafts/${draftId}`)
+            .set('Authorization', `Bearer ${token}`)
+            .send({ referencesBasic: 'SILVA, Joao. Livro sem ano.' });
+        expect(referenceWithoutYearSave.statusCode).toBe(400);
+        expect(referenceWithoutYearSave.body).toMatchObject({
+            code: 'DRAFT_REFERENCE_YEAR_REQUIRED',
+            details: {
+                section: 'referencesBasic',
+                fields: [ 'Referências básicas' ],
+            },
+        });
         const pdf = await supertest(app).get(`/api/components/${detail.body.id}/export?version=draft`)
             .set('Authorization', `Bearer ${token}`).buffer(true).parse(binaryParser as never);
         expect(pdf.statusCode).toBe(200);
@@ -520,7 +531,7 @@ describe('Component document flow', () => {
                 methodology: 'Aulas expositivas',
                 objective: 'Validar busca exata em componente publicado',
                 syllabus: 'Ementa Similar',
-                bibliography: 'Bibliografia Similar',
+                bibliography: 'Bibliografia Similar. 2020.',
                 modality: 'Presencial',
                 learningAssessment: 'Provas',
             });
@@ -541,7 +552,7 @@ describe('Component document flow', () => {
                 methodology: 'Aulas expositivas',
                 objective: 'Validar busca exata em componente publicado',
                 syllabus: 'Ementa Alvo',
-                bibliography: 'Bibliografia Alvo',
+                bibliography: 'Bibliografia Alvo. 2021.',
                 modality: 'Presencial',
                 learningAssessment: 'Provas',
             });
@@ -573,7 +584,7 @@ describe('Component document flow', () => {
                 syllabus: 'Ementa Similar',
                 methodology: 'Metodologia Similar',
                 learningAssessment: 'Avaliacao Similar',
-                bibliography: 'Bibliografia Similar',
+                bibliography: 'Bibliografia Similar. 2020.',
                 prerequeriments: 'Nenhum',
             });
 
@@ -594,7 +605,7 @@ describe('Component document flow', () => {
                 syllabus: 'Ementa Alvo',
                 methodology: 'Metodologia Alvo',
                 learningAssessment: 'Avaliacao Alvo',
-                bibliography: 'Bibliografia Alvo',
+                bibliography: 'Bibliografia Alvo. 2021.',
                 prerequeriments: 'Nenhum',
             });
 
@@ -810,13 +821,15 @@ describe('Component document flow', () => {
         expect(documentXml).toContain('<w:spacing w:before="0" w:after="0" w:line="20" w:lineRule="exact"/>');
 
         const facultySignatureParagraphMatch = documentXml.match(/<w:p[\s\S]*?Docente\(s\) Responsável\(is\)[\s\S]*?<\/w:p>/);
-        const teacherSignatureParagraphMatch = documentXml.match(/<w:p[\s\S]*?Nome:\s+[^_][\s\S]*?Assinatura:[\s\S]*?<\/w:p>/);
+        const teacherIdentityParagraphMatch = documentXml.match(/<w:p[\s\S]*?Test User[\s\S]*?<\/w:p>/);
+        const teacherFieldsParagraphMatch = documentXml.match(/<w:p[\s\S]*?Nome:\s*_+[\s\S]*?Assinatura:\s*_+[\s\S]*?<\/w:p>/);
         const chiefSignatureLineMatch = documentXml.match(/Nome:\s*_+\s*Assinatura:\s*_+/);
 
         expect(facultySignatureParagraphMatch).not.toBeNull();
-        expect(teacherSignatureParagraphMatch).not.toBeNull();
+        expect(teacherIdentityParagraphMatch).not.toBeNull();
+        expect(teacherFieldsParagraphMatch).not.toBeNull();
         expect(chiefSignatureLineMatch).not.toBeNull();
-        expect(teacherSignatureParagraphMatch?.[0]).toMatch(/<w:drawing|<w:pict/);
+        expect(teacherIdentityParagraphMatch?.[0]).toMatch(/<w:drawing|<w:pict/);
 
         const approvalMarkerIndex = documentXml.indexOf('Docente(s) Responsável(is)');
         const tableStack: number[] = [];
@@ -1034,7 +1047,11 @@ describe('Component document flow', () => {
         const exportedDocZip = new AdmZip(docExportResponse.body as Buffer);
         const documentXml = exportedDocZip.readAsText('word/document.xml');
 
-        expect(documentXml).toContain('Nome: Test User Assinatura:');
+        expect(documentXml).toContain('Test User');
+        expect(documentXml).toContain('Nome: ____________________________________');
+        expect(documentXml).toContain('Assinatura: ____________________________________');
+        expect(documentXml.indexOf('Test User')).toBeLessThan(documentXml.indexOf('Nome: ____________________________________'));
+        expect(documentXml.indexOf('<w:drawing')).toBeLessThan(documentXml.indexOf('Assinatura: ____________________________________'));
         expect(documentXml).toMatch(/<w:drawing|<w:pict/);
 
         const hasEmbeddedTeacherSignatureAsset = exportedDocZip
