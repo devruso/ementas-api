@@ -86,7 +86,7 @@ export class DocxSignatureEmbedder {
         ].join('');
     }
 
-    private withJustification(paragraphProperties: string, justification: 'center' | 'right') {
+    private withJustification(paragraphProperties: string, justification: 'left' | 'center' | 'right') {
         if (!paragraphProperties) {
             return `<w:pPr><w:jc w:val="${justification}"/></w:pPr>`;
         }
@@ -123,6 +123,20 @@ export class DocxSignatureEmbedder {
         return updatedProperties;
     }
 
+    private withApprovalTabStops(paragraphProperties: string) {
+        let updatedProperties = paragraphProperties || '<w:pPr></w:pPr>';
+        const tabStops = [
+            '<w:tabs>',
+            '<w:tab w:val="left" w:pos="720"/>',
+            '<w:tab w:val="left" w:pos="5600"/>',
+            '</w:tabs>',
+        ].join('');
+
+        updatedProperties = updatedProperties.replace(/<w:tabs\b[\s\S]*?<\/w:tabs>|<w:tabs\s*\/>/, '');
+
+        return updatedProperties.replace('</w:pPr>', `${tabStops}</w:pPr>`);
+    }
+
     private encodeXmlText(value: string) {
         return value
             .replace(/&/g, '&amp;')
@@ -132,38 +146,62 @@ export class DocxSignatureEmbedder {
             .replace(/'/g, '&apos;');
     }
 
-    embedSignature(zip: any, paragraphXml: string, approvedBy: string, asset: SignatureAsset) {
-        const contentTypesXml = zip.readAsText('[Content_Types].xml');
-        const documentRelsPath = 'word/_rels/document.xml.rels';
-        const documentRelsXml = zip.readAsText(documentRelsPath);
-        const relationshipId = this.nextRelationshipId(documentRelsXml);
-        const mediaFileName = `signature-${relationshipId}.png`;
+    embedSignature(zip: any, paragraphXml: string, approvedBy: string, asset?: SignatureAsset | null) {
         const paragraphStartTag = paragraphXml.match(/^<w:p\b[^>]*>/)?.[0] || '<w:p>';
+        const continuationParagraphStartTag = paragraphStartTag
+            .replace(/\s+w14:paraId="[^"]*"/g, '')
+            .replace(/\s+w14:textId="[^"]*"/g, '');
         const paragraphProperties = paragraphXml.match(/<w:pPr[\s\S]*?<\/w:pPr>|<w:pPr\s*\/>/)?.[0] || '';
-        const drawingXml = this.buildDrawingXml(relationshipId, asset, Number(relationshipId.replace('rId', '')) + 1000);
-        const imageParagraphProperties = this.withSignatureParagraphControls(
-            this.withJustification(paragraphProperties, 'right'),
-            true
+        const approvalRowProperties = this.withApprovalTabStops(
+            this.withSignatureParagraphControls(
+                this.withJustification(paragraphProperties, 'left'),
+                true
+            )
         );
-        const signatureLineParagraphProperties = this.withSignatureParagraphControls(paragraphProperties, true);
+        const fieldRowProperties = this.withApprovalTabStops(
+            this.withSignatureParagraphControls(
+                this.withJustification(paragraphProperties, 'left'),
+                true
+            )
+        );
         const encodedApprovedBy = this.encodeXmlText(approvedBy);
+        let drawingRun = '';
+
+        if (asset) {
+            const contentTypesXml = zip.readAsText('[Content_Types].xml');
+            const documentRelsPath = 'word/_rels/document.xml.rels';
+            const documentRelsXml = zip.readAsText(documentRelsPath);
+            const relationshipId = this.nextRelationshipId(documentRelsXml);
+            const mediaFileName = `signature-${relationshipId}.png`;
+            const drawingXml = this.buildDrawingXml(
+                relationshipId,
+                asset,
+                Number(relationshipId.replace('rId', '')) + 1000
+            );
+
+            drawingRun = `<w:r><w:tab/></w:r><w:r><w:rPr><w:noProof/></w:rPr>${drawingXml}</w:r>`;
+            zip.addFile(`word/media/${mediaFileName}`, asset.buffer);
+            zip.updateFile('[Content_Types].xml', Buffer.from(this.ensurePngContentType(contentTypesXml), 'utf-8'));
+            zip.updateFile(
+                documentRelsPath,
+                Buffer.from(this.appendRelationship(documentRelsXml, relationshipId, `media/${mediaFileName}`), 'utf-8')
+            );
+        }
+
         const updatedParagraphXml = [
             paragraphStartTag,
-            imageParagraphProperties,
-            `<w:r><w:rPr><w:noProof/></w:rPr>${drawingXml}</w:r>`,
+            approvalRowProperties,
+            '<w:r><w:tab/></w:r>',
+            `<w:r><w:rPr><w:noProof/></w:rPr><w:t xml:space="preserve">${encodedApprovedBy}</w:t></w:r>`,
+            drawingRun,
             '</w:p>',
-            paragraphStartTag,
-            signatureLineParagraphProperties,
-            `<w:r><w:rPr><w:noProof/></w:rPr><w:t xml:space="preserve">Nome: ${encodedApprovedBy} Assinatura: ____________________________________</w:t></w:r>`,
+            continuationParagraphStartTag,
+            fieldRowProperties,
+            '<w:r><w:rPr><w:noProof/></w:rPr><w:t xml:space="preserve">Nome: ____________________________________</w:t></w:r>',
+            '<w:r><w:tab/></w:r>',
+            '<w:r><w:rPr><w:noProof/></w:rPr><w:t xml:space="preserve">Assinatura: ____________________________________</w:t></w:r>',
             '</w:p>',
         ].join('');
-
-        zip.addFile(`word/media/${mediaFileName}`, asset.buffer);
-        zip.updateFile('[Content_Types].xml', Buffer.from(this.ensurePngContentType(contentTypesXml), 'utf-8'));
-        zip.updateFile(
-            documentRelsPath,
-            Buffer.from(this.appendRelationship(documentRelsXml, relationshipId, `media/${mediaFileName}`), 'utf-8')
-        );
 
         return updatedParagraphXml;
     }
