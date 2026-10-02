@@ -311,7 +311,7 @@ export class ComponentDraftService {
         return payload;
     }
 
-    private validateRequiredFieldsForSaving(draft: ComponentDraft) {
+    private validateRequiredFieldsForSaving(draft: ComponentDraft, validateReferenceYear = true) {
         const requiredTextFields: Array<{ key: keyof ComponentDraft; label: string }> = [
             { key: 'code', label: 'Código' },
             { key: 'name', label: 'Nome' },
@@ -335,10 +335,21 @@ export class ComponentDraftService {
                 details: { fields: missing },
             });
         }
+
+        const referencesBasic = formatAbntReferenceBlock(draft.referencesBasic || '').trim();
+
+        if (validateReferenceYear && hasNonWebReferenceWithoutYear(referencesBasic)) {
+            throw AppError.fromCode(ApiErrorCode.DRAFT_REFERENCE_YEAR_REQUIRED, {
+                details: {
+                    section: 'referencesBasic',
+                    fields: [ 'Referências básicas' ],
+                },
+            });
+        }
     }
 
     private validateRequiredFieldsForOfficialPublication(draft: ComponentDraft) {
-        this.validateRequiredFieldsForSaving(draft);
+        this.validateRequiredFieldsForSaving(draft, false);
 
         const referencesBasic = formatAbntReferenceBlock(draft.referencesBasic || '').trim();
 
