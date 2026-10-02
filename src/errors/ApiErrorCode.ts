@@ -15,6 +15,7 @@ export enum ApiErrorCode {
     DRAFT_NOT_FOUND = 'DRAFT_NOT_FOUND',
     DRAFT_CODE_CONFLICT = 'DRAFT_CODE_CONFLICT',
     DRAFT_REQUIRED_FIELDS = 'DRAFT_REQUIRED_FIELDS',
+    DRAFT_REFERENCE_YEAR_REQUIRED = 'DRAFT_REFERENCE_YEAR_REQUIRED',
     DRAFT_SAVE_FAILED = 'DRAFT_SAVE_FAILED',
     PUBLICATION_PASSWORD_REQUIRED = 'PUBLICATION_PASSWORD_REQUIRED',
     PUBLICATION_PASSWORD_INVALID = 'PUBLICATION_PASSWORD_INVALID',
@@ -128,6 +129,12 @@ export const API_ERROR_CATALOG: Record<ApiErrorCode, ApiErrorDefinition> = {
         message: 'Não foi possível salvar: há campos obrigatórios pendentes.',
         reason: 'A disciplina precisa estar completa antes de ser salva.',
         recovery: 'Preencha os campos listados e tente salvar novamente.',
+    },
+    [ApiErrorCode.DRAFT_REFERENCE_YEAR_REQUIRED]: {
+        statusCode: 400,
+        message: 'Não foi possível salvar: uma referência bibliográfica está sem ano de publicação.',
+        reason: 'Referências não web precisam informar o ano para que a ementa possa ser publicada.',
+        recovery: 'Inclua o ano nas referências básicas indicadas e tente salvar novamente.',
     },
     [ApiErrorCode.DRAFT_SAVE_FAILED]: {
         statusCode: 400,
