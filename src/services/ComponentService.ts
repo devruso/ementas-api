@@ -1215,17 +1215,13 @@ export class ComponentService {
             (text) => /^Nome:\s*/.test(text) && /Assinatura:/.test(text) && !/Nome:\s*_+/.test(text)
         );
         if (signatureLineIndex >= 0) {
-            if (signatureAsset) {
-                updatedParagraphs[signatureLineIndex] = this.docxSignatureEmbedder.embedSignature(
-                    zip,
-                    updatedParagraphs[signatureLineIndex],
-                    approvedBy,
-                    signatureAsset
-                );
-                texts[signatureLineIndex] = `Nome: ${approvedBy} Assinatura: ____________________________________`;
-            } else {
-                replaceIndex(signatureLineIndex, `Nome: ${approvedBy} Assinatura: ____________________________________`);
-            }
+            updatedParagraphs[signatureLineIndex] = this.docxSignatureEmbedder.embedSignature(
+                zip,
+                updatedParagraphs[signatureLineIndex],
+                approvedBy,
+                signatureAsset
+            );
+            texts[signatureLineIndex] = `${approvedBy} Nome: ____________________________________ Assinatura: ____________________________________`;
         }
 
         const chiefSignatureLineIndex = texts.findIndex(
